@@ -1,7 +1,5 @@
-const TOPIC_MAPPING_EXPIRE = document.getElementById("iveltHelperSettings").getAttribute("data-cached-topic-mapping-expire");
-const COPY_ATTACHMENTS = document.getElementById("iveltHelperSettings").getAttribute("data-copy-attachments");
-// empty is never: the list is only fetched when there's none yet, or with "update the list now"
-const CACHE_EXPIRY_MS = TOPIC_MAPPING_EXPIRE === '' ? Infinity : (TOPIC_MAPPING_EXPIRE || 3600) * 1000;
+// set once the settings are on the page, see the end of this file
+let TOPIC_MAPPING_EXPIRE, COPY_ATTACHMENTS, CACHE_EXPIRY_MS;
 const CACHE_KEY = "topicMappingCache";
 const CACHE_TIME_KEY = "topicMappingLastFetchTime";
 
@@ -433,7 +431,7 @@ function iveltNotify(message){
 //https://docs.google.com/spreadsheets/d/1bziJ_h6bIRBXFSBJHT3aBsb13-QrEnrSjjy_-IS3FFw/edit?gid=1771705226#gid=1771705226
 
 
-// the forum's CSP blocks this page from reaching Google Sheets, so the extension fetches the sheet (see js/contentScript.js)
+// the forum's CSP blocks this page from reaching Google Sheets, so the extension fetches the sheet (see js/topicMappingRelay.js)
 function requestTopicMappingCsv() {
     return new Promise((resolve, reject) => {
         window.addEventListener('message', function onResult(e) {
@@ -572,4 +570,11 @@ async function quoteInOtherTopic(url, postID, targetTopicId, imageData) {
 }
 
 
-addBtn();
+whenIveltSettingsReady(() => {
+    const settings = document.getElementById("iveltHelperSettings");
+    TOPIC_MAPPING_EXPIRE = settings.getAttribute("data-cached-topic-mapping-expire");
+    COPY_ATTACHMENTS = settings.getAttribute("data-copy-attachments");
+    // empty is never: the list is only fetched when there's none yet, or with "update the list now"
+    CACHE_EXPIRY_MS = TOPIC_MAPPING_EXPIRE === '' ? Infinity : (TOPIC_MAPPING_EXPIRE || 3600) * 1000;
+    addBtn();
+});

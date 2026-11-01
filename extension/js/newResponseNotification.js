@@ -1,4 +1,4 @@
-(function () {
+whenIveltSettingsReady(function () {
     if (window.location.pathname !== '/forum/viewtopic.php') return ;
 
   // not every viewtopic page is a topic, e.g. Cloudflare's challenge page or an error
@@ -110,4 +110,4 @@
     }
   };
   setTimeout(checkNewResponse, interval);
-})();
+});

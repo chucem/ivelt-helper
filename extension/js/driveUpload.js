@@ -23,6 +23,7 @@
 
 (function () {
     'use strict';
+    if (!document.getElementById('page-body')) return; // not the forum, e.g. Cloudflare's check page
 
     const PLACE_KEY = 'driveButtonPlace'; // 'attachments' (default) or 'toolbar'
     const PROVIDER_KEY = 'cloudProvider';  // the service picked last time

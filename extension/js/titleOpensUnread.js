@@ -11,6 +11,7 @@
 
 (function () {
     'use strict';
+    if (!document.getElementById('page-body')) return; // not the forum, e.g. Cloudflare's check page
 
     const SETTING_KEY = 'titleOpensUnread';
 

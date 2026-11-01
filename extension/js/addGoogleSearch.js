@@ -1,6 +1,7 @@
 function addGoogleSearch(){
+    if (!document.getElementById('page-body')) return; // not the forum, e.g. Cloudflare's check page
     if (window.location.href.includes("viewtopic.php")) {
-        // Not every page has these (e.g. Cloudflare's "checking your browser" page)
+        // Not every topic page has these (e.g. an error page)
         let titleLink = document.querySelector('.topic-title > a');
         let topicSearch = document.getElementById('search_keywords');
         if (!titleLink || !topicSearch) return;
@@ -24,7 +25,8 @@ function addGoogleSearch(){
 addGoogleSearch();
 
 function addGoogleSiteSearch(){
-    // Missing on pages without the forum's search box (e.g. Cloudflare's check page)
+    if (!document.getElementById('page-body')) return; // not the forum, e.g. Cloudflare's check page
+    // Missing on pages without the forum's search box
     let siteSearch = document.getElementById('search');
     if (!siteSearch) return;
 

@@ -4,6 +4,7 @@
 // runs in the page context, so it uses the forum's own jQuery
 
 (function () {
+    if (!document.getElementById('page-body')) return; // not the forum, e.g. Cloudflare's check page
 
     const PRINT_VERSION = 'v2.9';
     const QUOTE_MAX_PX = 250; // long quotes are cut to this height (site uses 550 on screen)

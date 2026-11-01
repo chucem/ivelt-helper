@@ -8,6 +8,7 @@
 
 (function () {
     'use strict';
+    if (!document.getElementById('page-body')) return; // not the forum, e.g. Cloudflare's check page
 
     const PROFILE_BY_NAME = '/forum/memberlist.php?mode=viewprofile&un=';
 

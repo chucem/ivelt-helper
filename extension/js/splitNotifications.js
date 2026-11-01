@@ -253,7 +253,8 @@ function splitNotifications() {
     }
 }
 
-// splitNotifications();
-if (document.getElementById("iveltHelperSettings").getAttribute("data-show-multi-notifs") === "true") {
-  splitNotifications();
-}
+whenIveltSettingsReady(() => {
+  if (document.getElementById("iveltHelperSettings").getAttribute("data-show-multi-notifs") === "true") {
+    splitNotifications();
+  }
+});

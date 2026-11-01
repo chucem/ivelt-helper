@@ -126,4 +126,4 @@ function showCopiedTip(anchor) {
   setTimeout(() => tip.remove(), 1600);
 }
 
-enchancePage();
+whenIveltSettingsReady(enchancePage);

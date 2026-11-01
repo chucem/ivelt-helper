@@ -7,7 +7,7 @@
 // is its own step, and Ctrl+Z / Ctrl+Y (also Ctrl+Shift+Z, and the right-click
 // menu) plus two toolbar buttons walk through it.
 //
-// Runs in the page (injected by contentScript.js) so it can see the forum's own
+// Runs in the page (a MAIN world content script) so it can see the forum's own
 // writes to the textarea.
 
 (function () {
@@ -234,11 +234,5 @@
         document.querySelectorAll('textarea[name="message"]').forEach(attach);
     }
 
-    // The settings element is added by settingsHandler.js once storage answers,
-    // which may be a moment after this script runs
-    let tries = 0;
-    (function waitForSettings() {
-        if (document.getElementById('iveltHelperSettings') || ++tries > 20) start();
-        else setTimeout(waitForSettings, 100);
-    })();
+    whenIveltSettingsReady(start);
 }());

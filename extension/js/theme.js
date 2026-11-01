@@ -7,6 +7,7 @@
 	const root = document.documentElement;
 	const cacheKey = 'iveltHelperTheme';
 	let appliedVars = [];
+	let notForum = false;
 
 	function setVars(themeId, vars){
 		appliedVars.forEach(name => root.style.removeProperty(name));
@@ -22,6 +23,7 @@
 	}
 
 	function applyTheme(items){
+		if(notForum) return;
 		// when themes are turned off in the settings the forum keeps its own look
 		const theme = items.themesEnabled ? resolveTheme(items.theme, items.customTheme) : null;
 		const vars = theme ? themeVars(theme) : null;
@@ -47,6 +49,16 @@
 	} catch(e) {}
 
 	loadAndApply();
+
+	// A forum address that isn't the forum (e.g. Cloudflare's check page) keeps its own look. At
+	// document_start the page isn't there yet to tell, so the theme comes off once it is.
+	if(location.protocol !== 'chrome-extension:'){
+		document.addEventListener('DOMContentLoaded', () => {
+			if(document.getElementById('page-body')) return;
+			notForum = true;
+			setVars(null, null);
+		});
+	}
 
 	// switch live when the setting is changed (also while editing a custom theme)
 	chrome.storage.onChanged.addListener((changes, area) => {

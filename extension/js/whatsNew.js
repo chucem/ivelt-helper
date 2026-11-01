@@ -11,6 +11,7 @@
 
 (function () {
     'use strict';
+    if (!document.getElementById('page-body')) return; // not the forum, e.g. Cloudflare's check page
 
     const KEYS = ['whatsNewVersion', 'whatsNewFrom', 'whatsNewCheckTiming', 'whatsNewLaterUntil'];
     const LATER_MS = 24 * 60 * 60 * 1000;

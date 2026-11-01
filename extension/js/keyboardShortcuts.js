@@ -94,28 +94,30 @@ function checkKey(e) {
 	}
 }
 
-let post = document.getElementsByName("post")[0] || document.getElementsByName("submit")[0] || false;
-if (post) {
-	post.setAttribute("title", "שיק (Ctrl+Enter)");
+// not the forum, e.g. Cloudflare's check page: no shortcuts there
+if (document.getElementById("page-body")) {
+	let post = document.getElementsByName("post")[0] || document.getElementsByName("submit")[0] || false;
+	if (post) {
+		post.setAttribute("title", "שיק (Ctrl+Enter)");
+	}
+	document.onkeydown = checkKey;
+
+	// Ctrl+Enter sends the post. phpBB's editor.js also binds Ctrl+Enter in textareas and
+	// clicks every submit button in the form (preview, post, ...), so together with ours the
+	// form was submitted several times at once, which broke edits (attachments lost, error page).
+	// Catch it in the capture phase before phpBB sees it, and submit once via the post button.
+	window.addEventListener("keydown", function (e) {
+		if (e.key !== "Enter" || !(e.ctrlKey || e.metaKey)) {
+			return;
+		}
+		const post = document.getElementsByName("post")[0] || document.getElementsByName("submit")[0];
+		if (!post) {
+			return;
+		}
+		e.preventDefault();
+		e.stopImmediatePropagation();
+		if (!e.repeat) {
+			sendPost(post);
+		}
+	}, true);
 }
-document.onkeydown = checkKey;
-
-// Ctrl+Enter sends the post. phpBB's editor.js also binds Ctrl+Enter in textareas and
-// clicks every submit button in the form (preview, post, ...), so together with ours the
-// form was submitted several times at once, which broke edits (attachments lost, error page).
-// Catch it in the capture phase before phpBB sees it, and submit once via the post button.
-window.addEventListener("keydown", function (e) {
-	if (e.key !== "Enter" || !(e.ctrlKey || e.metaKey)) {
-		return;
-	}
-	const post = document.getElementsByName("post")[0] || document.getElementsByName("submit")[0];
-	if (!post) {
-		return;
-	}
-	e.preventDefault();
-	e.stopImmediatePropagation();
-	if (!e.repeat) {
-		sendPost(post);
-	}
-}, true);
-

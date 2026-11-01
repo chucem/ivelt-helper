@@ -1,4 +1,5 @@
 (function(){
+	if(!document.getElementById('page-body')) return; // not the forum, e.g. Cloudflare's check page
 
 	if(chrome.storage){
 		chrome.storage.local.get(['alwaysCopyTopic', 'stickyPostButtons', 'copyAttachments', 'forceUpdateTopicMapCache', 'cachedTopicMappingExpire', 'hideUserName', 'warnOnLosingPost','backgroundSync', 'backgroundSyncPosts', 'ShowMultiNotifs', 'upDownArrowKeys', 'copyPostLink', 'printShowLikes', 'printLikesStyle', 'editorUndo'], function(items){
@@ -59,6 +60,8 @@
 			e.setAttribute('data-print-likes-style',items.printLikesStyle);
 			e.setAttribute('data-editor-undo',items.editorUndo);
 			document.body.appendChild(e);
+			// the page scripts wait for this (js/settingsReady.js), DOM events reach the page's world
+			document.dispatchEvent(new Event('iveltHelperSettingsReady'));
 
 			if(items.forceUpdateTopicMapCache === true){
 				chrome.storage.local.set({ forceUpdateTopicMapCache: false }, function () {
