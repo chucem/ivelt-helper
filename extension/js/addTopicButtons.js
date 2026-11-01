@@ -13,7 +13,11 @@ function createButton(reference, customClass, title, text, onclick, itext="") {
     if (reference){
         a.setAttribute('href', reference);
     }
-    if (onclick){
+    // A function, so nothing from a post (an image address, a file name) is ever turned into code.
+    // A string only for the forum's own onclick code, see addQuoteLastButton
+    if (typeof onclick === 'function'){
+        a.addEventListener('click', onclick)
+    } else if (onclick){
         a.setAttribute('onClick', onclick)
     }
     a.setAttribute('class', 'button button-icon-only custom-btn ');
@@ -41,12 +45,17 @@ function getPMHref(id) {
     return null;
 }
 
+// The post's attached pictures: their alt is the file name, which the quoted text has between
+// [attachment] tags. Not [img] pictures, whose alt is just the word "בילד".
 function extractImageUrlsAndNames(contentElement) {
-    const images = contentElement.querySelectorAll("img.postimage");
+    const images = contentElement.querySelectorAll(".attach-image img.postimage, .inline-attachment img.postimage");
     const imageUrls = [];
 
     images.forEach(function(image) {
-        imageUrls.push({url:image.src, name:image.alt});
+        // a thumbnail (&t=1) links to the full picture
+        const link = image.closest('a[href*="download/file.php"]');
+        const url = /[?&]t=1\b/.test(image.src) && link ? link.href : image.src;
+        imageUrls.push({url, name:image.alt});
     });
 
     return imageUrls;
@@ -57,23 +66,15 @@ function replaceAttachmentsWithImgBBCode(text, imageData) {
         return text;
     }
 
-    imageData = JSON.parse(imageData);
-
-    // Loop through each image in the imageData array
-    imageData.forEach(image => {
-        // Create a regex that matches the exact filename anywhere in the text
-        const regex = new RegExp(image.name, "g"); // Matches the filename exactly, even if there's no space
-        text = text.replace(regex, `[img]${image.url}[/img]`);
+    // In the text's order, each [attachment=N]name[/attachment] becomes the next picture with that
+    // name, in the post's order. By name alone two pasted pictures, both "clipboard-image.jpg", would
+    // both come out as the first one. A file that isn't a picture keeps just its name.
+    const unused = [...imageData];
+    return text.replace(/\[attachment=\d+\]([\s\S]*?)\[\/attachment\]/g, (tag, inner) => {
+        const name = inner.replace(/<!--.*?-->/g, '').trim();
+        const i = unused.findIndex(image => image.name === name);
+        return i === -1 ? name : `[img]${unused.splice(i, 1)[0].url}[/img]`;
     });
-
-    // Remove all [attachment=X] and [/attachment] tags in one go.
-    // This regex matches either:
-    // 1. '[attachment=' followed by one or more digits and then ']'
-    // 2. '[/attachment]'
-    const allAttachmentBBCodeRegex = /\[attachment=\d+\]|\[\/attachment\]/g;
-    text = text.replace(allAttachmentBBCodeRegex, "");
-
-    return text;
 }
 async function addBtn() {
     let onlyLastQuote = window.location.href.includes("last=true");
@@ -122,8 +123,7 @@ async function addBtn() {
         if (!isPosting) {
             addCopyQuoteButton(btn, id.replace("post_content", ""), imageData)
         }
-        let pingOnClick = `ping_user(${strippedId})`
-        addSimpleButton(btn, null, 'fa-at', 'דערמאן תגובה', 'דערמאן תגובה', pingOnClick)
+        addSimpleButton(btn, null, 'fa-at', 'דערמאן תגובה', 'דערמאן תגובה', () => ping_user(strippedId))
         addPMQuoteButton(btn, id)
         if (contentElement.innerHTML.includes("blockquote")) {
             addQuoteLastButton(btn, isPosting);
@@ -142,8 +142,7 @@ async function addBtn() {
 
         }
     });
-    let navUpdate = addDefaultPage();
-    if (needUpdating || navUpdate) {
+    if (needUpdating) {
         let navBar = document.querySelector('#nav-footer');
         navBar.querySelectorAll('li.hidden:not(.responsive-menu)').forEach(si => {
             si.setAttribute('class', si.getAttribute('class').replace('hidden', ''))
@@ -187,13 +186,14 @@ function addUnderlineForQuoteBtn(btn) {
 }
 
 function addCopyQuoteButton(btn, postID, imageData){
+    // the post's text comes from its quote (or PM reply) page, so a post without one gets no button
     let sourceURL = getPMHref(postID) || getQuoteElm(btn)
+    if (!sourceURL) {
+        return;
+    }
+    const href = sourceURL.getAttribute("href");
     addSimpleButton(btn, null, 'fa-copy', 'ציטיר אין אנדערע אשכול', 'ציטיר אין אנדערע אשכול',
-        sourceURL?
-            `copyQuote("${sourceURL.getAttribute("href")}", "${postID}", 
-            '${JSON.stringify(imageData)}')`:
-            `copyQuoteParse("${postID}")`
-    )
+        () => copyQuote(href, postID, imageData))
 }
 
 // A private message to the writer with the post quoted: the link from the profile's contact menu
@@ -220,41 +220,14 @@ function addQuoteLastButton(btn, isPosting) {
         return;
     }
 
+    // on the reply page this reuses the forum's own addquote(...) onclick as lastaddquote(...)
     addSimpleButton(btn, `${quoteElm.getAttribute('href')}&last=true`, 'fa-quote-left last', 'ציטיר בלויז די לעצטע תגובה', 'ציטיר לעצטע',
         isPosting? `last${quoteElm.getAttribute('onclick')}`: null, '1');
 }
 
 
-function addDefaultPage(){
-    if (document.querySelector(`#kf-app-default-page`)){
-        return false
-    }
-    let li = document.createElement("li")
-    let a = document.createElement('a');
-    li.appendChild(a)
-    li.setAttribute("class", "rightside")
-    li.setAttribute("id", "kf-app-default-page")
-    a.setAttribute('onClick', "saveDefaultPage()")
-    a.innerText = "מאך דאס פאר מיין דיפאולט בלאט"
-    let pagination = document.querySelectorAll("#nav-footer").item(0)
-    if (pagination){
-        pagination.insertBefore(li, pagination.firstChild);
-        return true;
-    }
-    return false;
-}
-
 function getPostLink(postID){
     return `https://www.ivelt.com/forum/viewtopic.php?p=${postID}#p${postID}`;
-}
-
-function copyQuoteParse(post_id){
-    var html = document.querySelector(`#post_content${post_id} .content`).innerHTML
-    let post_url = getPostLink(post_id)
-    var username = getUsername(post_id)
-    let converter = new HTML2BBCode();
-    html = html.replaceAll("./download", "www.ivelt.com/forum/download")
-    navigator.clipboard.writeText(`[quote="${username}"]${converter.feed(html)} [/quote] [url=${post_url}]מקור[/url]`)
 }
 
 function getPostDetails(post_id, prefix = 'p'){
@@ -270,9 +243,10 @@ function getPostDetails(post_id, prefix = 'p'){
     let postTime;
 
     if (!postTimestampElm){
-        const tsExtractor = document.querySelector(`#${prefix}${post_id} [href='#postingbox']`).getAttribute('onclick');
-        if (postTimestampElm){
-            postTime = tsExtractor ? tsExtractor.match('(?<=time:)(.*)(?=,user)')[0] : undefined;        }
+        // the reply page's topic review has no <time>, the forum's addquote(... {time:N,user_id:N}) onclick has it
+        const tsLink = document.querySelector(`#${prefix}${post_id} [href='#postingbox']`);
+        const tsMatch = tsLink && (tsLink.getAttribute('onclick') || '').match('(?<=time:)(.*)(?=,user)');
+        postTime = tsMatch ? tsMatch[0] : undefined;
     } else {
         postTime = Date.parse(postTimestampElm.dateTime) / 1000
     }
@@ -401,14 +375,15 @@ function copyQuote(url, post_id, imageData){
             if (url.toString().includes("posting.php")){
                 res = `${res} [url=${post_url}]מקור[/url]`
             }
-            navigator.clipboard.writeText(res).then(r =>
-                iveltNotify("קאפירט צום קליפבאורד")
+            return navigator.clipboard.writeText(res).then(
+                () => iveltNotify("קאפירט צום קליפבאורד"),
+                () => iveltNotify("קען נישט קאפירן צום קליפבאורד, פרובירט נאכאמאל", 5000)
             )
         }
-    )
+    ).catch(e => iveltNotify(fetchFailedMessage(e), 5000))
 }
 
-function iveltNotify(message){
+function iveltNotify(message, ms = 1500){
 
     let fadeTarget = document.querySelector('#ivelt-notify');
     if (!fadeTarget) {
@@ -420,10 +395,11 @@ function iveltNotify(message){
     }
 
     fadeTarget.style.opacity = "1";
-    fadeTarget.innerHTML = message ;
-    setTimeout(function() {
+    fadeTarget.textContent = message;
+    clearTimeout(fadeTarget.hideTimer);
+    fadeTarget.hideTimer = setTimeout(function() {
         fadeTarget.style.opacity = "0";
-    }, 1500);
+    }, ms);
 }
 
 
@@ -509,18 +485,29 @@ function addQuoteInOtherTopicButton(btn, postID, topicMapping, imageData) {
         'fa-comment',
         'ציטיר אינעם קאמענטארן אשכול',
         'ציטיר אינעם קאמענטארן אשכול',
-        `quoteInOtherTopic("${sourceURL.getAttribute("href")}", "${postID}", "${targetTopicId}" ,'${JSON.stringify(imageData)}')`)
+        () => quoteInOtherTopic(sourceURL.getAttribute("href"), postID, targetTopicId, imageData))
 
 }
 
+// The post's text from its quote (or PM reply) page. Fails with "cloudflare" when Cloudflare
+// sent its check page instead, which it sometimes does for a page fetched in the background.
 function fetchMsgText(url) {
     return fetch(url)
-        .then(response => response.text())
-        .then(data => {
+        .then(response => response.text().then(data => {
             const parser = new DOMParser();
             const doc = parser.parseFromString(data, "text/html");
-            return doc.querySelector("#message-box #message").innerText;
-        });
+            const message = doc.querySelector("#message-box #message");
+            if (message) return message.innerText;
+            const cloudflare = response.headers.get("cf-mitigated") === "challenge" || /Just a moment/i.test(doc.title);
+            throw new Error(cloudflare ? "cloudflare" : "no message");
+        }));
+}
+
+function fetchFailedMessage(error) {
+    // Cloudflare lets it through once its check is passed in a normal tab
+    return error && error.message === "cloudflare"
+        ? "Cloudflare האט אפגעשטעלט. עפנט איינמאל דעם ציטיר בלאט פון דער תגובה, און פרובירט נאכאמאל"
+        : "קען נישט ברענגען די תגובה, פרובירט נאכאמאל";
 }
 
 async function quoteInOtherTopic(url, postID, targetTopicId, imageData) {
@@ -532,10 +519,6 @@ async function quoteInOtherTopic(url, postID, targetTopicId, imageData) {
     try {
         // Fetch the message text
         let res = await fetchMsgText(url);
-        if (!res) {
-            console.error("Failed to fetch message text.");
-            return;
-        }
 
         // Process the message text
         res = replaceAttachmentsWithImgBBCode(res, imageData);
@@ -565,7 +548,7 @@ async function quoteInOtherTopic(url, postID, targetTopicId, imageData) {
             }, 100); // Retry every 100ms
         };
     } catch (error) {
-        console.error("Error in quoteInOtherTopic:", error);
+        iveltNotify(fetchFailedMessage(error), 5000);
     }
 }
 
