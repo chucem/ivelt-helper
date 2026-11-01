@@ -368,19 +368,28 @@ function lastaddquote(post_id, username) {
 }
 
 function copyQuote(url, post_id, imageData){
-    let post_url = getPostLink(post_id)
     fetchMsgText(url).then( res => {
-        res = replaceAttachmentsWithImgBBCode(res, imageData);
-
-            if (url.toString().includes("posting.php")){
-                res = `${res} [url=${post_url}]מקור[/url]`
-            }
+        res = withTopicLink(replaceAttachmentsWithImgBBCode(res, imageData), post_id);
             return navigator.clipboard.writeText(res).then(
                 () => iveltNotify("קאפירט צום קליפבאורד"),
                 () => iveltNotify("קען נישט קאפירן צום קליפבאורד, פרובירט נאכאמאל", 5000)
             )
         }
     ).catch(e => iveltNotify(fetchFailedMessage(e), 5000))
+}
+
+// A "קעפל: <topic>" link to the post above the quote, the way the forum's own private-message quote
+// page writes it (that page is where most quotes come from, so it's the line people know). Not on a
+// private message, which has no topic.
+function withTopicLink(text, postID) {
+    if (/^\s*\[url=[^\]]*\]קעפל:/.test(text)) {
+        return text;
+    }
+    const title = document.querySelector('.topic-title a')?.textContent.trim();
+    if (!title) {
+        return text;
+    }
+    return `[url=${getPostLink(postID)}]קעפל: ${title}[/url]\n\n${text.trimStart()}`;
 }
 
 function iveltNotify(message, ms = 1500){
@@ -521,7 +530,7 @@ async function quoteInOtherTopic(url, postID, targetTopicId, imageData) {
         let res = await fetchMsgText(url);
 
         // Process the message text
-        res = replaceAttachmentsWithImgBBCode(res, imageData);
+        res = withTopicLink(replaceAttachmentsWithImgBBCode(res, imageData), postID);
 
         // Open the reply window
         const replyURL = `https://www.ivelt.com/forum/posting.php?mode=reply&t=${targetTopicId}`;
