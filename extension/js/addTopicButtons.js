@@ -430,13 +430,11 @@ const forceRefresh = document.getElementById("iveltHelperSettings").getAttribute
 
 if (!forceRefresh && cachedData && lastFetchTime && now - lastFetchTime < CACHE_EXPIRY_MS) {
     // Use cached data if available and valid
-    console.log("Using cached topic mapping.");
     return JSON.parse(cachedData);
     }
 
 // Otherwise, fetch new data from Google Sheets
     try {
-        console.log('fetching topic mappings form google sheet');
         const csvText = await requestTopicMappingCsv();
         const mappings = {};
 
@@ -452,7 +450,6 @@ if (!forceRefresh && cachedData && lastFetchTime && now - lastFetchTime < CACHE_
         localStorage.setItem(CACHE_KEY, JSON.stringify(mappings));
         localStorage.setItem(CACHE_TIME_KEY, now.toString());
 
-        console.log("Fetched and cached new topic mapping.");
         return mappings;
     } catch (error) {
         console.error("Error fetching topic mappings:", error);

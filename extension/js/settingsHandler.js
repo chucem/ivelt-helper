@@ -28,10 +28,6 @@
 
 				let notificationLinks = document.querySelectorAll('#mark_all_notifications a, .pagination a[href*="mark="].mark');
 				notificationLinks.forEach (link => {
-					// for testing while development
-					// console.log(link);
-					// link.setAttribute('href', 'javascript:void(0);');
-
 					link.addEventListener('click', function(event) {
 						let confirmation = confirm('זענט איר זיכער אז איר ווילט פארצייכענען אלעס ווי געליינט?');
 						if (!confirmation) {
@@ -64,9 +60,7 @@
 			document.dispatchEvent(new Event('iveltHelperSettingsReady'));
 
 			if(items.forceUpdateTopicMapCache === true){
-				chrome.storage.local.set({ forceUpdateTopicMapCache: false }, function () {
-					console.log('Topic mapping set back to false');
-				});
+				chrome.storage.local.set({ forceUpdateTopicMapCache: false });
 			}
 		});
 	}
