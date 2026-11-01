@@ -512,7 +512,7 @@ function fetchFailedMessage(error) {
 
 async function quoteInOtherTopic(url, postID, targetTopicId, imageData) {
     if (!targetTopicId) {
-        alert("No target topic found for this topic in the mapping.");
+        iveltNotify("דער אשכול האט נישט קיין קאמענטארן אשכול", 5000);
         return;
     }
 
@@ -528,7 +528,7 @@ async function quoteInOtherTopic(url, postID, targetTopicId, imageData) {
         const replyWindow = window.open(replyURL, '_blank');
 
         if (!replyWindow) {
-            alert("Popup blocked. Please allow popups for this site.");
+            iveltNotify("דער בראוזער האט נישט געלאזט עפענען א נייעם טעב. ערלויבט פאפ-אפס פאר אייוועלט, און פרובירט נאכאמאל", 5000);
             return;
         }
 

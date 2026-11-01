@@ -224,7 +224,7 @@
         baseUrl = ($('.topic-title a:first').prop('href') || document.URL).replace(/&start=\d*/, '').replace(/#.*$/, '');
 
         if (on_page < totalPages) {
-            let answer = prompt(printTag + '\r\n\r\nYou are on page ' + on_page + ' of ' + totalPages + ' pages.\r\nTill which page do you want to print?', totalPages);
+            let answer = prompt(printTag + '\r\n\r\nאיר זענט אויף בלאט ' + on_page + ' פון ' + totalPages + '.\r\nביז וועלכן בלאט ווילט איר פרינטן?', totalPages);
             if (answer === null) { // Cancel = do nothing
                 return;
             }
