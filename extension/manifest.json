@@ -19,18 +19,14 @@
   "content_scripts": [
     {
       "matches": [
-        "*://*.ivelt.com/*",
-        "*://*.yiddishworld.com/*",
-        "*://*.198.153.76.147/*"
+        "*://*.ivelt.com/*"
       ],
       "css": ["css/spoilers.css"],
       "js": ["js/spoilers.js"]
     },
     {
       "matches": [
-        "*://*.ivelt.com/*",
-        "*://*.yiddishworld.com/*",
-        "*://*.198.153.76.147/*"
+        "*://*.ivelt.com/*"
       ],
       "css": ["css/themes.css"],
       "js": ["js/themes.data.js", "js/theme.js"],
@@ -38,61 +34,47 @@
     },
     {
       "matches": [
-        "*://*.ivelt.com/*",
-        "*://*.yiddishworld.com/*",
-        "*://*.198.153.76.147/*"
+        "*://*.ivelt.com/*"
       ],
       "js": ["js/titleOpensUnread.js"]
     },
     {
       "matches": [
-        "*://*.ivelt.com/*",
-        "*://*.yiddishworld.com/*",
-        "*://*.198.153.76.147/*"
+        "*://*.ivelt.com/*"
       ],
       "css": ["css/whatsNew.css"],
       "js": ["js/whatsNew.data.js", "js/whatsNew.js"]
     },
     {
       "matches": [
-        "*://*.ivelt.com/*",
-        "*://*.yiddishworld.com/*",
-        "*://*.198.153.76.147/*"
+        "*://*.ivelt.com/*"
       ],
       "css": ["css/drafts.css"],
       "js": ["js/drafts.js"]
     },
     {
       "matches": [
-        "*://*.ivelt.com/*",
-        "*://*.yiddishworld.com/*",
-        "*://*.198.153.76.147/*"
+        "*://*.ivelt.com/*"
       ],
       "css": ["css/whoLiked.css"],
       "js": ["js/whoLiked.js"]
     },
     {
       "matches": [
-        "*://*.ivelt.com/*",
-        "*://*.yiddishworld.com/*",
-        "*://*.198.153.76.147/*"
+        "*://*.ivelt.com/*"
       ],
       "css": ["css/profileCards.css"],
       "js": ["js/profileCards.js"]
     },
     {
       "matches": [
-        "*://*.ivelt.com/*",
-        "*://*.yiddishworld.com/*",
-        "*://*.198.153.76.147/*"
+        "*://*.ivelt.com/*"
       ],
       "css": ["css/editorUndo.css"]
     },
     {
       "matches": [
-        "*://*.ivelt.com/*",
-        "*://*.yiddishworld.com/*",
-        "*://*.198.153.76.147/*"
+        "*://*.ivelt.com/*"
       ],
 	  "css":["css/appcss.css"],
       "js": [
@@ -104,9 +86,7 @@
     },
     {
       "matches": [
-        "*://*.ivelt.com/*",
-        "*://*.yiddishworld.com/*",
-        "*://*.198.153.76.147/*"
+        "*://*.ivelt.com/*"
       ],
       "js": [
         "js/settingsReady.js",
@@ -120,9 +100,7 @@
     },
     {
       "matches": [
-        "*://*.ivelt.com/forum/viewtopic.php*",
-        "*://*.yiddishworld.com/forum/viewtopic.php*",
-        "*://*.198.153.76.147/forum/viewtopic.php*"
+        "*://*.ivelt.com/forum/viewtopic.php*"
       ],
       "js": ["js/settingsReady.js", "js/print.js", "js/newResponseNotification.js"],
       "world": "MAIN"
@@ -130,50 +108,36 @@
     {
       "matches": [
         "*://*.ivelt.com/forum/posting.php*",
-        "*://*.yiddishworld.com/forum/posting.php*",
-        "*://*.198.153.76.147/forum/posting.php*",
         "*://*.ivelt.com/forum/viewtopic.php*",
-        "*://*.yiddishworld.com/forum/viewtopic.php*",
-        "*://*.198.153.76.147/forum/viewtopic.php*",
-        "*://*.ivelt.com/forum/ucp.php*",
-        "*://*.yiddishworld.com/forum/ucp.php*",
-        "*://*.198.153.76.147/forum/ucp.php*"
+        "*://*.ivelt.com/forum/ucp.php*"
       ],
       "js": ["js/settingsReady.js", "js/editorUndo.js"],
       "world": "MAIN"
     },
     {
       "matches": [
-        "*://*.ivelt.com/*",
-        "*://*.yiddishworld.com/*",
-        "*://*.198.153.76.147/*"
+        "*://*.ivelt.com/*"
       ],
       "css": ["css/doubleClickLike.css"],
       "js": ["js/doubleClickLike.js"]
     },
     {
       "matches": [
-        "*://*.ivelt.com/forum/posting.php*",
-        "*://*.yiddishworld.com/forum/posting.php*",
-        "*://*.198.153.76.147/forum/posting.php*"
+        "*://*.ivelt.com/forum/posting.php*"
       ],
       "css": ["css/imageResizer.css", "css/driveUpload.css"],
       "js": ["js/imageResizer.js", "js/driveUpload.js"]
     },
     {
       "matches": [
-        "*://*.ivelt.com/forum/ucp.php*",
-        "*://*.yiddishworld.com/forum/ucp.php*",
-        "*://*.198.153.76.147/forum/ucp.php*"
+        "*://*.ivelt.com/forum/ucp.php*"
       ],
       "css": ["css/driveUpload.css"],
       "js": ["js/driveUpload.js"]
     },
     {
       "matches": [
-        "*://*.ivelt.com/*",
-        "*://*.yiddishworld.com/*",
-        "*://*.198.153.76.147/*"
+        "*://*.ivelt.com/*"
       ],
       "css": ["css/quoteSelection.css"],
       "js": ["js/quoteSelection.js"]
@@ -192,8 +156,6 @@
   ],
   "host_permissions": [
     "*://*.ivelt.com/*",
-    "*://*.198.153.76.147/*",
-    "*://*.yiddishworld.com/*",
     "*://www.xn--4dbhss5b.com/*",
     "https://docs.google.com/*"
   ],
