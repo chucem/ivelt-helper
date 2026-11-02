@@ -40,7 +40,8 @@ const defualtPreferences = {
   printLikesStyle: 'names',
   editorUndo: true,
   themesEnabled: false,
-  theme: 'default'
+  theme: 'default',
+  multiAccounts: false // keeps the session cookies of more than one account, so it's off until turned on
 };
 
 let debugQueue = {};
@@ -310,4 +311,4 @@ function commitDebugLog(name, values){
   })
 }
 
-importScripts('./background.notifications.js', './background.drive.js', './background.dropbox.js', './background.settingsSync.js')
+importScripts('./background.notifications.js', './background.drive.js', './background.dropbox.js', './background.settingsSync.js', './background.accounts.js')

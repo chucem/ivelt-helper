@@ -34,7 +34,8 @@ const preferencesOptions = [
 	'profileCards',
 	'printShowLikes',
 	'printLikesStyle',
-	'editorUndo'
+	'editorUndo',
+	'multiAccounts'
 ];
 
 // Listen to settings changes

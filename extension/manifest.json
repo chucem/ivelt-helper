@@ -154,6 +154,12 @@
       ],
       "css": ["css/quoteSelection.css"],
       "js": ["js/quoteSelection.js"]
+    },
+    {
+      "matches": [
+        "*://*.ivelt.com/*"
+      ],
+      "js": ["js/accounts.js"]
     }
   ],
   "background": {

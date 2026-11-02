@@ -109,6 +109,121 @@ function initThemeSwatches() {
     });
 }
 
+// The saved accounts (background.accounts.js): a click switches to one, the background does the
+// switching and reloads the forum's tabs. Shown when turned on in the settings
+function initAccounts() {
+    chrome.storage.local.get(['multiAccounts', 'savedAccounts'], function (items) {
+        if (!items.multiAccounts)
+            return;
+        document.getElementById('accountsSection').hidden = false;
+
+        chrome.cookies.get({ url: 'https://www.ivelt.com', name: 'phpbb3_sw7kk_u' }, function (cookie) {
+            const currentId = cookie && cookie.value !== '1' ? cookie.value : '';
+            const accounts = items.savedAccounts || [];
+            showAccounts(accounts, currentId);
+            // signed in with an account that isn't saved yet
+            document.getElementById('save_account').hidden = !currentId || accounts.some(a => a.userId === currentId);
+        });
+    });
+}
+
+function showAccounts(accounts, currentId) {
+    const list = document.getElementById('accountsList');
+    list.replaceChildren();
+
+    accounts.forEach(function (account) {
+        const name = account.name || 'באנוצער ' + account.userId;
+        const row = document.createElement('div');
+        row.className = 'account_row';
+        row.setAttribute('role', 'button');
+        row.tabIndex = 0;
+        row.classList.toggle('current', account.userId === currentId);
+        row.classList.toggle('expired', !!account.expired && account.userId !== currentId);
+
+        let avatar;
+        if (account.avatar) {
+            avatar = document.createElement('img');
+            avatar.src = account.avatar;
+            avatar.alt = '';
+        } else {
+            avatar = document.createElement('span');
+            avatar.textContent = name.charAt(0);
+        }
+        avatar.className = 'account_avatar';
+
+        const nameElement = document.createElement('span');
+        nameElement.className = 'account_name';
+        nameElement.textContent = name;
+
+        const status = document.createElement('span');
+        status.className = 'account_status';
+        if (account.userId === currentId)
+            status.textContent = 'אריינגעלאגט';
+        else if (account.expired)
+            status.textContent = 'לאג אריין נאכאמאל';
+
+        const forget = document.createElement('button');
+        forget.className = 'account_forget';
+        forget.textContent = '×';
+        forget.title = 'מעק אויס דעם אקאונט פון דער ליסטע';
+        forget.addEventListener('click', function (e) {
+            e.stopPropagation();
+            if (!confirm('אויסמעקן ' + name + ' פון דער ליסטע? (מען בלייבט נישט ארויסגעלאגט פונעם פארום, נאר דאס עקסטענשען געדענקט עס מער נישט)'))
+                return;
+            chrome.runtime.sendMessage({ type: 'forgetAccount', userId: account.userId }, initAccounts);
+        });
+
+        row.append(avatar, nameElement, status, forget);
+        row.addEventListener('click', () => accountClicked(account, currentId));
+        row.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                accountClicked(account, currentId);
+            }
+        });
+        list.appendChild(row);
+    });
+}
+
+function showAccountsMessage(text) {
+    const message = document.getElementById('accountsMessage');
+    message.textContent = text;
+    message.hidden = !text;
+}
+
+function accountClicked(account, currentId) {
+    if (account.userId === currentId)
+        return;
+
+    // the forum doesn't take its cookies any more, so it signs in from the start
+    if (account.expired) {
+        add_account();
+        return;
+    }
+
+    showAccountsMessage('מען טוישט דעם אקאונט…');
+    chrome.runtime.sendMessage({ type: 'switchAccount', userId: account.userId }, function (response) {
+        if (chrome.runtime.lastError || !response || response.error) {
+            showAccountsMessage('עס האט נישט געקלאפט, פרובירט נאכאמאל');
+            return;
+        }
+        if (response.expired) {
+            showAccountsMessage((account.name || 'דער אקאונט') + ' איז מער נישט אריינגעלאגט. קליקט אויף אים זיך אריינצולאגן נאכאמאל');
+            initAccounts();
+            return;
+        }
+        window.close();
+    });
+}
+
+function add_account() {
+    chrome.runtime.sendMessage({ type: 'addAccount' }, () => window.close());
+}
+
+function save_account() {
+    chrome.runtime.sendMessage({ type: 'saveAccount' }, initAccounts);
+}
+
 document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('open_home_page').addEventListener('click', open_home_page);
 });
@@ -138,6 +253,12 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 document.addEventListener('DOMContentLoaded', initThemeSwatches);
+
+document.addEventListener('DOMContentLoaded', function () {
+    document.getElementById('add_account').addEventListener('click', add_account);
+    document.getElementById('save_account').addEventListener('click', save_account);
+    initAccounts();
+});
 
 document.addEventListener('DOMContentLoaded', function () {
     const manifest = chrome.runtime.getManifest();
