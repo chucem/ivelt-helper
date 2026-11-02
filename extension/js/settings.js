@@ -13,6 +13,7 @@ const preferencesOptions = [
 	"alwaysCopyTopic",
 	'cachedTopicMappingExpire',
 	'copyAttachments',
+	'quoteSourceLink',
 	'stickyPostButtons',
 	'titleOpensUnread',
 	'doubleClickLike',

@@ -382,19 +382,36 @@ function lastaddquote(post_id, username) {
 }
 
 function copyQuote(url, post_id, imageData){
-    let post_url = getPostLink(post_id)
     fetchMsgText(url).then( res => {
-        res = replaceAttachmentsWithImgBBCode(res, imageData);
-
-            if (url.toString().includes("posting.php")){
-                res = `${res} [url=${post_url}]מקור[/url]`
-            }
+        res = withTopicLink(replaceAttachmentsWithImgBBCode(res, imageData), post_id);
             return navigator.clipboard.writeText(res).then(
                 () => iveltNotify("קאפירט צום קליפבאורד"),
                 () => iveltNotify("קען נישט קאפירן צום קליפבאורד, פרובירט נאכאמאל", 5000)
             )
         }
     ).catch(e => iveltNotify(fetchFailedMessage(e), 5000))
+}
+
+// The link to the quoted post, as chosen in the settings (quoteSourceLink): a "קעפל: <topic>" line
+// above the quote, the way the forum's own private-message quote page writes it (where most quotes
+// come from, so it's the line people know), a "מקור" link below it, both, or none.
+// Not on a private message, which has no topic.
+function withTopicLink(text, postID) {
+    const choice = document.getElementById("iveltHelperSettings").getAttribute("data-quote-source-link");
+    const topicLine = /^\s*\[url=[^\]]*\]קעפל:[^\n]*?\[\/url\]\s*/;
+    const forumLine = text.match(topicLine);
+    text = text.replace(topicLine, '');
+
+    const title = document.querySelector('.topic-title a')?.textContent.trim();
+    if (!title) {
+        // nothing to build our own links from: keep what the forum wrote
+        return (forumLine ? forumLine[0] : '') + text;
+    }
+    const link = getPostLink(postID);
+    const above = choice === 'source' || choice === 'none' ? '' :
+        (forumLine ? forumLine[0].trim() : `[url=${link}]קעפל: ${title}[/url]`) + '\n\n';
+    const below = choice === 'source' || choice === 'both' ? ` [url=${link}]מקור[/url]` : '';
+    return above + (below ? text.trimEnd() + below + '\n' : text);
 }
 
 function iveltNotify(message, ms = 1500){
@@ -532,7 +549,7 @@ async function quoteInOtherTopic(url, postID, targetTopicId, imageData) {
         let res = await fetchMsgText(url);
 
         // Process the message text
-        res = replaceAttachmentsWithImgBBCode(res, imageData);
+        res = withTopicLink(replaceAttachmentsWithImgBBCode(res, imageData), postID);
 
         // Open the reply window
         // on the same address as this page: on another one the quote can't be put into its text box

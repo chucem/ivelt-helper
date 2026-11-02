@@ -48,6 +48,7 @@ const SYNCED_SETTINGS = [
   'whoLiked',
   'profileCards',
   'printLikesStyle',
+  'quoteSourceLink',
   'editorUndo',
   'themesEnabled',
   'theme',
