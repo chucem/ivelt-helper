@@ -100,7 +100,11 @@ class Forum(http.server.BaseHTTPRequestHandler):
             user, set_cookies = who(cookies)
             if os.environ.get('ACCOUNTS_DEBUG'):
                 print('   ', self.path[7:47], cookies.get(PREFIX + 'u'), cookies.get(PREFIX + 'k'), '->', user, set_cookies)
-            body = page_for(user, render.PAGES[path]()) if path in render.PAGES else                 page_for(user, other_page(user, path), show_name=False)
+            # the demo pages show the name in the header, the others hide it (the forum's "hide my name")
+            if path in render.PAGES:
+                body = page_for(user, render.PAGES[path]())
+            else:
+                body = page_for(user, other_page(user, path), show_name=False)
             return self.answer(body.encode(), 'text/html; charset=utf-8', set_cookies)
         file = os.path.normpath(os.path.join(render.SITE, urllib.parse.unquote(path).lstrip('/')))
         if file.startswith(render.SITE) and os.path.isfile(file):
