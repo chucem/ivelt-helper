@@ -257,6 +257,22 @@ select {
     font-size: 0.7em;
     line-height: 1;
 }
+/* Font Awesome 4.7 ships with the extension (fonts/, license in fontawesome-OFL.txt), so the
+   settings page loads nothing from outside. Only the icons the page uses: */
+@font-face {
+	font-family: FontAwesome;
+	src: url('../fonts/fontawesome-webfont.woff2') format('woff2');
+	font-weight: normal;
+	font-style: normal;
+}
+.fa-at:before { content: "\f1fa"; }
+.fa-file:before { content: "\f15b"; }
+.fa-print:before { content: "\f02f"; }
+.fa-quote-left:before { content: "\f10d"; }
+.fa-copy:before { content: "\f0c5"; }
+.fa-comment:before { content: "\f075"; }
+.fa-fw { width: 1.28571429em; text-align: center; }
+
 .shortcut-key .icon {
 	display: inline-block;
   	font-family: FontAwesome;
