@@ -290,14 +290,12 @@ function debugLog(name, valueToPush){
     clearTimeout(debugQueueTimeout);
 
   debugQueueTimeout = setTimeout(() => {
+    // the queue empties either way: with debug mode off (the default) nothing is kept
+    const entries = debugQueue;
+    debugQueue = {};
     chrome.storage.local.get('debugMode', items => {
-      if(items.debugMode){
-        // log all from the queue
-        Object.keys(debugQueue).forEach(key => {
-          commitDebugLog(key, debugQueue[key]);
-          delete debugQueue[key];
-        });
-      }
+      if(items.debugMode)
+        Object.keys(entries).forEach(key => commitDebugLog(key, entries[key]));
     });
   }, 1000);
 }

@@ -2,8 +2,8 @@
 // locally with `node .github/scripts/check-extension.mjs`):
 // - every script parses
 // - the manifest is valid JSON, and every file it names exists
-// - every file the background script imports, and every local script and stylesheet the
-//   extension's pages load, exists
+// - every file the background script imports, every local script and stylesheet the
+//   extension's pages load, and every file a stylesheet points to (url()), exists
 import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
@@ -67,8 +67,18 @@ for (const page of files.filter(f => f.endsWith('.html'))) {
 	}
 }
 
+// what the extension's stylesheets load (fonts, images), relative to each stylesheet
+for (const sheet of files.filter(f => f.endsWith('.css'))) {
+	const css = readFileSync(sheet, 'utf8');
+	for (const [, , path] of css.matchAll(/url\(\s*(['"]?)([^'")]+)\1\s*\)/g)) {
+		if (/^[a-z]+:|^\/\/|^#/i.test(path)) continue; // data:, https:, an SVG's own #id
+		const target = relative(EXT, join(sheet, '..', path.split(/[?#]/)[0]));
+		if (!existsSync(join(EXT, target))) problems.push(`${relative(EXT, sheet)} names ${path}, which doesn't exist`);
+	}
+}
+
 if (problems.length) {
 	console.error(problems.map(p => `✗ ${p}`).join('\n'));
 	process.exit(1);
 }
-console.log(`✓ ${files.filter(f => f.endsWith('.js')).length} scripts parse, and every file the manifest and pages name exists`);
+console.log(`✓ ${files.filter(f => f.endsWith('.js')).length} scripts parse, and every file the manifest, pages and stylesheets name exists`);

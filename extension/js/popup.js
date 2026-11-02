@@ -1,35 +1,18 @@
-let logout_url;
+// Signed in or not, from the forum's user cookie: a guest's is 1, and a browser that never visited
+// the forum (or cleared its cookies) has none, which is signed out too
+let logoutSid = null; // the session's number, which the forum's sign-out link needs
 
-function getUserId(domain, name) {
-    chrome.cookies.get({"url": domain, "name": name}, function (cookie) {
-        if (cookie !== null) {
-            id = cookie.value;
-            checkLoginState();
-        }
-    });
-}
-
-function checkLoginState() {
-    if (id.length > 1) {
-
-        function getLogOutCookie(domain, name) {
-            chrome.cookies.get({'url': domain, 'name': name}, function (cookie) {
-                logout_url = cookie.value;
-                setLogOutState();
-            });
-        }
-
-        function setLogOutState() {
-        }
-
-        getLogOutCookie('https://www.ivelt.com', 'phpbb3_sw7kk_sid');
+chrome.cookies.get({ url: 'https://www.ivelt.com', name: 'phpbb3_sw7kk_u' }, function (cookie) {
+    const userId = cookie ? cookie.value : '';
+    if (userId.length > 1) {
+        chrome.cookies.get({ url: 'https://www.ivelt.com', name: 'phpbb3_sw7kk_sid' }, function (sid) {
+            logoutSid = sid ? sid.value : null;
+        });
         document.getElementById('emergency_sign_out').style.display = 'block';
     } else {
         document.getElementById('quick_sign_in').style.display = 'block';
     }
-}
-
-getUserId('https://www.ivelt.com', 'phpbb3_sw7kk_u');
+});
 
 const FORUM_HOSTS = /(^|\.)ivelt\.com$/;
 
@@ -68,13 +51,15 @@ function open_active_topics() {
 
 function quick_sign_in() {
     chrome.tabs.create({url: 'https://www.ivelt.com/forum/ucp.php?mode=login', active: true});
-    chrome.storage.local.set({'logged_in': '0'});
     window.close();
 }
 
 function emergency_sign_out() {
-    chrome.tabs.create({url: 'https://www.ivelt.com/forum/ucp.php?mode=logout&sid=' + logout_url, active: false});
-    chrome.storage.local.set({'logged_in': '0'});
+    // without the session's number the forum would only ask to confirm, so then open its sign-out page
+    const url = logoutSid
+        ? 'https://www.ivelt.com/forum/ucp.php?mode=logout&sid=' + encodeURIComponent(logoutSid)
+        : 'https://www.ivelt.com/forum/ucp.php?mode=logout';
+    chrome.tabs.create({url: url, active: !logoutSid});
     window.close();
 }
 
