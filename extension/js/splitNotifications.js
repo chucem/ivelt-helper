@@ -254,7 +254,7 @@ function splitNotifications() {
 }
 
 whenIveltSettingsReady(() => {
-  if (document.getElementById("iveltHelperSettings").getAttribute("data-show-multi-notifs") === "true") {
+  if (iveltSetting("ShowMultiNotifs") === true) {
     splitNotifications();
   }
 });

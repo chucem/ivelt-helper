@@ -1,8 +1,13 @@
 (function(){
 	if(!document.getElementById('page-body')) return; // not the forum, e.g. Cloudflare's check page
 
+	// The settings the scripts in the page's world use (they can't reach chrome.storage): the topic
+	// buttons, print, split notifications and editor undo. Only these go on the page.
+	const PAGE_SETTINGS = ['alwaysCopyTopic', 'copyAttachments', 'cachedTopicMappingExpire', 'forceUpdateTopicMapCache',
+		'quoteSourceLink', 'ShowMultiNotifs', 'printShowLikes', 'printLikesStyle', 'editorUndo'];
+
 	if(chrome.storage){
-		chrome.storage.local.get(['alwaysCopyTopic', 'stickyPostButtons', 'copyAttachments', 'forceUpdateTopicMapCache', 'cachedTopicMappingExpire', 'hideUserName', 'warnOnLosingPost','backgroundSync', 'backgroundSyncPosts', 'ShowMultiNotifs', 'upDownArrowKeys', 'copyPostLink', 'printShowLikes', 'printLikesStyle', 'editorUndo', 'quoteSourceLink'], function(items){
+		chrome.storage.local.get([...PAGE_SETTINGS, 'hideUserName', 'warnOnLosingPost'], function(items){
 			if(items.hideUserName){
 				let userName = document.querySelector('.header-avatar .username');
 				if (userName) {
@@ -39,23 +44,13 @@
 
 			}
             
-            let e = document.createElement('div');
-            e.style.display = "none";
-            e.setAttribute('id', 'iveltHelperSettings');
-            e.setAttribute('data-background-sync',items.backgroundSync);
-            e.setAttribute('data-background-sync-posts',items.backgroundSyncPosts);
-			e.setAttribute('data-always-copy-topic',items.alwaysCopyTopic);
-			e.setAttribute('data-copy-attachments',items.copyAttachments);
-			e.setAttribute('data-cached-topic-mapping-expire',items.cachedTopicMappingExpire);
-			e.setAttribute('data-force-update-topic-map-cache',items.forceUpdateTopicMapCache);
-			e.setAttribute('data-sticky-post-buttons',items.stickyPostButtons);
-			e.setAttribute('data-show-multi-notifs',items.ShowMultiNotifs);
-			e.setAttribute('data-up-down-arrow-keys',items.upDownArrowKeys);
-			e.setAttribute('data-copy-post-link',items.copyPostLink);
-			e.setAttribute('data-print-show-likes',items.printShowLikes);
-			e.setAttribute('data-print-likes-style',items.printLikesStyle);
-			e.setAttribute('data-editor-undo',items.editorUndo);
-			e.setAttribute('data-quote-source-link',items.quoteSourceLink);
+			// as JSON, so they keep their real values (true, 3600, 'names'); one never set is left out
+			const pageSettings = {};
+			PAGE_SETTINGS.forEach(name => { if(name in items) pageSettings[name] = items[name]; });
+			let e = document.createElement('div');
+			e.style.display = "none";
+			e.setAttribute('id', 'iveltHelperSettings');
+			e.dataset.settings = JSON.stringify(pageSettings);
 			document.body.appendChild(e);
 			// the page scripts wait for this (js/settingsReady.js), DOM events reach the page's world
 			document.dispatchEvent(new Event('iveltHelperSettingsReady'));

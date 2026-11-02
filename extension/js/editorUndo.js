@@ -24,9 +24,8 @@
     const valueProp = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value');
 
     function isEnabled() {
-        const settings = document.getElementById('iveltHelperSettings');
         // On unless the user turned it off in the extension settings
-        return !settings || settings.getAttribute('data-editor-undo') !== 'false';
+        return iveltSetting('editorUndo') !== false;
     }
 
     // The forum uses the ABBC3 toolbar and hides phpBB's own #format-buttons

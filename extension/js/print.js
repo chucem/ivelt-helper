@@ -212,9 +212,8 @@
             return;
         }
 
-        let settings = document.getElementById('iveltHelperSettings');
-        showLikes = !!settings && settings.getAttribute('data-print-show-likes') === 'true';
-        likeNames = !settings || settings.getAttribute('data-print-likes-style') !== 'count';
+        showLikes = iveltSetting('printShowLikes') === true;
+        likeNames = iveltSetting('printLikesStyle') !== 'count';
         printTag = 'פרינט אשכול ' + PRINT_VERSION + (showLikes ? '-L · מיט לייקס' : '');
 
         totalPages = Number($('.pagination li:not(.next):last').text()) || 1;

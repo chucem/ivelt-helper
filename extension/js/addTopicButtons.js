@@ -64,7 +64,7 @@ function extractImageUrlsAndNames(postElement) {
 }
 
 function replaceAttachmentsWithImgBBCode(text, imageData) {
-    if (COPY_ATTACHMENTS !== "true") {
+    if (COPY_ATTACHMENTS !== true) {
         return text;
     }
 
@@ -282,7 +282,7 @@ function ping_user(post_id){
         let PostDetails = getPostDetails(post_id)
         let text = `[quote="${PostDetails.username}" user_id=${PostDetails.id} time=${PostDetails.time} post_id=${post_id}]\n[/quote]`
 
-        if (document.getElementById("iveltHelperSettings").getAttribute("data-always-copy-topic") == "true"){
+        if (iveltSetting("alwaysCopyTopic") === true){
             navigator.clipboard.writeText(text)
             iveltNotify("קאפירט צום קליפבאורד")
         } else {
@@ -397,7 +397,7 @@ function copyQuote(url, post_id, imageData){
 // come from, so it's the line people know), a "מקור" link below it, both, or none.
 // Not on a private message, which has no topic.
 function withTopicLink(text, postID) {
-    const choice = document.getElementById("iveltHelperSettings").getAttribute("data-quote-source-link");
+    const choice = iveltSetting("quoteSourceLink");
     const topicLine = /^\s*\[url=[^\]]*\]קעפל:[^\n]*?\[\/url\]\s*/;
     const forumLine = text.match(topicLine);
     text = text.replace(topicLine, '');
@@ -457,7 +457,7 @@ async function fetchTopicMapping() {
 const cachedData = localStorage.getItem(CACHE_KEY);
 const lastFetchTime = localStorage.getItem(CACHE_TIME_KEY);
 
-const forceRefresh = document.getElementById("iveltHelperSettings").getAttribute("data-force-update-topic-map-cache") === "true";
+const forceRefresh = iveltSetting("forceUpdateTopicMapCache") === true;
 
 if (!forceRefresh && cachedData && lastFetchTime && now - lastFetchTime < CACHE_EXPIRY_MS) {
     // Use cached data if available and valid
@@ -583,9 +583,8 @@ async function quoteInOtherTopic(url, postID, targetTopicId, imageData) {
 
 
 whenIveltSettingsReady(() => {
-    const settings = document.getElementById("iveltHelperSettings");
-    TOPIC_MAPPING_EXPIRE = settings.getAttribute("data-cached-topic-mapping-expire");
-    COPY_ATTACHMENTS = settings.getAttribute("data-copy-attachments");
+    TOPIC_MAPPING_EXPIRE = iveltSetting("cachedTopicMappingExpire");
+    COPY_ATTACHMENTS = iveltSetting("copyAttachments");
     // empty is never: the list is only fetched when there's none yet, or with "update the list now"
     CACHE_EXPIRY_MS = TOPIC_MAPPING_EXPIRE === '' ? Infinity : (TOPIC_MAPPING_EXPIRE || 3600) * 1000;
     addBtn();
