@@ -30,7 +30,11 @@ if (document.getElementById('page-body')) chrome.storage.local.get(['backgroundS
   let backgroundSyncPosts = items.backgroundSyncPosts;
   if (!backgroundSync || !backgroundSyncPosts) return;
 
-  let interval = parseInt(backgroundSyncPosts);
+  // the chosen time between checks; after a failed check (e.g. Cloudflare's check page, or the forum
+  // down) the wait grows, up to 30 minutes, and the next check that works brings it back
+  const baseInterval = parseInt(backgroundSyncPosts);
+  const MAX_INTERVAL = 30 * 60 * 1000;
+  let interval = baseInterval;
   let notificationElement = null;
   let titleFlashInterval = null;
   let checkNewResponse = function () {
@@ -48,6 +52,7 @@ if (document.getElementById('page-body')) chrome.storage.local.get(['backgroundS
               .getElementsByClassName("topics")[0]
                 .querySelectorAll('li.row:has(dl[class*="_unread"])')
           );
+          interval = baseInterval;
           let topic = topics.find((t) => {
             let tHref = t.children[0]?.children[0].children[0].href;
             if (!tHref) return false;
@@ -104,7 +109,7 @@ if (document.getElementById('page-body')) chrome.storage.local.get(['backgroundS
           }
         })
         .catch(function (error) {
-          interval *= 3;
+          interval = Math.min(interval * 3, Math.max(MAX_INTERVAL, baseInterval));
           setTimeout(checkNewResponse, interval);
         });
     }

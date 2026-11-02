@@ -561,17 +561,22 @@ async function quoteInOtherTopic(url, postID, targetTopicId, imageData) {
             return;
         }
 
-        // Wait for the textarea to load
+        // Wait for the textarea to load. Give up after 30 seconds, or if the tab is closed: a reply
+        // page that never gets one (signed out, an error page, the forum down) would keep this going
         replyWindow.onload = () => {
+            const giveUpAt = Date.now() + 30000;
             const interval = setInterval(() => {
                 try {
+                    if (replyWindow.closed || Date.now() > giveUpAt) {
+                        clearInterval(interval);
+                        return;
+                    }
                     const textarea = replyWindow.document.querySelector("#message-box textarea");
                     if (textarea) {
                         textarea.value = res;
                         clearInterval(interval);
                     }
                 } catch (e) {
-                    console.error("Error accessing textarea:", e);
                     clearInterval(interval);
                 }
             }, 100); // Retry every 100ms
