@@ -6,15 +6,15 @@ function addGoogleSearch(){
         let topicSearch = document.getElementById('search_keywords');
         if (!titleLink || !topicSearch) return;
 
-        let topicTitle = titleLink.text;
-        let searchUrl = `https://www.google.com/search?q=intitle%3A"${topicTitle}"+site%3Awww.ivelt.com+`
+        // a " in the title would end the exact-title phrase early
+        let topicTitle = titleLink.text.replace(/"/g, ' ').trim();
         topicSearch.insertAdjacentHTML('beforebegin', 
             '<input class="inputbox search tiny" style="border-width:1px;border-radius:4px" type="search" id="g_search_keywords" size="20" placeholder="גוגל זוך אין דעם אשכול…">'
         ) 
 
         document.getElementById('g_search_keywords').addEventListener('keydown' ,function (e) {
             if (e.key === 'Enter') {
-                window.open(searchUrl + document.getElementById('g_search_keywords').value, '_blank').focus();
+                window.open(googleSearchUrl(`intitle:"${topicTitle}" site:www.ivelt.com ${document.getElementById('g_search_keywords').value}`), '_blank').focus();
                 e.preventDefault();
             }
         });
@@ -30,7 +30,6 @@ function addGoogleSiteSearch(){
     let siteSearch = document.getElementById('search');
     if (!siteSearch) return;
 
-    let searchUrl = `https://www.google.com/search?q=site%3Awww.ivelt.com+`
     // Built like the forum's own search box under it (same classes), with a Google button in place of its two
     siteSearch.insertAdjacentHTML('beforebegin',
         '<form class="ih-google-search"><fieldset>' +
@@ -44,8 +43,13 @@ function addGoogleSiteSearch(){
     // Enter in the box submits the form too
     siteSearch.previousElementSibling.addEventListener('submit', function (e) {
         e.preventDefault();
-        window.open(searchUrl + document.getElementById('g_site_search_keywords').value, '_blank').focus();
+        window.open(googleSearchUrl(`site:www.ivelt.com ${document.getElementById('g_site_search_keywords').value}`), '_blank').focus();
     });
+}
+
+// The whole query encoded, so a & or # in the title or the typed words doesn't cut it off
+function googleSearchUrl(query){
+    return 'https://www.google.com/search?q=' + encodeURIComponent(query.trim());
 }
 
 addGoogleSiteSearch();
