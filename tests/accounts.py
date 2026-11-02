@@ -340,6 +340,16 @@ def run(t):
     check('the forum page itself has no way to message the extension', answer is False)
     check('no saved cookies on the forum page', 'savedAccounts' not in t.topic.content() and a['sid'] not in t.topic.content())
 
+    # old drafts are dropped by the background now, so the forum's pages never read all of storage
+    # (with the saved cookies in it); a page that keeps a draft asks for it
+    t.sw.evaluate('() => chrome.storage.local.set({ "draft:old": { savedAt: 1 }, "draft:new": { savedAt: Date.now() } })')
+    posting = t.ctx.new_page()
+    posting.goto(render.FORUM + 'posting.php?mode=reply&t=1')
+    posting.wait_for_timeout(1200)
+    posting.close()
+    drafts = t.sw.evaluate('() => chrome.storage.local.get(["draft:old", "draft:new"])')
+    check('an old draft is dropped, a new one kept', 'draft:old' not in drafts and 'draft:new' in drafts)
+
     # turning it off deletes the saved cookies
     t.sw.evaluate('() => chrome.storage.local.set({ multiAccounts: false })')
     time.sleep(0.5)

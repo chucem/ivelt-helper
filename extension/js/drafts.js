@@ -3,8 +3,7 @@
     if (!document.getElementById('page-body')) return; // not the forum, e.g. Cloudflare's check page
 
     const SETTING_KEY = 'keepDrafts';
-    const PREFIX = 'draft:';
-    const KEEP_MS = 14 * 24 * 60 * 60 * 1000;
+    const PREFIX = 'draft:'; // kept two weeks, background.js drops older ones
     const SAVE_DELAY_MS = 800;
     const KEY_PARAMS = ['i', 'mode', 'action', 'f', 't', 'p', 'u'];
     const ATTACHMENT_FIELD = /^attachment_data\[(\d+)\]\[(\w+)\]$/;
@@ -215,12 +214,12 @@
         return text.replace(/\[[^\]]*\]/g, ' ').replace(/[ \t]+/g, ' ').replace(/\s*\n\s*/g, '\n').trim().slice(0, 300);
     }
 
+    // The background does it: finding the drafts means reading all of the extension's storage, which
+    // has the saved accounts' sign-in cookies (background.accounts.js), and those stay out of the forum's pages
     function dropOldDrafts() {
-        const oldest = Date.now() - KEEP_MS;
-        chrome.storage.local.get(null, (items) => {
-            const old = Object.keys(items).filter((key) => key.startsWith(PREFIX) && !(items[key].savedAt >= oldest));
-            if (old.length) chrome.storage.local.remove(old);
-        });
+        try {
+            chrome.runtime.sendMessage({ type: 'dropOldDrafts' });
+        } catch (e) {}
     }
 
     function store(key, draft) {
