@@ -123,9 +123,19 @@ function initAccounts() {
             showAccounts(accounts, currentId);
             // signed in with an account that isn't saved yet
             document.getElementById('save_account').hidden = !currentId || accounts.some(a => a.userId === currentId);
+
+            // the signed-in account's name and avatar were never looked up (no forum page has been
+            // opened with it yet): saving it again looks them up, once
+            const current = accounts.find(a => a.userId === currentId);
+            if (current && !current.profileCheckedAt && !accountNameAsked) {
+                accountNameAsked = true;
+                chrome.runtime.sendMessage({ type: 'saveAccount' }, initAccounts);
+            }
         });
     });
 }
+
+let accountNameAsked = false;
 
 function showAccounts(accounts, currentId) {
     const list = document.getElementById('accountsList');
@@ -141,7 +151,8 @@ function showAccounts(accounts, currentId) {
         row.classList.toggle('expired', !!account.expired && account.userId !== currentId);
 
         let avatar;
-        if (account.avatar) {
+        // the picture itself is kept with the account, the forum doesn't let the popup load its address
+        if (/^data:image\//.test(account.avatar || '')) {
             avatar = document.createElement('img');
             avatar.src = account.avatar;
             avatar.alt = '';

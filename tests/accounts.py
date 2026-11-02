@@ -7,7 +7,7 @@
 # - anything else is a guest: u=1, a new session, no key
 #
 # Usage: python tests/accounts.py   (RENDER_CHANNEL=msedge for Edge, as for render.py; needs openssl)
-import http.server, os, re, secrets, shutil, ssl, subprocess, sys, tempfile, threading, time, urllib.parse
+import base64, http.server, os, re, secrets, shutil, ssl, subprocess, sys, tempfile, threading, time, urllib.parse
 from bs4 import BeautifulSoup
 from playwright.sync_api import sync_playwright
 
@@ -47,16 +47,34 @@ def who(cookies):
     return '1', new_session('1', False)
 
 
+def other_page(user, path):
+    """Any other forum page, with the forum's header as the forum sends it: its menu (with the
+    "your profile" link) is filled in later by the forum's script, and the name may be hidden.
+    A profile page has the name and the avatar, as on the real forum."""
+    header = ('<ul><li id="username_logged_in"><div class="header-profile dropdown-container">'
+              '<a class="header-avatar dropdown-trigger" href="./ucp.php"><span class="username">הא?</span></a>'
+              '<div class="dropdown"><ul class="dropdown-contents"></ul></div></div></li></ul>')
+    body = ''
+    if path == '/forum/memberlist.php':
+        body = (f'<form id="viewprofile"><div class="panel bg1"><dl class="left-box">'
+                f'<dt class="profile-avatar"><img class="avatar" src="./download/file.php?avatar={user}_1.png&amp;v=2" '
+                f'width="90" height="90" alt=""></dt></dl><dl class="left-box details profile-details">'
+                f'<dt>ניק:</dt><dd>\n\t<span>{USERS.get(user, "")}</span> [ <a href="./ucp.php">edit</a> ]</dd>'
+                f'<dt>rank:</dt><dd><span class="username">other</span></dd></dl></div></form>')
+    return f'<html><body>{header}<div id="page-body">{body}</div></body></html>'
+
+
 def page_for(user, html):
+    """A demo page as the forum sends it to this user: a guest has no header, and the header's
+    menu is filled in later (no "your profile" link yet)."""
     s = BeautifulSoup(html, 'html.parser')
     header = s.select_one('#username_logged_in')
     if user == '1':
         header.decompose()
     else:
-        for el in header.select('.my_other_name, .username'):
-            el.string = USERS[user]
         for a in header.select('a[href*="mode=viewprofile"]'):
-            a['href'] = re.sub(r'u=\d+', 'u=' + user, a['href'])
+            a.decompose()
+        header['data-test-user'] = USERS[user]  # for the test to see who the page was for
     return str(s)
 
 
@@ -67,12 +85,15 @@ class Forum(http.server.BaseHTTPRequestHandler):
 
     def do_GET(self):
         path = urllib.parse.urlparse(self.path).path
+        if path == '/forum/download/file.php':
+            # phpBB answers an avatar before it looks at the session, so it never changes the cookies
+            return self.answer(base64.b64decode('R0lGODlhAQABAIAAAP///wAAACwAAAAAAQABAAACAkQBADs='), 'image/gif')
         if path.endswith('.php') or path == '/forum/':
             cookies = dict(c.split('=', 1) for c in (self.headers.get('Cookie') or '').split('; ') if '=' in c)
             user, set_cookies = who(cookies)
             if os.environ.get('ACCOUNTS_DEBUG'):
                 print('   ', self.path[7:47], cookies.get(PREFIX + 'u'), cookies.get(PREFIX + 'k'), '->', user, set_cookies)
-            body = page_for(user, render.PAGES[path]()) if path in render.PAGES else                 '<html><body><div id="page-body"></div></body></html>'
+            body = page_for(user, render.PAGES[path]() if path in render.PAGES else other_page(user, path))
             return self.answer(body.encode(), 'text/html; charset=utf-8', set_cookies)
         file = os.path.normpath(os.path.join(render.SITE, urllib.parse.unquote(path).lstrip('/')))
         if file.startswith(render.SITE) and os.path.isfile(file):
@@ -161,8 +182,8 @@ class Test:
         return self.topic
 
     def topic_user(self):
-        el = self.topic.query_selector('#username_logged_in .my_other_name')
-        return el.text_content().strip() if el else None
+        el = self.topic.query_selector('#username_logged_in')
+        return el.get_attribute('data-test-user') if el else None
 
     def popup(self):
         page = self.ctx.new_page()
@@ -230,7 +251,7 @@ def run(t):
     t.ctx.pages[-1].wait_for_timeout(1200)
     t.open_topic()
     check('שמעון is saved too', [x['userId'] for x in t.saved()] == ['2', '3'])
-    check('the names come from the forum page', [x['name'] for x in t.saved()] == ['ראובן', 'שמעון'])
+    check('the names come from their profile pages, not the hidden header', [x['name'] for x in t.saved()] == ['ראובן', 'שמעון'])
 
     page = t.popup()
     rows = page.query_selector_all('.account_row')
@@ -273,9 +294,13 @@ def run(t):
     c = t.sign_in('4', remember=False)
     t.ctx.pages[-1].wait_for_timeout(1200)
     check('לוי is saved, without a key', '4' in [x['userId'] for x in t.saved()] and t.saved_cookies('4')['k'] == '')
+    levi = next(x for x in t.saved() if x['userId'] == '4')
+    check('without opening a forum page, his name comes from the forum', levi['name'] == 'לוי')
+    check('the address of his avatar', levi['avatarUrl'] == 'https://www.ivelt.com/forum/download/file.php?avatar=4_1.png&v=2')
+    check('and the picture itself is kept, for the popup', levi['avatar'].startswith('data:image/gif;base64,'))
     t.switch('ראובן')
     del sessions[c['sid']]
-    message = t.switch('4')  # no name yet, he never opened a forum page: "באנוצער 4"
+    message = t.switch('לוי')
     check('switching to the expired לוי says so', bool(message) and 'נישט אריינגעלאגט' in message)
     check('ראובן is still signed in', t.cookies()['u'] == '2')
     check('לוי is marked expired', next(x for x in t.saved() if x['userId'] == '4').get('expired') is True)
