@@ -54,7 +54,7 @@ function checkKey(e) {
     const isAltKey = e.altKey || e.getModifierState('AltGraph');
 
     if (e.code === "KeyA" && isAltKey) {
-		window.location.href = 'https://www.ivelt.com/forum/search.php?search_id=active_topics';
+		window.location.href = '/forum/search.php?search_id=active_topics';
 	}
 
     if (e.code === "KeyV" && isAltKey && post) {
@@ -79,13 +79,13 @@ function checkKey(e) {
 		try {
 			nextPage();
 		} catch {
-			console.log("attempted to go after last page");
+			// already on the last page
 		}
     } else if (e.key === "ArrowRight") {
 		try {
 			previousPage();
 		} catch {
-			console.log("attempted to go before first page");
+			// already on the first page
 		}
     } else if (e.key === "ArrowUp" && upDownArrowKeysEnabled()) {
 		scrollTop();

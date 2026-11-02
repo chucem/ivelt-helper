@@ -31,7 +31,7 @@ function checkLoginState() {
 
 getUserId('https://www.ivelt.com', 'phpbb3_sw7kk_u');
 
-const FORUM_HOSTS = /(^|\.)(ivelt\.com|yiddishworld\.com|198\.153\.76\.147)$/;
+const FORUM_HOSTS = /(^|\.)ivelt\.com$/;
 
 function isForumUrl(url) {
     try {

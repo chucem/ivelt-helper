@@ -19,16 +19,13 @@ function enchancePage() {
         // Add or remove the sticky-post class based on the parent's top position
         if (parentRect.top < 0 && parentRect.bottom > 30 && !firstStickyFound) {
           firstStickyFound = true;
-          // console.log(`found button set to stick. the parent.bottom is ${parentRect.bottom}, the parentRect.top is ${parentRect.top} `);
 
           if (!btn.classList.contains('sticky-post')) {
-            // console.log(`Adding 'sticky-post' to`, i);
             btn.style.left = `${btnRect.left}px`; // Keep the original X position
             btn.classList.add('sticky-post');
           }
         } else {
           if (btn.classList.contains('sticky-post')) {
-            // console.log(`Removing 'sticky-post' from`, i);
             btn.classList.remove('sticky-post');
             btn.style.left = '';
           }

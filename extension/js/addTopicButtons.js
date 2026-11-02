@@ -45,17 +45,19 @@ function getPMHref(id) {
     return null;
 }
 
-// The post's attached pictures: their alt is the file name, which the quoted text has between
-// [attachment] tags. Not [img] pictures, whose alt is just the word "בילד".
-function extractImageUrlsAndNames(contentElement) {
-    const images = contentElement.querySelectorAll(".attach-image img.postimage, .inline-attachment img.postimage");
+// The post's attached pictures: their alt is the file name. The ones placed in the text sit in
+// .inline-attachment and the quoted text has them between [attachment] tags; the ones attached at
+// the bottom sit in the .attachbox after .content, and the quoted text doesn't have them at all.
+// Not [img] pictures, whose alt is just the word "בילד".
+function extractImageUrlsAndNames(postElement) {
+    const images = postElement.querySelectorAll(".inline-attachment img.postimage, .attachbox img.postimage");
     const imageUrls = [];
 
     images.forEach(function(image) {
         // a thumbnail (&t=1) links to the full picture
         const link = image.closest('a[href*="download/file.php"]');
         const url = /[?&]t=1\b/.test(image.src) && link ? link.href : image.src;
-        imageUrls.push({url, name:image.alt});
+        imageUrls.push({url, name:image.alt, inline: !!image.closest('.inline-attachment')});
     });
 
     return imageUrls;
@@ -69,12 +71,22 @@ function replaceAttachmentsWithImgBBCode(text, imageData) {
     // In the text's order, each [attachment=N]name[/attachment] becomes the next picture with that
     // name, in the post's order. By name alone two pasted pictures, both "clipboard-image.jpg", would
     // both come out as the first one. A file that isn't a picture keeps just its name.
-    const unused = [...imageData];
-    return text.replace(/\[attachment=\d+\]([\s\S]*?)\[\/attachment\]/g, (tag, inner) => {
+    const unused = imageData.filter(image => image.inline);
+    text = text.replace(/\[attachment=\d+\]([\s\S]*?)\[\/attachment\]/g, (tag, inner) => {
         const name = inner.replace(/<!--.*?-->/g, '').trim();
         const i = unused.findIndex(image => image.name === name);
         return i === -1 ? name : `[img]${unused.splice(i, 1)[0].url}[/img]`;
     });
+
+    // The pictures attached at the bottom go at the end of the quote, the way the post shows them
+    const bottom = imageData.filter(image => !image.inline).map(image => `[img]${image.url}[/img]`).join('\n');
+    if (!bottom) {
+        return text;
+    }
+    const end = text.lastIndexOf('[/quote]');
+    return end === -1
+        ? `${text.trimEnd()}\n${bottom}`
+        : `${text.slice(0, end).trimEnd()}\n${bottom}\n${text.slice(end)}`;
 }
 async function addBtn() {
     let onlyLastQuote = window.location.href.includes("last=true");
@@ -114,7 +126,8 @@ async function addBtn() {
 
         let contentElement = btn.parentElement.getElementsByClassName("content").item(0)
 
-        const imageData = extractImageUrlsAndNames(contentElement);
+        // the whole post, since the pictures attached at the bottom are outside .content
+        const imageData = extractImageUrlsAndNames(btn.parentElement);
 
         let id = btn.parentElement.getAttribute("id") || ""
 
@@ -227,7 +240,8 @@ function addQuoteLastButton(btn, isPosting) {
 
 
 function getPostLink(postID){
-    return `https://www.ivelt.com/forum/viewtopic.php?p=${postID}#p${postID}`;
+    // the address the user is on (ivelt.com or www.ivelt.com), where they're signed in
+    return `${location.origin}/forum/viewtopic.php?p=${postID}#p${postID}`;
 }
 
 function getPostDetails(post_id, prefix = 'p'){
@@ -447,13 +461,11 @@ const forceRefresh = document.getElementById("iveltHelperSettings").getAttribute
 
 if (!forceRefresh && cachedData && lastFetchTime && now - lastFetchTime < CACHE_EXPIRY_MS) {
     // Use cached data if available and valid
-    console.log("Using cached topic mapping.");
     return JSON.parse(cachedData);
     }
 
 // Otherwise, fetch new data from Google Sheets
     try {
-        console.log('fetching topic mappings form google sheet');
         const csvText = await requestTopicMappingCsv();
         const mappings = {};
 
@@ -469,7 +481,6 @@ if (!forceRefresh && cachedData && lastFetchTime && now - lastFetchTime < CACHE_
         localStorage.setItem(CACHE_KEY, JSON.stringify(mappings));
         localStorage.setItem(CACHE_TIME_KEY, now.toString());
 
-        console.log("Fetched and cached new topic mapping.");
         return mappings;
     } catch (error) {
         console.error("Error fetching topic mappings:", error);
@@ -541,7 +552,8 @@ async function quoteInOtherTopic(url, postID, targetTopicId, imageData) {
         res = withTopicLink(replaceAttachmentsWithImgBBCode(res, imageData), postID);
 
         // Open the reply window
-        const replyURL = `https://www.ivelt.com/forum/posting.php?mode=reply&t=${targetTopicId}`;
+        // on the same address as this page: on another one the quote can't be put into its text box
+        const replyURL = `${location.origin}/forum/posting.php?mode=reply&t=${targetTopicId}`;
         const replyWindow = window.open(replyURL, '_blank');
 
         if (!replyWindow) {
