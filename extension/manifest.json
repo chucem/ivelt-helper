@@ -90,20 +90,33 @@
       ],
       "js": [
         "js/settingsReady.js",
+        "js/splitNotifications.js",
+        "js/addTopicButtons.js"
+      ],
+      "world": "MAIN"
+    },
+    {
+      "matches": [
+        "*://*.ivelt.com/*"
+      ],
+      "js": [
         "js/keyboardShortcuts.js",
         "js/pageEnhancements.js",
-        "js/splitNotifications.js",
-        "js/addTopicButtons.js",
         "js/addGoogleSearch.js"
+      ]
+    },
+    {
+      "matches": [
+        "*://*.ivelt.com/forum/viewtopic.php*"
       ],
+      "js": ["js/settingsReady.js", "js/print.js"],
       "world": "MAIN"
     },
     {
       "matches": [
         "*://*.ivelt.com/forum/viewtopic.php*"
       ],
-      "js": ["js/settingsReady.js", "js/print.js", "js/newResponseNotification.js"],
-      "world": "MAIN"
+      "js": ["js/newResponseNotification.js"]
     },
     {
       "matches": [

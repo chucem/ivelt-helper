@@ -1,4 +1,5 @@
-whenIveltSettingsReady(function () {
+// Runs in the extension's own world: the settings come straight from its storage
+if (document.getElementById('page-body')) chrome.storage.local.get(['backgroundSync', 'backgroundSyncPosts'], function (items) {
     if (window.location.pathname !== '/forum/viewtopic.php') return ;
 
   // not every viewtopic page is a topic, e.g. Cloudflare's challenge page or an error
@@ -6,9 +7,8 @@ whenIveltSettingsReady(function () {
   let countMatch = pagination && pagination.innerHTML.match(/(\d+) תגובות/);
   let topicLink = document.querySelector("h2.topic-title > a");
   let forumLink = document.getElementsByClassName("left-box arrow-right")[0];
-  let settings = document.getElementById("iveltHelperSettings");
   let posts = document.getElementsByClassName("post has-profile");
-  if (!countMatch || !topicLink || !forumLink || !settings || !posts.length) return;
+  if (!countMatch || !topicLink || !forumLink || !posts.length) return;
 
   let currentCount = countMatch[1];
   let lastPost = posts[posts.length - 1];
@@ -26,8 +26,8 @@ whenIveltSettingsReady(function () {
   let title = document.title;
   // setting was unchecked by the user
 
-  let backgroundSync = settings.getAttribute("data-background-sync") === "true";
-  let backgroundSyncPosts = settings.getAttribute("data-background-sync-posts");
+  let backgroundSync = items.backgroundSync === true;
+  let backgroundSyncPosts = items.backgroundSyncPosts;
   if (!backgroundSync || !backgroundSyncPosts) return;
 
   let interval = parseInt(backgroundSyncPosts);

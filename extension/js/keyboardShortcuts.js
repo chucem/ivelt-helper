@@ -14,10 +14,12 @@ function scrollBottom() {
 	window.scrollTo({ top: document.body.scrollHeight, behavior: 'instant' } );
 }
 
+// Runs in the extension's own world, so the setting comes straight from its storage, and a change
+// in the settings applies right away. On unless the user turned it off.
+let upDownArrowKeys = true;
+
 function upDownArrowKeysEnabled() {
-	const settings = document.getElementById("iveltHelperSettings");
-	// Enabled unless the user explicitly turned it off in the extension settings
-	return !settings || settings.getAttribute("data-up-down-arrow-keys") !== "false";
+	return upDownArrowKeys;
 }
 
 function sendPost(post) {
@@ -100,7 +102,11 @@ if (document.getElementById("page-body")) {
 	if (post) {
 		post.setAttribute("title", "שיק (Ctrl+Enter)");
 	}
-	document.onkeydown = checkKey;
+	chrome.storage.local.get('upDownArrowKeys', items => { upDownArrowKeys = items.upDownArrowKeys !== false; });
+	chrome.storage.onChanged.addListener((changes, area) => {
+		if (area === 'local' && changes.upDownArrowKeys) upDownArrowKeys = changes.upDownArrowKeys.newValue !== false;
+	});
+	document.addEventListener("keydown", checkKey);
 
 	// Ctrl+Enter sends the post. phpBB's editor.js also binds Ctrl+Enter in textareas and
 	// clicks every submit button in the form (preview, post, ...), so together with ours the
