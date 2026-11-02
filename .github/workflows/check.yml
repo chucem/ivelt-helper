@@ -1,7 +1,7 @@
-# Checks the extension's code on every push to dev or master and on every pull request that
-# changes it: every script parses, the manifest is valid and every file it and the extension's
-# pages name exists (.github/scripts/check-extension.mjs), and ESLint finds no real mistakes
-# (eslint.config.mjs). Node is already on the runner, so nothing is installed but ESLint.
+# Checks the extension's code on every pull request, and on every push to dev or master that
+# changes it: every script parses, the manifest is valid and every file it, the extension's pages
+# and stylesheets name exists (.github/scripts/check-extension.mjs), and ESLint finds no real
+# mistakes (eslint.config.mjs). Node is already on the runner, so nothing is installed but ESLint.
 
 name: Check
 
@@ -15,12 +15,8 @@ on:
       - eslint.config.mjs
       - .github/scripts/check-extension.mjs
       - .github/workflows/check.yml
+  # every pull request, whatever it changes, so the result is always there to look at before merging
   pull_request:
-    paths:
-      - extension/**
-      - eslint.config.mjs
-      - .github/scripts/check-extension.mjs
-      - .github/workflows/check.yml
   workflow_dispatch:
 
 permissions:
