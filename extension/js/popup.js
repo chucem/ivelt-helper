@@ -106,6 +106,22 @@ function initThemeSwatches() {
 
             container.appendChild(swatch);
         });
+        makeRoomForScrollbar();
+    });
+}
+
+// The browser sizes the popup to its content, and only then a scrollbar comes (a tall popup, with
+// the accounts and the colors), which takes its width from the content: the colors stuck out of
+// their card. So then the popup asks for the scrollbar's width more
+function makeRoomForScrollbar() {
+    requestAnimationFrame(function () {
+        const body = document.body;
+        const scrollbar = window.innerWidth - document.documentElement.clientWidth;
+        body.style.minWidth = '';
+        body.style.width = 'max-content';
+        const content = body.getBoundingClientRect().width;
+        body.style.width = '';
+        body.style.minWidth = scrollbar > 0 ? Math.ceil(content + scrollbar) + 'px' : '';
     });
 }
 
@@ -124,18 +140,20 @@ function initAccounts() {
             // signed in with an account that isn't saved yet
             document.getElementById('save_account').hidden = !currentId || accounts.some(a => a.userId === currentId);
 
-            // the signed-in account's name and avatar were never looked up (no forum page has been
-            // opened with it yet): saving it again looks them up, once
+            // no name yet for the signed-in account: the forum's pages find it (js/accounts.js), its
+            // own profile page always has it
             const current = accounts.find(a => a.userId === currentId);
-            if (current && !current.profileCheckedAt && !accountNameAsked) {
-                accountNameAsked = true;
-                chrome.runtime.sendMessage({ type: 'saveAccount' }, initAccounts);
-            }
+            document.getElementById('open_own_profile').hidden = !current || !!current.name;
         });
     });
 }
 
-let accountNameAsked = false;
+function open_own_profile() {
+    chrome.cookies.get({ url: 'https://www.ivelt.com', name: 'phpbb3_sw7kk_u' }, function (cookie) {
+        if (cookie)
+            openForumLink('https://www.ivelt.com/forum/memberlist.php?mode=viewprofile&u=' + encodeURIComponent(cookie.value));
+    });
+}
 
 function showAccounts(accounts, currentId) {
     const list = document.getElementById('accountsList');
@@ -194,6 +212,12 @@ function showAccounts(accounts, currentId) {
         });
         list.appendChild(row);
     });
+
+    // with many accounts the list scrolls, the signed-in one is shown
+    const current = list.querySelector('.account_row.current');
+    if (current)
+        current.scrollIntoView({ block: 'nearest' });
+    makeRoomForScrollbar();
 }
 
 function showAccountsMessage(text) {
@@ -268,6 +292,7 @@ document.addEventListener('DOMContentLoaded', initThemeSwatches);
 document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('add_account').addEventListener('click', add_account);
     document.getElementById('save_account').addEventListener('click', save_account);
+    document.getElementById('open_own_profile').addEventListener('click', open_own_profile);
     initAccounts();
 });
 

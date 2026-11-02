@@ -49,10 +49,10 @@ def who(cookies):
 
 def other_page(user, path):
     """Any other forum page, with the forum's header as the forum sends it: its menu (with the
-    "your profile" link) is filled in later by the forum's script, and the name may be hidden.
+    "your profile" link) is filled in later by the forum's script, and here the name is hidden.
     A profile page has the name and the avatar, as on the real forum."""
     header = ('<ul><li id="username_logged_in"><div class="header-profile dropdown-container">'
-              '<a class="header-avatar dropdown-trigger" href="./ucp.php"><span class="username">הא?</span></a>'
+              '<a class="header-avatar dropdown-trigger" href="./ucp.php"><span class="username"></span></a>'
               '<div class="dropdown"><ul class="dropdown-contents"></ul></div></div></li></ul>')
     body = ''
     if path == '/forum/memberlist.php':
@@ -64,7 +64,7 @@ def other_page(user, path):
     return f'<html><body>{header}<div id="page-body">{body}</div></body></html>'
 
 
-def page_for(user, html):
+def page_for(user, html, show_name=True):
     """A demo page as the forum sends it to this user: a guest has no header, and the header's
     menu is filled in later (no "your profile" link yet)."""
     s = BeautifulSoup(html, 'html.parser')
@@ -74,6 +74,8 @@ def page_for(user, html):
     else:
         for a in header.select('a[href*="mode=viewprofile"]'):
             a.decompose()
+        for el in header.select('.my_other_name, .username') if show_name else []:
+            el.string = USERS[user]
         header['data-test-user'] = USERS[user]  # for the test to see who the page was for
     return str(s)
 
@@ -85,6 +87,11 @@ class Forum(http.server.BaseHTTPRequestHandler):
 
     def do_GET(self):
         path = urllib.parse.urlparse(self.path).path
+        if (self.headers.get('Origin') or '').startswith('chrome-extension://') and \
+                path in ('/forum/memberlist.php', '/forum/download/file.php'):
+            # like Cloudflare on the real forum may: the extension's background gets its check page
+            # for these, so the names and avatars have to come through the forum's own pages
+            return self.answer(b'<html><title>Just a moment...</title></html>', 'text/html', status=403)
         if path == '/forum/download/file.php':
             # phpBB answers an avatar before it looks at the session, so it never changes the cookies
             return self.answer(base64.b64decode('R0lGODlhAQABAIAAAP///wAAACwAAAAAAQABAAACAkQBADs='), 'image/gif')
@@ -93,7 +100,7 @@ class Forum(http.server.BaseHTTPRequestHandler):
             user, set_cookies = who(cookies)
             if os.environ.get('ACCOUNTS_DEBUG'):
                 print('   ', self.path[7:47], cookies.get(PREFIX + 'u'), cookies.get(PREFIX + 'k'), '->', user, set_cookies)
-            body = page_for(user, render.PAGES[path]() if path in render.PAGES else other_page(user, path))
+            body = page_for(user, render.PAGES[path]()) if path in render.PAGES else                 page_for(user, other_page(user, path), show_name=False)
             return self.answer(body.encode(), 'text/html; charset=utf-8', set_cookies)
         file = os.path.normpath(os.path.join(render.SITE, urllib.parse.unquote(path).lstrip('/')))
         if file.startswith(render.SITE) and os.path.isfile(file):
@@ -251,7 +258,7 @@ def run(t):
     t.ctx.pages[-1].wait_for_timeout(1200)
     t.open_topic()
     check('שמעון is saved too', [x['userId'] for x in t.saved()] == ['2', '3'])
-    check('the names come from their profile pages, not the hidden header', [x['name'] for x in t.saved()] == ['ראובן', 'שמעון'])
+    check('the names come from the forum header', [x['name'] for x in t.saved()] == ['ראובן', 'שמעון'])
 
     page = t.popup()
     rows = page.query_selector_all('.account_row')
@@ -295,7 +302,14 @@ def run(t):
     t.ctx.pages[-1].wait_for_timeout(1200)
     check('לוי is saved, without a key', '4' in [x['userId'] for x in t.saved()] and t.saved_cookies('4')['k'] == '')
     levi = next(x for x in t.saved() if x['userId'] == '4')
-    check('without opening a forum page, his name comes from the forum', levi['name'] == 'לוי')
+    check('the background alone can\'t get his name (Cloudflare)', levi['name'] == '')
+    # a page whose header hides his name: it's looked up on his profile page
+    hidden = t.ctx.new_page()
+    hidden.goto(render.FORUM + 'index.php')
+    hidden.wait_for_timeout(1200)
+    hidden.close()
+    levi = next(x for x in t.saved() if x['userId'] == '4')
+    check('a forum page with his name hidden looks it up on his profile', levi['name'] == 'לוי')
     check('the address of his avatar', levi['avatarUrl'] == 'https://www.ivelt.com/forum/download/file.php?avatar=4_1.png&v=2')
     check('and the picture itself is kept, for the popup', levi['avatar'].startswith('data:image/gif;base64,'))
     t.switch('ראובן')

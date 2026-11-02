@@ -22,6 +22,7 @@ const ACCOUNT_COOKIES = ['u', 'k', 'sid'].map(name => ACCOUNT_COOKIE_PREFIX + na
 const ACCOUNTS_KEY = 'savedAccounts';
 const ACCOUNT_ADD_KEY = 'accountAddUntil'; // session storage: the next account to sign in gets saved, until then
 const ACCOUNT_ADD_TIME = 30 * 60 * 1000;
+const SEEN_NAMES_KEY = 'seenAccountNames'; // session storage: the names forum pages showed, for accounts not saved yet
 const PROFILE_CHECK_TIME = 24 * 60 * 60 * 1000; // the name and avatar are looked up again after a day
 const AVATAR_MAX_BYTES = 200 * 1024;
 const FORUM_URL = 'https://www.ivelt.com';
@@ -129,15 +130,15 @@ async function saveSignedInAccount(add){
   if(!account){
     if(!add)
       return null;
-    account = { userId, name: '', avatar: '' };
+    // the name a forum page showed before it was saved, the picture comes with the next page
+    const { [SEEN_NAMES_KEY]: seenNames } = await chrome.storage.session.get(SEEN_NAMES_KEY);
+    account = { userId, name: (seenNames || {})[userId] || '', avatar: '' };
     accounts.push(account);
   }
   account.cookies = await readAccountCookies();
   account.expired = false;
   account.savedAt = Date.now();
   await setSavedAccounts(accounts);
-
-  await updateProfile(userId);
   return account;
 }
 
@@ -200,7 +201,6 @@ async function switchAccount(userId){
     target.savedAt = Date.now();
     await setSavedAccounts(accounts);
     reloadForumTabs();
-    updateProfile(userId);
     return { switched: true };
   } finally {
     accountSwitching = false;
@@ -212,98 +212,49 @@ async function forgetAccount(userId){
   await setSavedAccounts(accounts.filter(a => a.userId !== userId));
 }
 
-// A forum page is signed in (js/accounts.js): the account's name and avatar are looked up, now and then
-async function accountSeen(){
+// A forum page is signed in (js/accounts.js): when the saved account's name and avatar are due to be
+// looked up (never yet, or a day ago), the page is asked to, with the account's number. Only the
+// forum's pages can: the background's own requests get Cloudflare's check page (403)
+async function accountSeen(request){
   const userId = await signedInUserId();
-  if(userId)
-    await updateProfile(userId);
+  const account = userId && (await getSavedAccounts()).find(a => a.userId === userId);
+  if(userId && !account && request.name){
+    const { [SEEN_NAMES_KEY]: seenNames } = await chrome.storage.session.get(SEEN_NAMES_KEY);
+    await chrome.storage.session.set({ [SEEN_NAMES_KEY]: { ...seenNames, [userId]: String(request.name).trim().slice(0, 100) } });
+  }
+  if(!account)
+    return {};
+  // the account's own profile page has them right there, the popup links to it when the name is missing
+  const ownProfile = request.profileOf === userId;
+  if(!ownProfile && (account.profileCheckedAt > Date.now() - PROFILE_CHECK_TIME || lookUpAsked.get(userId) > Date.now() - 10 * 60 * 1000))
+    return {};
+  // one page at a time: if its lookup fails, the next page after a while tries again
+  lookUpAsked.set(userId, Date.now());
+  return { lookUp: userId };
 }
 
-const profilesUpdating = new Set();
+const lookUpAsked = new Map();
 
-// The saved account's name and avatar, from its profile page: the forum's header may hide the name
-// (the forum's "hide my name", or this extension's). The picture is downloaded once for each
-// address it has (avatarUrl). Once a day, or always when asked to (force)
-async function updateProfile(userId, force){
-  let account = (await getSavedAccounts()).find(a => a.userId === userId);
-  if(!account || profilesUpdating.has(userId) || (!force && account.profileCheckedAt > Date.now() - PROFILE_CHECK_TIME))
+// What the page found on the profile page: kept only for the account that is signed in, and only
+// a picture as data (not an address the popup would load)
+async function accountProfile(request){
+  const userId = await signedInUserId();
+  if(!userId || request.userId !== userId)
     return;
+  const avatar = typeof request.avatar === 'string' && request.avatar.length <= AVATAR_MAX_BYTES * 1.4 &&
+    /^data:image\/(png|jpeg|gif|webp);base64,[\w+/=]+$/.test(request.avatar) ? request.avatar : '';
 
-  profilesUpdating.add(userId);
-  try {
-    const profile = await fetchProfile(userId);
-    if(!profile)
-      return;
-    const avatar = profile.avatarUrl === account.avatarUrl && account.avatar ? account.avatar : await avatarData(profile.avatarUrl);
-
-    // read again after the downloads, so nothing saved meanwhile is lost
-    const accounts = await getSavedAccounts();
-    account = accounts.find(a => a.userId === userId);
-    if(!account)
-      return;
-    Object.assign(account, { name: profile.name || account.name, avatarUrl: profile.avatarUrl, avatar, profileCheckedAt: Date.now() });
-    await setSavedAccounts(accounts);
-  } finally {
-    profilesUpdating.delete(userId);
-  }
-}
-
-// The name and avatar's address on a profile page (memberlist.php?mode=viewprofile), where
-// js/profileCards.js reads them too: .profile-avatar img and .profile-details' username
-async function fetchProfile(userId){
-  let html;
-  try {
-    const response = await fetch(`https://www.ivelt.com/forum/memberlist.php?mode=viewprofile&u=${userId}`, { credentials: 'include' });
-    if(!response.ok)
-      return null;
-    html = await response.text();
-  } catch(e) {
-    return null;
-  }
-
-  const start = html.indexOf('id="viewprofile"');
-  if(start < 0)
-    return null;
-  const page = html.slice(start);
-  const text = value => value.replace(/&quot;/g, '"').replace(/&#0?39;/g, "'").replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
-
-  const avatarAt = page.search(/class="[^"]*\bprofile-avatar\b/);
-  const image = avatarAt < 0 ? null : /<img[^>]*>/.exec(page.slice(avatarAt, avatarAt + 2000));
-  // a picture that loads late has its address in data-src
-  const avatarSrc = image && (/\sdata-src="([^"]+)"/.exec(image[0]) || /\ssrc="([^"]+)"/.exec(image[0]));
-
-  // the first line, the name: in a span of its own on one's own profile, colored on someone else's
-  const detailsAt = page.search(/class="[^"]*\bprofile-details\b/);
-  const firstLine = detailsAt < 0 ? '' : (/<dd[^>]*>([\s\S]*?)<\/dd>/.exec(page.slice(detailsAt)) || [])[1] || '';
-  const name = /<span[^>]*>([^<]+)</.exec(firstLine);
-
-  const avatarUrl = avatarSrc ? new URL(text(avatarSrc[1]), 'https://www.ivelt.com/forum/').href : '';
-  return {
-    name: name ? text(name[1]).trim().slice(0, 100) : '',
-    avatarUrl: /^https:\/\/([\w-]+\.)*ivelt\.com\//.test(avatarUrl) ? avatarUrl : ''
-  };
-}
-
-// The avatar as a data: address, kept with the account: the forum doesn't let other pages (the
-// popup) show its pictures. The background may download it, it has the forum's permission
-async function avatarData(url){
-  if(!url)
-    return '';
-  try {
-    const response = await fetch(url, { credentials: 'include' });
-    const type = (response.headers.get('content-type') || '').split(';')[0].trim();
-    if(!response.ok || !type.startsWith('image/'))
-      return '';
-    const bytes = new Uint8Array(await response.arrayBuffer());
-    if(bytes.length > AVATAR_MAX_BYTES)
-      return '';
-    let binary = '';
-    for(let i = 0; i < bytes.length; i += 0x8000)
-      binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
-    return `data:${type};base64,${btoa(binary)}`;
-  } catch(e) {
-    return '';
-  }
+  const accounts = await getSavedAccounts();
+  const account = accounts.find(a => a.userId === userId);
+  if(!account)
+    return;
+  Object.assign(account, {
+    name: String(request.name || '').trim().slice(0, 100) || account.name,
+    avatarUrl: /^https:\/\/([\w-]+\.)*ivelt\.com\//.test(request.avatarUrl) ? request.avatarUrl : '',
+    avatar,
+    profileCheckedAt: Date.now()
+  });
+  await setSavedAccounts(accounts);
 }
 
 // The signed-in account's cookies changed: a new session or key is saved again, and while adding,
@@ -331,15 +282,18 @@ chrome.storage.onChanged.addListener((changes, area) => {
   // turned off: the saved cookies go
   if(area === 'local' && changes.multiAccounts && changes.multiAccounts.newValue !== true){
     chrome.storage.local.remove(ACCOUNTS_KEY);
-    chrome.storage.session.remove(ACCOUNT_ADD_KEY);
+    chrome.storage.session.remove([ACCOUNT_ADD_KEY, SEEN_NAMES_KEY]);
   }
 });
 
-// Only the extension's own pages (the popup) may ask for these, not the forum's pages
+// The forum's pages only tell what they see (js/accounts.js); only the extension's own pages (the
+// popup) may ask for the rest
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
-  if(request.type === 'accountSeen'){
-    accountSeen();
-    return;
+  const fromForumPage = sender.id === chrome.runtime.id && /^https:\/\/([\w-]+\.)*ivelt\.com\//.test(sender.url || '');
+  if(fromForumPage && (request.type === 'accountSeen' || request.type === 'accountProfile')){
+    (request.type === 'accountSeen' ? accountSeen(request) : accountProfile(request))
+      .then(answer => sendResponse(answer || {}), () => sendResponse({}));
+    return true;
   }
 
   const fromExtensionPage = sender.id === chrome.runtime.id && (sender.url || '').startsWith(chrome.runtime.getURL(''));

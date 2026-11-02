@@ -157,8 +157,13 @@ body {
   gap: 2px;
   padding: 0 6px;
   direction: rtl;
+  /* five and a half accounts, more scroll; the half one shows there's more */
+  max-height: 188px;
+  overflow-y: auto;
+  scrollbar-width: thin;
 }
 .account_row {
+  flex: none;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -179,8 +184,10 @@ body {
   cursor: default;
   font-weight: 600;
 }
+/* the signed-in account is tinted, so it stands out from the others */
+.account_row.current,
 .account_row.current:hover {
-  background: none;
+  background: color-mix(in srgb, var(--ui-accent) 14%, transparent);
 }
 .account_avatar {
   flex: none;
@@ -195,11 +202,10 @@ body {
   line-height: 24px;
   text-align: center;
 }
+/* the whole name, the popup gets wider for a long one */
 .account_name {
-  flex: 1;
-  overflow: hidden;
+  flex: 1 0 auto;
   white-space: nowrap;
-  text-overflow: ellipsis;
 }
 .account_status {
   font-size: 11px;
@@ -236,4 +242,16 @@ body {
   text-align: right;
   direction: rtl;
   white-space: normal;
+}
+.accounts_hint {
+  margin: 6px 10px 2px;
+  font-size: 12px;
+  color: var(--ui-muted);
+  text-align: right;
+  direction: rtl;
+  white-space: normal;
+  cursor: pointer;
+}
+.accounts_hint a {
+  color: var(--ui-link);
 }
