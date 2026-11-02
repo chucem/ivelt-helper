@@ -36,4 +36,4 @@ jobs:
         run: node .github/scripts/check-extension.mjs
 
       - name: ESLint
-        run: npx --yes eslint@9.17.0 extension
+        run: npx --yes eslint@10.13.0 extension
