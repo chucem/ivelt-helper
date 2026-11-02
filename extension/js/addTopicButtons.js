@@ -378,18 +378,26 @@ function copyQuote(url, post_id, imageData){
     ).catch(e => iveltNotify(fetchFailedMessage(e), 5000))
 }
 
-// A "קעפל: <topic>" link to the post above the quote, the way the forum's own private-message quote
-// page writes it (that page is where most quotes come from, so it's the line people know). Not on a
-// private message, which has no topic.
+// The link to the quoted post, as chosen in the settings (quoteSourceLink): a "קעפל: <topic>" line
+// above the quote, the way the forum's own private-message quote page writes it (where most quotes
+// come from, so it's the line people know), a "מקור" link below it, both, or none.
+// Not on a private message, which has no topic.
 function withTopicLink(text, postID) {
-    if (/^\s*\[url=[^\]]*\]קעפל:/.test(text)) {
-        return text;
-    }
+    const choice = document.getElementById("iveltHelperSettings").getAttribute("data-quote-source-link");
+    const topicLine = /^\s*\[url=[^\]]*\]קעפל:[^\n]*?\[\/url\]\s*/;
+    const forumLine = text.match(topicLine);
+    text = text.replace(topicLine, '');
+
     const title = document.querySelector('.topic-title a')?.textContent.trim();
     if (!title) {
-        return text;
+        // nothing to build our own links from: keep what the forum wrote
+        return (forumLine ? forumLine[0] : '') + text;
     }
-    return `[url=${getPostLink(postID)}]קעפל: ${title}[/url]\n\n${text.trimStart()}`;
+    const link = getPostLink(postID);
+    const above = choice === 'source' || choice === 'none' ? '' :
+        (forumLine ? forumLine[0].trim() : `[url=${link}]קעפל: ${title}[/url]`) + '\n\n';
+    const below = choice === 'source' || choice === 'both' ? ` [url=${link}]מקור[/url]` : '';
+    return above + (below ? text.trimEnd() + below + '\n' : text);
 }
 
 function iveltNotify(message, ms = 1500){

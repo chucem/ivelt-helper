@@ -2,7 +2,7 @@
 	if(!document.getElementById('page-body')) return; // not the forum, e.g. Cloudflare's check page
 
 	if(chrome.storage){
-		chrome.storage.local.get(['alwaysCopyTopic', 'stickyPostButtons', 'copyAttachments', 'forceUpdateTopicMapCache', 'cachedTopicMappingExpire', 'hideUserName', 'warnOnLosingPost','backgroundSync', 'backgroundSyncPosts', 'ShowMultiNotifs', 'upDownArrowKeys', 'copyPostLink', 'printShowLikes', 'printLikesStyle', 'editorUndo'], function(items){
+		chrome.storage.local.get(['alwaysCopyTopic', 'stickyPostButtons', 'copyAttachments', 'forceUpdateTopicMapCache', 'cachedTopicMappingExpire', 'hideUserName', 'warnOnLosingPost','backgroundSync', 'backgroundSyncPosts', 'ShowMultiNotifs', 'upDownArrowKeys', 'copyPostLink', 'printShowLikes', 'printLikesStyle', 'editorUndo', 'quoteSourceLink'], function(items){
 			if(items.hideUserName){
 				let userName = document.querySelector('.header-avatar .username');
 				if (userName) {
@@ -59,6 +59,7 @@
 			e.setAttribute('data-print-show-likes',items.printShowLikes);
 			e.setAttribute('data-print-likes-style',items.printLikesStyle);
 			e.setAttribute('data-editor-undo',items.editorUndo);
+			e.setAttribute('data-quote-source-link',items.quoteSourceLink);
 			document.body.appendChild(e);
 			// the page scripts wait for this (js/settingsReady.js), DOM events reach the page's world
 			document.dispatchEvent(new Event('iveltHelperSettingsReady'));

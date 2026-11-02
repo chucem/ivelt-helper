@@ -4,6 +4,7 @@ const defualtPreferences = {
   hideUserName: false,
   alwaysCopyTopic: false,
   copyAttachments: true,
+  quoteSourceLink: 'topic', // the link to the quoted post: 'topic' line above, 'source' below, 'both' or 'none'
   getBrowserNotifications: false,
   popupSameTab: false,
   warnOnLosingPost: true,
