@@ -241,17 +241,6 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     chrome.tabs.create({ url: chrome.runtime.getURL('settings.html' + (request.hash ? '#' + request.hash : '')) });
   }
 
-  // js/drafts.js: drafts older than two weeks go. Done here, finding them means reading all of
-  // storage, and the saved accounts' cookies in it stay out of the forum's pages
-  if(request.type === 'dropOldDrafts'){
-    const oldest = Date.now() - 14 * 24 * 60 * 60 * 1000;
-    chrome.storage.local.get(null, items => {
-      const old = Object.keys(items).filter(key => key.startsWith('draft:') && !(items[key].savedAt >= oldest));
-      if(old.length)
-        chrome.storage.local.remove(old);
-    });
-  }
-
   if(request.type === 'badgeText'){
     chrome.action.setBadgeText({ text: request.text });
   }

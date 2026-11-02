@@ -128,22 +128,28 @@ function makeRoomForScrollbar() {
 // The saved accounts (background.accounts.js): a click switches to one, the background does the
 // switching and reloads the forum's tabs. Shown when turned on in the settings
 function initAccounts() {
-    chrome.storage.local.get(['multiAccounts', 'savedAccounts'], function (items) {
+    chrome.storage.local.get('multiAccounts', function (items) {
         if (!items.multiAccounts)
             return;
         document.getElementById('accountsSection').hidden = false;
 
-        chrome.cookies.get({ url: 'https://www.ivelt.com', name: 'phpbb3_sw7kk_u' }, function (cookie) {
-            const currentId = cookie && cookie.value !== '1' ? cookie.value : '';
-            const accounts = items.savedAccounts || [];
-            showAccounts(accounts, currentId);
-            // signed in with an account that isn't saved yet
-            document.getElementById('save_account').hidden = !currentId || accounts.some(a => a.userId === currentId);
+        // the background keeps them, it gives the list without their cookies
+        chrome.runtime.sendMessage({ type: 'listAccounts' }, function (list) {
+            if (chrome.runtime.lastError || !list || !list.accounts)
+                return;
+            const accounts = list.accounts;
 
-            // no name yet for the signed-in account: the forum's pages find it (js/accounts.js), its
-            // own profile page always has it
-            const current = accounts.find(a => a.userId === currentId);
-            document.getElementById('open_own_profile').hidden = !current || !!current.name;
+            chrome.cookies.get({ url: 'https://www.ivelt.com', name: 'phpbb3_sw7kk_u' }, function (cookie) {
+                const currentId = cookie && cookie.value !== '1' ? cookie.value : '';
+                showAccounts(accounts, currentId);
+                // signed in with an account that isn't saved yet
+                document.getElementById('save_account').hidden = !currentId || accounts.some(a => a.userId === currentId);
+
+                // no name yet for the signed-in account: the forum's pages find it (js/accounts.js), its
+                // own profile page always has it
+                const current = accounts.find(a => a.userId === currentId);
+                document.getElementById('open_own_profile').hidden = !current || !!current.name;
+            });
         });
     });
 }

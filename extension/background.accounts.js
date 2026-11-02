@@ -14,12 +14,15 @@
 // - An account signed in without "remember me" has no key, it lasts only as long as its session.
 //   One the forum doesn't take any more is marked expired, and the popup offers to sign in again.
 //
-// The saved cookies are kept in chrome.storage.local only (never synced, and never put on the
-// forum's page). Turning the setting off deletes them.
+// The saved accounts, with their cookies, are kept in the extension's own IndexedDB database, not in
+// chrome.storage: the extension's scripts on the forum's pages can read chrome.storage, and every
+// change there is sent to all of them. The database only the background and the popup's messages
+// reach. It stays on this computer (never synced) and turning the setting off deletes it.
 
 const ACCOUNT_COOKIE_PREFIX = 'phpbb3_sw7kk_';
 const ACCOUNT_COOKIES = ['u', 'k', 'sid'].map(name => ACCOUNT_COOKIE_PREFIX + name);
-const ACCOUNTS_KEY = 'savedAccounts';
+const ACCOUNTS_DB = 'accounts'; // the database, with one store and one entry in it: the list
+const ACCOUNTS_KEY = 'savedAccounts'; // where they were kept before, in chrome.storage.local
 const ACCOUNT_ADD_KEY = 'accountAddUntil'; // session storage: the next account to sign in gets saved, until then
 const ACCOUNT_ADD_TIME = 30 * 60 * 1000;
 const SEEN_NAMES_KEY = 'seenAccountNames'; // session storage: the names forum pages showed, for accounts not saved yet
@@ -36,13 +39,52 @@ async function isMultiAccountsOn(){
   return multiAccounts === true;
 }
 
-async function getSavedAccounts(){
-  const items = await chrome.storage.local.get(ACCOUNTS_KEY);
-  return items[ACCOUNTS_KEY] || [];
+// One step on the database's store, in a transaction of its own: what the step's request gave
+function accountsStore(mode, step){
+  return new Promise((resolve, reject) => {
+    const open = indexedDB.open(ACCOUNTS_DB, 1);
+    open.onupgradeneeded = () => open.result.createObjectStore(ACCOUNTS_DB);
+    open.onerror = () => reject(open.error);
+    open.onsuccess = () => {
+      const db = open.result;
+      const transaction = db.transaction(ACCOUNTS_DB, mode);
+      const request = step(transaction.objectStore(ACCOUNTS_DB));
+      transaction.oncomplete = () => { db.close(); resolve(request.result); };
+      transaction.onerror = transaction.onabort = () => { db.close(); reject(transaction.error); };
+    };
+  });
 }
 
-function setSavedAccounts(accounts){
-  return chrome.storage.local.set({ [ACCOUNTS_KEY]: accounts });
+// Accounts saved by an earlier test build were in chrome.storage.local, they move over once
+let accountsMoved;
+function moveAccountsFromStorage(){
+  accountsMoved = accountsMoved || (async () => {
+    const { [ACCOUNTS_KEY]: old } = await chrome.storage.local.get(ACCOUNTS_KEY);
+    if(old === undefined)
+      return;
+    if(old.length && !(await accountsStore('readonly', store => store.get('list'))))
+      await accountsStore('readwrite', store => store.put(old, 'list'));
+    await chrome.storage.local.remove(ACCOUNTS_KEY);
+  })();
+  return accountsMoved;
+}
+
+async function getSavedAccounts(){
+  await moveAccountsFromStorage();
+  return (await accountsStore('readonly', store => store.get('list'))) || [];
+}
+
+async function setSavedAccounts(accounts){
+  await accountsStore('readwrite', store => store.put(accounts, 'list'));
+}
+
+function deleteSavedAccounts(){
+  return accountsStore('readwrite', store => store.delete('list'));
+}
+
+// For the popup's list: everything but the cookies
+async function listAccounts(){
+  return { accounts: (await getSavedAccounts()).map(({ cookies, ...account }) => account) };
 }
 
 // The signed-in account's number, '' for a guest or no cookie
@@ -281,6 +323,7 @@ chrome.cookies.onChanged.addListener(({ cookie }) => {
 chrome.storage.onChanged.addListener((changes, area) => {
   // turned off: the saved cookies go
   if(area === 'local' && changes.multiAccounts && changes.multiAccounts.newValue !== true){
+    deleteSavedAccounts();
     chrome.storage.local.remove(ACCOUNTS_KEY);
     chrome.storage.session.remove([ACCOUNT_ADD_KEY, SEEN_NAMES_KEY]);
   }
@@ -298,6 +341,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 
   const fromExtensionPage = sender.id === chrome.runtime.id && (sender.url || '').startsWith(chrome.runtime.getURL(''));
   const actions = {
+    listAccounts: () => listAccounts(),
     addAccount: () => startAddingAccount(),
     saveAccount: () => saveSignedInAccount(true),
     switchAccount: () => switchAccount(String(request.userId)),

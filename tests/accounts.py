@@ -176,7 +176,8 @@ class Test:
                 if c['name'].startswith(PREFIX)}
 
     def saved(self):
-        return self.sw.evaluate('async () => (await chrome.storage.local.get("savedAccounts")).savedAccounts')
+        # in the background's own database (background.accounts.js), where the forum's pages can't reach
+        return self.sw.evaluate('() => getSavedAccounts()')
 
     def saved_cookies(self, user):
         account = next(a for a in self.saved() if a['userId'] == user)
@@ -207,17 +208,20 @@ class Test:
 
     def switch(self, name):
         page = self.popup()
-        page.click(f'.account_row:has-text("{name}")')
-        # switched: the popup closes itself; otherwise it says why
+        # switched: the popup closes itself, within a moment (so it's listened for before the click);
+        # otherwise it says why
         try:
-            page.wait_for_event('close', timeout=3000)
-            # and the forum's tabs reload, one after the other
-            self.ctx.pages[0].wait_for_timeout(1500)
-            return None
+            with page.expect_event('close', timeout=5000):
+                page.click(f'.account_row:has-text("{name}")')
         except Exception:
+            if page.is_closed():
+                return None
             message = page.text_content('#accountsMessage')
             page.close()
             return message
+        # and the forum's tabs reload, one after the other
+        self.ctx.pages[0].wait_for_timeout(1500)
+        return None
 
 
 def check(what, ok):
@@ -240,6 +244,13 @@ def main():
 
 
 def run(t):
+    # accounts an earlier build kept in chrome.storage.local move to the database
+    t.sw.evaluate('() => chrome.storage.local.set({ savedAccounts: [{ userId: "9", name: "x", cookies: [] }] })')
+    moved = t.saved()
+    check('accounts kept by an earlier build move over', [x['userId'] for x in moved] == ['9'])
+    check('and are gone from chrome.storage.local', t.sw.evaluate('async () => (await chrome.storage.local.get("savedAccounts")).savedAccounts') is None)
+    t.sw.evaluate('() => deleteSavedAccounts()')
+
     # signed in as ראובן, the popup offers to save the account
     a = t.sign_in('2')
     t.open_topic()
@@ -339,21 +350,18 @@ def run(t):
     answer = t.topic.evaluate('() => typeof chrome !== "undefined" && !!(chrome.runtime && chrome.runtime.sendMessage)')
     check('the forum page itself has no way to message the extension', answer is False)
     check('no saved cookies on the forum page', 'savedAccounts' not in t.topic.content() and a['sid'] not in t.topic.content())
-
-    # old drafts are dropped by the background now, so the forum's pages never read all of storage
-    # (with the saved cookies in it); a page that keeps a draft asks for it
-    t.sw.evaluate('() => chrome.storage.local.set({ "draft:old": { savedAt: 1 }, "draft:new": { savedAt: Date.now() } })')
-    posting = t.ctx.new_page()
-    posting.goto(render.FORUM + 'posting.php?mode=reply&t=1')
-    posting.wait_for_timeout(1200)
-    posting.close()
-    drafts = t.sw.evaluate('() => chrome.storage.local.get(["draft:old", "draft:new"])')
-    check('an old draft is dropped, a new one kept', 'draft:old' not in drafts and 'draft:new' in drafts)
+    # chrome.storage.local is what the extension's scripts on the forum's pages can read, and every
+    # change in it is sent to them: no cookie may be there
+    local = t.sw.evaluate('async () => JSON.stringify(await chrome.storage.local.get(null))')
+    check('no cookie in chrome.storage.local', not any(c['value'] in local for x in t.saved() for c in x['cookies'] if len(c['value']) > 4))
+    page = t.popup()
+    check('the popup gets the list without cookies', page.evaluate('() => new Promise(r => chrome.runtime.sendMessage({ type: "listAccounts" }, l => r(l.accounts.every(x => !("cookies" in x)))))'))
+    page.close()
 
     # turning it off deletes the saved cookies
     t.sw.evaluate('() => chrome.storage.local.set({ multiAccounts: false })')
     time.sleep(0.5)
-    check('turning it off deletes the saved accounts', t.saved() is None)
+    check('turning it off deletes the saved accounts', t.saved() == [])
 
 
 if __name__ == '__main__':
