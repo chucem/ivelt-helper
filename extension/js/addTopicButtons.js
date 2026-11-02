@@ -227,7 +227,8 @@ function addQuoteLastButton(btn, isPosting) {
 
 
 function getPostLink(postID){
-    return `https://www.ivelt.com/forum/viewtopic.php?p=${postID}#p${postID}`;
+    // the address the user is on (ivelt.com or www.ivelt.com), where they're signed in
+    return `${location.origin}/forum/viewtopic.php?p=${postID}#p${postID}`;
 }
 
 function getPostDetails(post_id, prefix = 'p'){
@@ -521,7 +522,8 @@ async function quoteInOtherTopic(url, postID, targetTopicId, imageData) {
         res = replaceAttachmentsWithImgBBCode(res, imageData);
 
         // Open the reply window
-        const replyURL = `https://www.ivelt.com/forum/posting.php?mode=reply&t=${targetTopicId}`;
+        // on the same address as this page: on another one the quote can't be put into its text box
+        const replyURL = `${location.origin}/forum/posting.php?mode=reply&t=${targetTopicId}`;
         const replyWindow = window.open(replyURL, '_blank');
 
         if (!replyWindow) {
