@@ -339,7 +339,11 @@ def run(t):
         page.screenshot(path=os.environ['ACCOUNTS_SHOT'])
 
     # forgetting an account takes it out of the list only
+    # the first click asks, right in the row (no dialog, it took seconds in the popup)
     page.hover('.account_row.expired')
+    page.click('.account_row.expired .account_forget')
+    check('the first click on × asks', 'אויסמעקן' in page.text_content('.account_row.expired .account_forget')
+          and len(t.saved()) == 3)
     page.click('.account_row.expired .account_forget')
     page.wait_for_timeout(500)
     check('לוי is gone from the list', [x['userId'] for x in t.saved()] == ['2', '3'])

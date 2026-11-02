@@ -235,6 +235,14 @@ body {
 .account_forget:hover {
   color: var(--ui-error);
 }
+/* the second click removes it */
+.account_forget.asking {
+  visibility: visible;
+  color: var(--ui-error);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
 .accounts_message {
   margin: 6px 10px 2px;
   font-size: 12px;

@@ -200,13 +200,27 @@ function showAccounts(accounts, currentId) {
         const forget = document.createElement('button');
         forget.className = 'account_forget';
         forget.textContent = '×';
-        forget.title = 'מעק אויס דעם אקאונט פון דער ליסטע';
+        forget.title = 'מעק אויס דעם אקאונט פון דער ליסטע (מען ווערט נישט ארויסגעלאגט פונעם פארום, נאר דאס עקסטענשען געדענקט עס מער נישט)';
+        // asked right here, a second click: the browser's confirm() takes seconds to show in a popup
+        let undoAsk;
+        const stopAsking = function () {
+            clearTimeout(undoAsk);
+            forget.classList.remove('asking');
+            forget.textContent = '×';
+        };
         forget.addEventListener('click', function (e) {
             e.stopPropagation();
-            if (!confirm('אויסמעקן ' + name + ' פון דער ליסטע? (מען בלייבט נישט ארויסגעלאגט פונעם פארום, נאר דאס עקסטענשען געדענקט עס מער נישט)'))
+            if (!forget.classList.contains('asking')) {
+                forget.classList.add('asking');
+                forget.textContent = 'אויסמעקן?';
+                undoAsk = setTimeout(stopAsking, 4000);
                 return;
+            }
+            stopAsking();
+            row.remove();
             chrome.runtime.sendMessage({ type: 'forgetAccount', userId: account.userId }, initAccounts);
         });
+        row.addEventListener('mouseleave', stopAsking);
 
         row.append(avatar, nameElement, status, forget);
         row.addEventListener('click', () => accountClicked(account, currentId));
