@@ -362,6 +362,26 @@ def run(t):
     check('the popup gets the list without cookies', page.evaluate('() => new Promise(r => chrome.runtime.sendMessage({ type: "listAccounts" }, l => r(l.accounts.every(x => !("cookies" in x)))))'))
     page.close()
 
+    # a tab with a post being written isn't reloaded by a switch, the others are
+    posting = t.ctx.new_page()
+    posting.goto(render.FORUM + 'posting.php?mode=reply&t=1')
+    posting.wait_for_timeout(800)
+    posting.fill('#message-box textarea', 'a reply not sent yet')
+    posting.evaluate('() => { window.notReloaded = true; }')
+    other = 'שמעון' if t.cookies()['u'] == '2' else 'ראובן'
+    page = t.popup()
+    page.click(f'.account_row:has-text("{other}")')
+    page.wait_for_timeout(1500)
+    message = page.text_content('#accountsMessage') if not page.is_closed() else ''
+    page.wait_for_timeout(1500)
+    check('the tab with an unsent post is left as it was', posting.evaluate('() => window.notReloaded === true')
+          and posting.input_value('#message-box textarea') == 'a reply not sent yet')
+    check('the other forum tab reloads as the new account', t.topic_user() == other)
+    check('the popup says a tab was left', 'נישט איבערגעלאדן' in message)
+    if not page.is_closed():
+        page.close()
+    posting.close()
+
     # a switch that fails midway puts back the account that was signed in
     signed_in = t.cookies()
     t.sw.evaluate('''() => updateSavedAccounts(accounts => { accounts.push({ userId: "8", name: "קאפוט",

@@ -13,6 +13,14 @@
     const profilePage = /\/memberlist\.php$/.test(location.pathname) && /[?&]mode=viewprofile\b/.test(location.search);
     const profileOf = profilePage ? (/[?&]u=(\d+)/.exec(location.search) || [])[1] : undefined;
 
+    // A switch reloads the forum's tabs, but not one with a post being written (text that isn't
+    // what the page came with), it would be lost: the background asks
+    chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+        if (request.type !== 'unsentPost') return;
+        const unsent = [...document.querySelectorAll('textarea')].some((box) => box.value.trim() && box.value !== box.defaultValue);
+        sendResponse({ unsent: unsent });
+    });
+
     chrome.storage.local.get('multiAccounts', function (items) {
         if (!items.multiAccounts || !document.getElementById('username_logged_in')) return;
 

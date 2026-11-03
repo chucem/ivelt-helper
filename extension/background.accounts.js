@@ -155,6 +155,16 @@ function forumTabs(){
   return chrome.tabs.query({ url: '*://*.ivelt.com/*' });
 }
 
+// The forum's tabs a switch reloads, and how many it leaves: one with a post being written
+// (js/accounts.js tells) keeps its text, it shows the account that was signed in till it's reloaded.
+// A tab that doesn't answer (opened before the extension was reloaded) is reloaded
+async function tabsToReload(){
+  const tabs = await forumTabs();
+  const unsent = await Promise.all(tabs.map(tab => chrome.tabs.sendMessage(tab.id, { type: 'unsentPost' })
+    .then(answer => !!(answer && answer.unsent), () => false)));
+  return { reload: tabs.filter((tab, i) => !unsent[i]), kept: unsent.filter(Boolean).length };
+}
+
 // Reloads a tab and waits till it's loaded (15 seconds at most)
 function reloadTab(tab){
   return new Promise(resolve => {
@@ -176,8 +186,8 @@ function reloadTab(tab){
 // One tab first, the others once it's loaded: if the session is gone after all, tabs loading together
 // would all sign in with the same key, the first one gets the new key and the rest become guests.
 // The first one may be loaded already (the check after a switch)
-async function reloadForumTabs(firstLoaded){
-  const [first, ...rest] = await forumTabs();
+async function reloadForumTabs(tabs, firstLoaded){
+  const [first, ...rest] = tabs;
   if(!first)
     return;
   if(!firstLoaded)
@@ -226,7 +236,8 @@ async function startAddingAccount(){
 
 // Gives { switched: true }, { expired: true } when the forum doesn't take the account's cookies
 // any more (then the account that was signed in stays), or { unchecked: true } when the forum
-// couldn't be asked, then it's switched anyway and the next page shows.
+// couldn't be asked, then it's switched anyway and the next page shows. With kept: the number of
+// tabs left as they were, with a post being written.
 // Who the forum takes it for is asked by the background first; Cloudflare answers that with its
 // check page on the live forum, then the first forum tab is reloaded and the forum's cookie read
 async function switchAccount(userId){
@@ -247,10 +258,11 @@ async function switchAccount(userId){
     if(beforeId)
       await saveSignedInAccount(true);
 
+    const { reload, kept } = await tabsToReload();
     await writeAccountCookies(saved.cookies || []);
     let nowId = await askForumWhoIsSignedIn();
     if(nowId === null){
-      [firstTab] = await forumTabs();
+      [firstTab] = reload;
       if(firstTab){
         await reloadTab(firstTab);
         nowId = await signedInUserId();
@@ -258,8 +270,8 @@ async function switchAccount(userId){
     }
 
     if(nowId === null){
-      reloadForumTabs();
-      return { unchecked: true };
+      reloadForumTabs(reload);
+      return { unchecked: true, kept };
     }
 
     if(nowId !== userId){
@@ -282,8 +294,8 @@ async function switchAccount(userId){
       if(target)
         Object.assign(target, { cookies, expired: false, savedAt: Date.now() });
     });
-    reloadForumTabs(!!firstTab);
-    return { switched: true };
+    reloadForumTabs(reload, !!firstTab);
+    return { switched: true, kept };
   } catch(e) {
     // whatever went wrong, the account that was signed in is put back
     if(before)

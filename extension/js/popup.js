@@ -273,6 +273,14 @@ function accountClicked(account, currentId) {
             initAccounts();
             return;
         }
+        // tabs with a post being written weren't reloaded, so the text isn't lost: told, then closed
+        if (response.kept) {
+            showAccountsMessage((response.kept === 1 ? 'א טאב' : response.kept + ' טאבס') +
+                ' מיט א תגובה וואס איז נאך נישט אוועקגעשיקט ' + (response.kept === 1 ? 'איז' : 'זענען') +
+                ' נישט איבערגעלאדן געווארן, ' + (response.kept === 1 ? 'ער ווייזט' : 'זיי ווייזן') + ' נאך דעם פריערדיגן אקאונט');
+            setTimeout(() => window.close(), 5000);
+            return;
+        }
         window.close();
     });
 }
