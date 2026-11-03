@@ -284,7 +284,7 @@ function switchTo(account, tabId) {
         if (response.kept) {
             showAccountsMessage((response.kept === 1 ? 'א טאב' : response.kept + ' טאבס') +
                 ' מיט א תגובה וואס איז נאך נישט אוועקגעשיקט ' + (response.kept === 1 ? 'איז' : 'זענען') +
-                ' נישט איבערגעלאדן געווארן, ' + (response.kept === 1 ? 'ער ווייזט' : 'זיי ווייזן') + ' נאך דעם פריערדיגן אקאונט');
+                ' נישט גערילאויד געווארן, ' + (response.kept === 1 ? 'ער ווייזט' : 'זיי ווייזן') + ' נאך דעם פריערדיגן אקאונט');
             setTimeout(() => window.close(), 5000);
             return;
         }

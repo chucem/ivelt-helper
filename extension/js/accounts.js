@@ -69,7 +69,7 @@
         text.textContent = 'מען האט געטוישט דעם אקאונט, דער טאב ווייזט נאך דעם פריערדיגן אקאונט.';
         const reload = document.createElement('button');
         reload.type = 'button';
-        reload.textContent = 'לאד איבער';
+        reload.textContent = 'רילאויד';
         reload.style.cssText = 'padding:3px 12px;border:1px solid #c9a227;border-radius:4px;background:#fff;color:#5c4400;font:inherit;cursor:pointer';
         reload.addEventListener('click', () => {
             if (location.hash) location.reload();

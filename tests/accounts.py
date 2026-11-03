@@ -405,7 +405,7 @@ def run(t):
     check('the tab with an unsent post is left as it was', posting.evaluate('() => window.notReloaded === true')
           and posting.input_value('#message-box textarea') == 'a reply not sent yet')
     check('the other forum tab reloads as the new account', t.topic_user() == other)
-    check('the popup says a tab was left', 'נישט איבערגעלאדן' in message)
+    check('the popup says a tab was left', 'נישט גערילאויד' in message)
     check('and that tab has a bar saying so', posting.query_selector('#ih-account-switched') is not None)
     if not page.is_closed():
         page.close()
