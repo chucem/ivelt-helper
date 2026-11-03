@@ -20,6 +20,10 @@
             const unsent = [...document.querySelectorAll('textarea')].some((box) => box.value.trim() && box.value !== box.defaultValue);
             sendResponse({ unsent: unsent });
         }
+
+        // a switch didn't reload this tab (a post being written, or the setting to reload only the
+        // tab it's switched in): it still shows the account that was signed in
+        if (request.type === 'accountSwitched') showSwitchedBar();
     });
 
     chrome.storage.local.get('multiAccounts', function (items) {
@@ -49,6 +53,36 @@
             avatarUrl: found.avatarUrl,
             avatar: found.avatarUrl ? await pictureData(found.avatarUrl) : ''
         });
+    }
+
+    // At the top of the page, with a button that loads it again as the account that's signed in now.
+    // Opened again rather than reloaded, a page that came from a form would send it again
+    function showSwitchedBar() {
+        if (document.getElementById('ih-account-switched')) return;
+        const bar = document.createElement('div');
+        bar.id = 'ih-account-switched';
+        bar.dir = 'rtl';
+        bar.style.cssText = 'position:fixed;top:0;left:0;right:0;z-index:2147483647;display:flex;gap:12px;' +
+            'align-items:center;justify-content:center;padding:8px 12px;background:#fff4ce;color:#5c4400;' +
+            'border-bottom:1px solid #e6cf7a;font:14px system-ui,sans-serif;box-shadow:0 2px 6px rgba(0,0,0,.15)';
+        const text = document.createElement('span');
+        text.textContent = 'מען האט געטוישט דעם אקאונט, דער טאב ווייזט נאך דעם פריערדיגן אקאונט.';
+        const reload = document.createElement('button');
+        reload.type = 'button';
+        reload.textContent = 'לאד איבער';
+        reload.style.cssText = 'padding:3px 12px;border:1px solid #c9a227;border-radius:4px;background:#fff;color:#5c4400;font:inherit;cursor:pointer';
+        reload.addEventListener('click', () => {
+            if (location.hash) location.reload();
+            else location.replace(location.href);
+        });
+        const close = document.createElement('button');
+        close.type = 'button';
+        close.textContent = '×';
+        close.title = 'צומאכן';
+        close.style.cssText = 'border:0;background:none;color:inherit;font-size:18px;line-height:1;cursor:pointer';
+        close.addEventListener('click', () => bar.remove());
+        bar.append(text, reload, close);
+        document.body.appendChild(bar);
     }
 
     // "hide my name" of this extension (js/settingsHandler.js) keeps the real name in data-name; the

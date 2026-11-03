@@ -35,7 +35,8 @@ const preferencesOptions = [
 	'printShowLikes',
 	'printLikesStyle',
 	'editorUndo',
-	'multiAccounts'
+	'multiAccounts',
+	'switchReloadsOneTab'
 ];
 
 // Listen to settings changes
@@ -138,6 +139,10 @@ function postSettingChange(items){
 
 	if(items.hasOwnProperty('printShowLikes')){
 		document.getElementById('printLikesStyle').disabled = !items.printShowLikes;
+	}
+
+	if(items.hasOwnProperty('multiAccounts')){
+		document.getElementById('switchReloadsOneTab').disabled = !items.multiAccounts;
 	}
 
 	// on unless turned off

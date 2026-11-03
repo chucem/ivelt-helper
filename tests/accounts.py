@@ -406,9 +406,32 @@ def run(t):
           and posting.input_value('#message-box textarea') == 'a reply not sent yet')
     check('the other forum tab reloads as the new account', t.topic_user() == other)
     check('the popup says a tab was left', 'נישט איבערגעלאדן' in message)
+    check('and that tab has a bar saying so', posting.query_selector('#ih-account-switched') is not None)
     if not page.is_closed():
         page.close()
     posting.close()
+
+    # with the setting, a switch reloads only the tab it's done in; the others get the bar
+    t.sw.evaluate('() => chrome.storage.local.set({ switchReloadsOneTab: true })')
+    another = t.ctx.new_page()
+    another.goto(render.FORUM + 'index.php')
+    another.wait_for_timeout(800)
+    another.evaluate('() => { window.notReloaded = true; }')
+    t.topic.evaluate('() => { window.notReloaded = true; }')
+    other = 'שמעון' if t.cookies()['u'] == '2' else 'ראובן'
+    other_id = '3' if other == 'שמעון' else '2'
+    topic_tab = t.sw.evaluate('async () => (await chrome.tabs.query({ url: "*://www.ivelt.com/forum/viewtopic.php*" }))[0].id')
+    t.sw.evaluate('([u, tab]) => switchAccount(u, tab)', [other_id, topic_tab])
+    t.topic.wait_for_timeout(1500)
+    check('only the tab it was switched in reloads', t.topic.evaluate('() => window.notReloaded') is None
+          and t.topic_user() == other)
+    check('the other tab stays as it was, with the bar', another.evaluate('() => window.notReloaded') is True
+          and another.query_selector('#ih-account-switched') is not None)
+    another.click('#ih-account-switched button')
+    another.wait_for_timeout(1000)
+    check('the bar\'s button loads it again', another.evaluate('() => window.notReloaded') is None)
+    another.close()
+    t.sw.evaluate('() => chrome.storage.local.set({ switchReloadsOneTab: false })')
 
     # a switch that fails midway puts back the account that was signed in
     signed_in = t.cookies()

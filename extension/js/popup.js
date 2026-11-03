@@ -263,7 +263,14 @@ function accountClicked(account, currentId) {
     }
 
     showAccountsMessage('מען טוישט דעם אקאונט…');
-    chrome.runtime.sendMessage({ type: 'switchAccount', userId: account.userId }, function (response) {
+    // the tab it's switched in: with the setting, the only one reloaded
+    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+        switchTo(account, tabs[0] && tabs[0].id);
+    });
+}
+
+function switchTo(account, tabId) {
+    chrome.runtime.sendMessage({ type: 'switchAccount', userId: account.userId, tabId: tabId }, function (response) {
         if (chrome.runtime.lastError || !response || response.error) {
             showAccountsMessage('עס האט נישט געקלאפט, פרובירט נאכאמאל');
             return;

@@ -155,14 +155,23 @@ function forumTabs(){
   return chrome.tabs.query({ url: '*://*.ivelt.com/*' });
 }
 
-// The forum's tabs a switch reloads, and how many it leaves: one with a post being written
-// (js/accounts.js tells) keeps its text, it shows the account that was signed in till it's reloaded.
-// A tab that doesn't answer (opened before the extension was reloaded) is reloaded
-async function tabsToReload(){
+// The forum's tabs a switch reloads, and the ones it leaves as they are (they get a bar saying so,
+// js/accounts.js): one with a post being written (js/accounts.js tells) keeps its text, and with
+// the setting "only the tab it's switched in" (switchReloadsOneTab) all but that one. kept: how many
+// were left for a post being written. A tab that doesn't answer (opened before the extension was
+// reloaded) is reloaded
+async function tabsToReload(currentTabId){
   const tabs = await forumTabs();
   const unsent = await Promise.all(tabs.map(tab => chrome.tabs.sendMessage(tab.id, { type: 'unsentPost' })
     .then(answer => !!(answer && answer.unsent), () => false)));
-  return { reload: tabs.filter((tab, i) => !unsent[i]), kept: unsent.filter(Boolean).length };
+  const { switchReloadsOneTab } = await chrome.storage.local.get('switchReloadsOneTab');
+  const reload = tabs.filter((tab, i) => !unsent[i] && (switchReloadsOneTab !== true || tab.id === currentTabId));
+  return { reload, left: tabs.filter(tab => !reload.includes(tab)), kept: unsent.filter(Boolean).length };
+}
+
+// Tells the tabs that weren't reloaded that they still show the account that was signed in
+function tellTabsLeft(tabs){
+  tabs.forEach(tab => chrome.tabs.sendMessage(tab.id, { type: 'accountSwitched' }).catch(() => {}));
 }
 
 // The tab's address is opened again rather than reloaded: a page that came from a form (the page
@@ -249,7 +258,7 @@ async function startAddingAccount(){
 // tabs left as they were, with a post being written.
 // Who the forum takes it for is asked by the background first; Cloudflare answers that with its
 // check page on the live forum, then the first forum tab is reloaded and the forum's cookie read
-async function switchAccount(userId){
+async function switchAccount(userId, currentTabId){
   const saved = (await getSavedAccounts()).find(a => a.userId === userId);
   if(!saved)
     return { error: 'unknown account' };
@@ -267,7 +276,7 @@ async function switchAccount(userId){
     if(beforeId)
       await saveSignedInAccount(true);
 
-    const { reload, kept } = await tabsToReload();
+    const { reload, left, kept } = await tabsToReload(currentTabId);
     await writeAccountCookies(saved.cookies || []);
     let nowId = await askForumWhoIsSignedIn();
     if(nowId === null){
@@ -280,6 +289,7 @@ async function switchAccount(userId){
 
     if(nowId === null){
       reloadForumTabs(reload);
+      tellTabsLeft(left);
       return { unchecked: true, kept };
     }
 
@@ -304,6 +314,7 @@ async function switchAccount(userId){
         Object.assign(target, { cookies, expired: false, savedAt: Date.now() });
     });
     reloadForumTabs(reload, !!firstTab);
+    tellTabsLeft(left);
     return { switched: true, kept };
   } catch(e) {
     // whatever went wrong, the account that was signed in is put back
@@ -417,7 +428,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     listAccounts: () => listAccounts(),
     addAccount: () => startAddingAccount(),
     saveAccount: () => saveSignedInAccount(true),
-    switchAccount: () => switchAccount(String(request.userId)),
+    switchAccount: () => switchAccount(String(request.userId), request.tabId),
     forgetAccount: () => forgetAccount(String(request.userId))
   };
   if(!fromExtensionPage || !actions[request.type])

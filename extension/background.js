@@ -41,7 +41,8 @@ const defualtPreferences = {
   editorUndo: true,
   themesEnabled: false,
   theme: 'default',
-  multiAccounts: false // keeps the session cookies of more than one account, so it's off until turned on
+  multiAccounts: false, // keeps the session cookies of more than one account, so it's off until turned on
+  switchReloadsOneTab: false // a switch reloads only the tab it's done in, the others get a bar
 };
 
 let debugQueue = {};
