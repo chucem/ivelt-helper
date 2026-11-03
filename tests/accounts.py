@@ -87,10 +87,10 @@ class Forum(http.server.BaseHTTPRequestHandler):
 
     def do_GET(self):
         path = urllib.parse.urlparse(self.path).path
-        if (self.headers.get('Origin') or '').startswith('chrome-extension://') and \
-                path in ('/forum/memberlist.php', '/forum/download/file.php'):
-            # like Cloudflare on the real forum may: the extension's background gets its check page
-            # for these, so the names and avatars have to come through the forum's own pages
+        if (self.headers.get('Origin') or '').startswith('chrome-extension://'):
+            # like Cloudflare on the real forum: the extension's background gets its check page, so
+            # a switch is checked in a reloaded forum tab, and the names and avatars come through
+            # the forum's own pages
             return self.answer(b'<html><title>Just a moment...</title></html>', 'text/html', status=403)
         if path == '/forum/download/file.php':
             # phpBB answers an avatar before it looks at the session, so it never changes the cookies
@@ -361,6 +361,25 @@ def run(t):
     page = t.popup()
     check('the popup gets the list without cookies', page.evaluate('() => new Promise(r => chrome.runtime.sendMessage({ type: "listAccounts" }, l => r(l.accounts.every(x => !("cookies" in x)))))'))
     page.close()
+
+    # a switch that fails midway puts back the account that was signed in
+    signed_in = t.cookies()
+    t.sw.evaluate('''() => updateSavedAccounts(accounts => { accounts.push({ userId: "8", name: "קאפוט",
+        cookies: [{ name: "phpbb3_sw7kk_u", value: "8", domain: ".example.com", hostOnly: false, path: "/",
+        secure: true, httpOnly: true, sameSite: "unspecified" }] }); })''')
+    message = t.switch('קאפוט')
+    check('a failed switch says so', bool(message) and 'נישט געקלאפט' in message)
+    check('and the account that was signed in is back', t.cookies() == signed_in)
+    t.sw.evaluate('() => forgetAccount("8")')
+
+    # a picture that can't be downloaded keeps the one there is
+    current = next(x for x in t.saved() if x['userId'] == signed_in['u'])
+    t.sw.evaluate('''u => updateSavedAccounts(accounts => { accounts.find(a => a.userId === u).avatar =
+        "data:image/gif;base64,R0lGODlhAQABAAAAACw="; })''', signed_in['u'])
+    t.sw.evaluate('''u => accountProfile({ userId: u, name: "x",
+        avatarUrl: "https://www.ivelt.com/forum/download/file.php?avatar=1.png", avatar: "" })''', signed_in['u'])
+    current = next(x for x in t.saved() if x['userId'] == signed_in['u'])
+    check('a failed picture download keeps the old picture', current['avatar'] == 'data:image/gif;base64,R0lGODlhAQABAAAAACw=')
 
     # turning it off deletes the saved cookies
     t.sw.evaluate('() => chrome.storage.local.set({ multiAccounts: false })')

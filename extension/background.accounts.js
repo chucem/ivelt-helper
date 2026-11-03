@@ -74,8 +74,22 @@ async function getSavedAccounts(){
   return (await accountsStore('readonly', store => store.get('list'))) || [];
 }
 
-async function setSavedAccounts(accounts){
-  await accountsStore('readwrite', store => store.put(accounts, 'list'));
+// Changes the list in one step of the database (read and written in the same transaction), so a
+// change made meanwhile elsewhere (a forum page's name, a removal in the popup) isn't written over.
+// change gets the list to change in place, and its answer is given back
+async function updateSavedAccounts(change){
+  await moveAccountsFromStorage();
+  let answer;
+  await accountsStore('readwrite', store => {
+    const request = store.get('list');
+    request.onsuccess = () => {
+      const accounts = request.result || [];
+      answer = change(accounts);
+      store.put(accounts, 'list');
+    };
+    return request;
+  });
+  return answer;
 }
 
 function deleteSavedAccounts(){
@@ -137,27 +151,37 @@ async function askForumWhoIsSignedIn(){
   return signedInUserId();
 }
 
-// One tab first, the others once it's loaded: if the session is gone after all, tabs loading together
-// would all sign in with the same key, the first one gets the new key and the rest become guests
-async function reloadForumTabs(){
-  const [first, ...rest] = await chrome.tabs.query({ url: '*://*.ivelt.com/*' });
-  if(!first)
-    return;
+function forumTabs(){
+  return chrome.tabs.query({ url: '*://*.ivelt.com/*' });
+}
 
-  await new Promise(resolve => {
+// Reloads a tab and waits till it's loaded (15 seconds at most)
+function reloadTab(tab){
+  return new Promise(resolve => {
     const done = () => {
       chrome.tabs.onUpdated.removeListener(loaded);
       clearTimeout(timeout);
       resolve();
     };
     const loaded = (tabId, change) => {
-      if(tabId === first.id && change.status === 'complete')
+      if(tabId === tab.id && change.status === 'complete')
         done();
     };
     const timeout = setTimeout(done, 15000);
     chrome.tabs.onUpdated.addListener(loaded);
-    chrome.tabs.reload(first.id).catch(done);
+    chrome.tabs.reload(tab.id).catch(done);
   });
+}
+
+// One tab first, the others once it's loaded: if the session is gone after all, tabs loading together
+// would all sign in with the same key, the first one gets the new key and the rest become guests.
+// The first one may be loaded already (the check after a switch)
+async function reloadForumTabs(firstLoaded){
+  const [first, ...rest] = await forumTabs();
+  if(!first)
+    return;
+  if(!firstLoaded)
+    await reloadTab(first);
   rest.forEach(tab => chrome.tabs.reload(tab.id));
 }
 
@@ -167,21 +191,21 @@ async function saveSignedInAccount(add){
   if(!userId)
     return null;
 
-  const accounts = await getSavedAccounts();
-  let account = accounts.find(a => a.userId === userId);
-  if(!account){
-    if(!add)
-      return null;
-    // the name a forum page showed before it was saved, the picture comes with the next page
-    const { [SEEN_NAMES_KEY]: seenNames } = await chrome.storage.session.get(SEEN_NAMES_KEY);
-    account = { userId, name: (seenNames || {})[userId] || '', avatar: '' };
-    accounts.push(account);
-  }
-  account.cookies = await readAccountCookies();
-  account.expired = false;
-  account.savedAt = Date.now();
-  await setSavedAccounts(accounts);
-  return account;
+  const cookies = await readAccountCookies();
+  // the name a forum page showed before it was saved, the picture comes with the next page
+  const { [SEEN_NAMES_KEY]: seenNames } = await chrome.storage.session.get(SEEN_NAMES_KEY);
+
+  return updateSavedAccounts(accounts => {
+    let account = accounts.find(a => a.userId === userId);
+    if(!account){
+      if(!add)
+        return null;
+      account = { userId, name: (seenNames || {})[userId] || '', avatar: '' };
+      accounts.push(account);
+    }
+    Object.assign(account, { cookies, expired: false, savedAt: Date.now() });
+    return account;
+  });
 }
 
 // Signed out here only (the account stays signed in on the server), and the forum's sign-in page
@@ -202,12 +226,16 @@ async function startAddingAccount(){
 
 // Gives { switched: true }, { expired: true } when the forum doesn't take the account's cookies
 // any more (then the account that was signed in stays), or { unchecked: true } when the forum
-// couldn't be asked, then it's switched anyway and the next page shows
+// couldn't be asked, then it's switched anyway and the next page shows.
+// Who the forum takes it for is asked by the background first; Cloudflare answers that with its
+// check page on the live forum, then the first forum tab is reloaded and the forum's cookie read
 async function switchAccount(userId){
-  if(!(await getSavedAccounts()).some(a => a.userId === userId))
+  const saved = (await getSavedAccounts()).find(a => a.userId === userId);
+  if(!saved)
     return { error: 'unknown account' };
 
   accountSwitching = true;
+  let before, firstTab;
   try {
     const beforeId = await signedInUserId();
     if(beforeId === userId)
@@ -215,43 +243,63 @@ async function switchAccount(userId){
 
     // the one signed in now is saved with its newest key, also one that wasn't saved yet, so
     // switching away doesn't lose it
-    const before = await readAccountCookies();
+    before = await readAccountCookies();
     if(beforeId)
       await saveSignedInAccount(true);
-    const accounts = await getSavedAccounts();
-    const target = accounts.find(a => a.userId === userId);
 
-    await writeAccountCookies(target.cookies || []);
-    const nowId = await askForumWhoIsSignedIn();
+    await writeAccountCookies(saved.cookies || []);
+    let nowId = await askForumWhoIsSignedIn();
+    if(nowId === null){
+      [firstTab] = await forumTabs();
+      if(firstTab){
+        await reloadTab(firstTab);
+        nowId = await signedInUserId();
+      }
+    }
 
     if(nowId === null){
-      await setSavedAccounts(accounts);
       reloadForumTabs();
       return { unchecked: true };
     }
 
     if(nowId !== userId){
-      target.expired = true;
       await writeAccountCookies(before);
-      await setSavedAccounts(accounts);
+      await updateSavedAccounts(accounts => {
+        const target = accounts.find(a => a.userId === userId);
+        if(target)
+          target.expired = true;
+      });
+      // the tab it was checked in shows the account that stays
+      if(firstTab)
+        reloadTab(firstTab);
       return { expired: true };
     }
 
     // the forum may have started a new session, with a new key
-    target.cookies = await readAccountCookies();
-    target.expired = false;
-    target.savedAt = Date.now();
-    await setSavedAccounts(accounts);
-    reloadForumTabs();
+    const cookies = await readAccountCookies();
+    await updateSavedAccounts(accounts => {
+      const target = accounts.find(a => a.userId === userId);
+      if(target)
+        Object.assign(target, { cookies, expired: false, savedAt: Date.now() });
+    });
+    reloadForumTabs(!!firstTab);
     return { switched: true };
+  } catch(e) {
+    // whatever went wrong, the account that was signed in is put back
+    if(before)
+      await writeAccountCookies(before).catch(() => {});
+    throw e;
   } finally {
     accountSwitching = false;
   }
 }
 
-async function forgetAccount(userId){
-  const accounts = await getSavedAccounts();
-  await setSavedAccounts(accounts.filter(a => a.userId !== userId));
+function forgetAccount(userId){
+  return updateSavedAccounts(accounts => {
+    const index = accounts.findIndex(a => a.userId === userId);
+    if(index >= 0)
+      accounts.splice(index, 1);
+  });
 }
 
 // A forum page is signed in (js/accounts.js): when the saved account's name and avatar are due to be
@@ -285,18 +333,22 @@ async function accountProfile(request){
     return;
   const avatar = typeof request.avatar === 'string' && request.avatar.length <= AVATAR_MAX_BYTES * 1.4 &&
     /^data:image\/(png|jpeg|gif|webp);base64,[\w+/=]+$/.test(request.avatar) ? request.avatar : '';
+  const avatarUrl = /^https:\/\/([\w-]+\.)*ivelt\.com\//.test(request.avatarUrl) ? request.avatarUrl : '';
 
-  const accounts = await getSavedAccounts();
-  const account = accounts.find(a => a.userId === userId);
-  if(!account)
-    return;
-  Object.assign(account, {
-    name: String(request.name || '').trim().slice(0, 100) || account.name,
-    avatarUrl: /^https:\/\/([\w-]+\.)*ivelt\.com\//.test(request.avatarUrl) ? request.avatarUrl : '',
-    avatar,
-    profileCheckedAt: Date.now()
+  await updateSavedAccounts(accounts => {
+    const account = accounts.find(a => a.userId === userId);
+    if(!account)
+      return;
+    // a picture that has an address but couldn't be downloaded keeps the one there is, and without
+    // one it's tried again on a later page
+    const pictureMissing = avatarUrl && !avatar;
+    Object.assign(account, {
+      name: String(request.name || '').trim().slice(0, 100) || account.name,
+      avatarUrl,
+      avatar: pictureMissing ? account.avatar || '' : avatar,
+      ...(pictureMissing && !account.avatar ? {} : { profileCheckedAt: Date.now() })
+    });
   });
-  await setSavedAccounts(accounts);
 }
 
 // The signed-in account's cookies changed: a new session or key is saved again, and while adding,

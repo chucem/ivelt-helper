@@ -112,9 +112,15 @@ function initThemeSwatches() {
 
 // The browser sizes the popup to its content, and only then a scrollbar comes (a tall popup, with
 // the accounts and the colors), which takes its width from the content: the colors stuck out of
-// their card. So then the popup asks for the scrollbar's width more
+// their card. So then the popup asks for the scrollbar's width more. Measured again whenever the
+// popup or its content changes size (the browser growing it, pictures coming in), once a frame
+let roomForScrollbarAsked = false;
 function makeRoomForScrollbar() {
+    if (roomForScrollbarAsked)
+        return;
+    roomForScrollbarAsked = true;
     requestAnimationFrame(function () {
+        roomForScrollbarAsked = false;
         const body = document.body;
         const scrollbar = window.innerWidth - document.documentElement.clientWidth;
         body.style.minWidth = '';
@@ -308,6 +314,11 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 document.addEventListener('DOMContentLoaded', initThemeSwatches);
+
+document.addEventListener('DOMContentLoaded', function () {
+    window.addEventListener('resize', makeRoomForScrollbar);
+    new ResizeObserver(makeRoomForScrollbar).observe(document.body);
+});
 
 document.addEventListener('DOMContentLoaded', function () {
     document.getElementById('add_account').addEventListener('click', add_account);
