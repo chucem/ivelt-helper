@@ -16,9 +16,10 @@
     // A switch reloads the forum's tabs, but not one with a post being written (text that isn't
     // what the page came with), it would be lost: the background asks
     chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
-        if (request.type !== 'unsentPost') return;
-        const unsent = [...document.querySelectorAll('textarea')].some((box) => box.value.trim() && box.value !== box.defaultValue);
-        sendResponse({ unsent: unsent });
+        if (request.type === 'unsentPost') {
+            const unsent = [...document.querySelectorAll('textarea')].some((box) => box.value.trim() && box.value !== box.defaultValue);
+            sendResponse({ unsent: unsent });
+        }
     });
 
     chrome.storage.local.get('multiAccounts', function (items) {

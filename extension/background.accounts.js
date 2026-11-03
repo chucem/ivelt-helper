@@ -165,6 +165,15 @@ async function tabsToReload(){
   return { reload: tabs.filter((tab, i) => !unsent[i]), kept: unsent.filter(Boolean).length };
 }
 
+// The tab's address is opened again rather than reloaded: a page that came from a form (the page
+// after signing in) would send it again, and the browser asks first. Opening the same address with
+// a #part only scrolls, those get the browser's reload; a page from a form doesn't have one
+function startReload(tab){
+  if(!tab.url || tab.url.includes('#'))
+    return chrome.tabs.reload(tab.id);
+  return chrome.tabs.update(tab.id, { url: tab.url });
+}
+
 // Reloads a tab and waits till it's loaded (15 seconds at most)
 function reloadTab(tab){
   return new Promise(resolve => {
@@ -179,7 +188,7 @@ function reloadTab(tab){
     };
     const timeout = setTimeout(done, 15000);
     chrome.tabs.onUpdated.addListener(loaded);
-    chrome.tabs.reload(tab.id).catch(done);
+    startReload(tab).catch(done);
   });
 }
 
@@ -192,7 +201,7 @@ async function reloadForumTabs(tabs, firstLoaded){
     return;
   if(!firstLoaded)
     await reloadTab(first);
-  rest.forEach(tab => chrome.tabs.reload(tab.id));
+  rest.forEach(tab => startReload(tab).catch(() => {}));
 }
 
 // Saves the signed-in account's cookies, as a new account only when asked to (add)

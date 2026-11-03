@@ -17,6 +17,7 @@ import render  # noqa: E402
 PREFIX = 'phpbb3_sw7kk_'
 USERS = {'2': 'ראובן', '3': 'שמעון', '4': 'לוי'}
 sessions = {}  # sid -> user
+posts = []  # the forms sent, by path: a page that came from one mustn't send it again when reloaded
 keys = {}  # k -> user
 
 
@@ -110,6 +111,15 @@ class Forum(http.server.BaseHTTPRequestHandler):
         if file.startswith(render.SITE) and os.path.isfile(file):
             return self.answer(open(file, 'rb').read(), render.TYPES.get(os.path.splitext(file)[1], 'application/octet-stream'))
         self.answer(b'', 'text/plain', status=404)
+
+    def do_POST(self):
+        """A form sent: answered with a page, like the page after signing in."""
+        self.rfile.read(int(self.headers.get('Content-Length') or 0))
+        posts.append(urllib.parse.urlparse(self.path).path)
+        cookies = dict(c.split('=', 1) for c in (self.headers.get('Cookie') or '').split('; ') if '=' in c)
+        user, set_cookies = who(cookies)
+        self.answer(page_for(user, other_page(user, '/forum/ucp.php'), show_name=False).encode(),
+                    'text/html; charset=utf-8', set_cookies)
 
     def answer(self, body, content_type, set_cookies=None, status=200):
         self.send_response(status)
@@ -361,6 +371,24 @@ def run(t):
     page = t.popup()
     check('the popup gets the list without cookies', page.evaluate('() => new Promise(r => chrome.runtime.sendMessage({ type: "listAccounts" }, l => r(l.accounts.every(x => !("cookies" in x)))))'))
     page.close()
+
+    # a tab showing the page a form came back with reloads without sending the form again (the
+    # browser asked "send it again?", like after signing in)
+    sent = t.ctx.new_page()
+    sent.goto(render.FORUM + 'index.php')
+    sent.evaluate('''() => { const form = document.createElement('form'); form.method = 'post';
+        form.action = './ucp.php?mode=login'; form.innerHTML = '<input name="x" value="1">';
+        document.body.appendChild(form); form.submit(); }''')
+    sent.wait_for_load_state()
+    sent.wait_for_timeout(500)
+    posts_before = len(posts)
+    sent.evaluate('() => { window.notReloaded = true; }')
+    other = 'שמעון' if t.cookies()['u'] == '2' else 'ראובן'
+    t.switch(other)
+    sent.wait_for_timeout(800)
+    check('a page from a form reloads after a switch', sent.evaluate('() => window.notReloaded') is None)
+    check('without sending the form again', len(posts) == posts_before)
+    sent.close()
 
     # a tab with a post being written isn't reloaded by a switch, the others are
     posting = t.ctx.new_page()
