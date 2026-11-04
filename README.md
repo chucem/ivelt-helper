@@ -55,6 +55,7 @@ Extra buttons next to the regular quote button on every post:
 * The editor opens on the **Attachments** tab instead of **Options**, so adding a file is one click (can be turned off).
 
 ### Reading posts
+* **Media filter**: choose **videos**, **videos and pictures**, or **all replies** on a topic page. The choice is kept for that topic in the current tab as you move between pages or reload. Quotes, signatures, avatars and smileys do not count. Direct media links and embedded videos are recognized; opaque Google Drive / Dropbox file links are checked against their public preview's file metadata when a filter is selected. Unavailable or private files remain unverified and can be retried. **Include NetFree links** optionally also keeps posts with modified Drive links such as `dri123ve.google.com` or `dr123ive.google.com` visible, with their file types labelled unverified. These links are preserved as written and are never repaired or fetched. This option is also kept for that topic in the current tab. Only posts on the current page are filtered; no other topic pages are fetched.
 * **Spoiler polish**: the spoiled words are covered with moving dust right where they are (so a couple of spoiled words stay in the middle of their line), and pictures are blurred with sparkling dots over them. A long spoiler shows only its first three lines. One click reveals it and opens it to its full height. Printed spoilers come out open. Off by default; turn it on in the settings.
 
 ### Color themes

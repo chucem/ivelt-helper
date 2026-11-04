@@ -310,4 +310,4 @@ function commitDebugLog(name, values){
   })
 }
 
-importScripts('./background.notifications.js', './background.drive.js', './background.dropbox.js', './background.settingsSync.js')
+importScripts('./js/mediaTypes.js', './background.media.js', './background.notifications.js', './background.drive.js', './background.dropbox.js', './background.settingsSync.js')

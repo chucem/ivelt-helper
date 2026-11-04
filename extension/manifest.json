@@ -19,6 +19,13 @@
   "content_scripts": [
     {
       "matches": [
+        "*://*.ivelt.com/forum/viewtopic.php*"
+      ],
+      "css": ["css/topicMediaFilter.css"],
+      "js": ["js/mediaTypes.js", "js/topicMediaFilter.js"]
+    },
+    {
+      "matches": [
         "*://*.ivelt.com/*"
       ],
       "css": ["css/spoilers.css"],
@@ -170,7 +177,9 @@
   "host_permissions": [
     "*://*.ivelt.com/*",
     "*://www.xn--4dbhss5b.com/*",
-    "https://docs.google.com/*"
+    "https://docs.google.com/*",
+    "https://drive.google.com/*",
+    "https://www.dropbox.com/*"
   ],
   "options_ui": {
     "page": "settings.html",
