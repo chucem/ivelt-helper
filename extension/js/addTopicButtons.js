@@ -105,9 +105,8 @@ async function addBtn() {
     var needUpdating = false;
     let topicMapping;
 
-    if (TOPIC_MAPPING_EXPIRE !== "") {
-         topicMapping = await fetchTopicMapping();
-    }
+    // with updates off the list is still loaded: from the saved copy, or fetched once when there's none
+    topicMapping = await fetchTopicMapping();
 
 
     btns.forEach(btn => {
@@ -142,7 +141,7 @@ async function addBtn() {
             addQuoteLastButton(btn, isPosting);
         }
 
-        if (TOPIC_MAPPING_EXPIRE !== "" && !isPosting && !isPM) {
+        if (!isPosting && !isPM) {
             if (topicMapping) {
                 addQuoteInOtherTopicButton(btn, strippedId, topicMapping, imageData);
             }
