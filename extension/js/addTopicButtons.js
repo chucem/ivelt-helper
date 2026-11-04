@@ -484,7 +484,8 @@ if (!forceRefresh && cachedData && lastFetchTime && now - lastFetchTime < CACHE_
         return mappings;
     } catch (error) {
         console.error("Error fetching topic mappings:", error);
-        return null;
+        // keep using the list from last time, and try again on the next page
+        return cachedData ? JSON.parse(cachedData) : null;
     }
 }
 

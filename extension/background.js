@@ -223,9 +223,11 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     return true;
   }
 
-  // the forum's CSP blocks the page from reaching Google Sheets, so the topic mapping is fetched here
+  // the forum's CSP blocks the page from reaching Google Sheets, so the topic mapping is fetched here.
+  // Without cookies: the sheet is public, and with someone's Google cookies Google sometimes sends
+  // the request to its sign-in page first, which blocks extensions (CORS)
   if(request.type === 'topicMappingCsv'){
-    fetch(topicMappingUrl)
+    fetch(topicMappingUrl, { credentials: 'omit' })
       .then(response => {
         if(!response.ok)
           throw new Error(`Failed to fetch CSV data: ${response.status} ${response.statusText}`);
