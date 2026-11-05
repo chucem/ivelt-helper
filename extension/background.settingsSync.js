@@ -32,6 +32,7 @@ const SYNCED_SETTINGS = [
   'titleOpensUnread',
   'doubleClickLike',
   'ShowMultiNotifs',
+  'olderNotifsPlus',
   'upDownArrowKeys',
   'spoilerPolish',
   'copyPostLink',
