@@ -27,6 +27,7 @@
 #ih-mobile-search .inputbox {
     flex: 1;
     min-width: 0;
+    max-width: none; /* the forum's phone layout caps every .inputbox at 260px */
     width: auto;
     font-size: 16px; /* under 16px a phone zooms the page in on focus */
 }
