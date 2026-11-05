@@ -1,0 +1,30 @@
+/* ABBC3's link window (#bbcode_wizard) on a narrow screen (js/mobileLinkButton.js opens it there).
+   It's 500px wide, centered with a -250px margin, so on a phone it sticks out on both sides */
+@media (max-width: 700px) {
+    #bbcode_wizard {
+        width: auto;
+        left: 8px;
+        right: 8px;
+        margin-left: 0;
+        /* Higher up, so the keyboard doesn't cover it */
+        top: 12%;
+        margin-top: 0;
+        max-height: 80vh;
+        overflow-y: auto;
+    }
+    #bbcode_wizard fieldset dt,
+    #bbcode_wizard fieldset dd {
+        float: none;
+        width: auto;
+        margin-left: 0;
+        margin-right: 0;
+    }
+    #bbcode_wizard fieldset dd {
+        margin-bottom: 6px;
+    }
+    #bbcode_wizard .inputbox {
+        width: 100%;
+        box-sizing: border-box;
+        font-size: 16px; /* 16px or more, or iOS zooms in when the field gets focus */
+    }
+}
