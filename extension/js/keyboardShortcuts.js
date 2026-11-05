@@ -52,6 +52,9 @@ function nextNotification() {
 }
 
 function checkKey(e) {
+    // the browser's autofill (the sign-in page's saved password) sends a keydown that's no real key
+    // press, without getModifierState
+    if (!(e instanceof KeyboardEvent)) return;
     const post = document.getElementsByName("post")[0] || document.getElementsByName("submit")[0] || false;
     const isAltKey = e.altKey || e.getModifierState('AltGraph');
 

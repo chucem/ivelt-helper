@@ -18,6 +18,7 @@ const preferencesOptions = [
 	'titleOpensUnread',
 	'doubleClickLike',
 	'ShowMultiNotifs',
+	'olderNotifsPlus',
 	'upDownArrowKeys',
 	'spoilerPolish',
 	'imageResizer',
@@ -143,6 +144,11 @@ function postSettingChange(items){
 
 	if(items.hasOwnProperty('multiAccounts')){
 		document.getElementById('switchReloadsOneTab').disabled = !items.multiAccounts;
+	}
+
+	// only means something with the bells split
+	if(items.hasOwnProperty('ShowMultiNotifs')){
+		document.getElementById('olderNotifsPlus').disabled = !items.ShowMultiNotifs;
 	}
 
 	// on unless turned off
