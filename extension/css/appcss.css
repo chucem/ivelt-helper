@@ -11,6 +11,35 @@
     flex: 1;
 }
 
+/* The phone layout's search bar under the navbar (js/addGoogleSearch.js), opened by the navbar's
+   search icon: one row as wide as the navbar, built of the forum's own input and button classes so
+   the themes color it too. Never on the desktop layout, which has no search icon to close it */
+#ih-mobile-search {
+    clear: both;
+    padding: 6px 0 2px;
+}
+#ih-mobile-search[hidden] {
+    display: none;
+}
+#ih-mobile-search fieldset {
+    display: flex;
+}
+#ih-mobile-search .inputbox {
+    flex: 1;
+    min-width: 0;
+    width: auto;
+    font-size: 16px; /* under 16px a phone zooms the page in on focus */
+}
+#ih-mobile-search .button {
+    display: flex;
+    align-items: center;
+}
+@media (min-width: 701px) {
+    #ih-mobile-search {
+        display: none;
+    }
+}
+
 /* "private message with a quote" post button (js/addTopicButtons.js): only where the forum's phone
    layout hides the profile's contact menu, which has the same link */
 @media (min-width: 701px) {
