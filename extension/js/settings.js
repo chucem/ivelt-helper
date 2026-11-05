@@ -35,7 +35,9 @@ const preferencesOptions = [
 	'profileCards',
 	'printShowLikes',
 	'printLikesStyle',
-	'editorUndo'
+	'editorUndo',
+	'multiAccounts',
+	'switchReloadsOneTab'
 ];
 
 // Listen to settings changes
@@ -138,6 +140,10 @@ function postSettingChange(items){
 
 	if(items.hasOwnProperty('printShowLikes')){
 		document.getElementById('printLikesStyle').disabled = !items.printShowLikes;
+	}
+
+	if(items.hasOwnProperty('multiAccounts')){
+		document.getElementById('switchReloadsOneTab').disabled = !items.multiAccounts;
 	}
 
 	// only means something with the bells split

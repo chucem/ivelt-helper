@@ -106,7 +106,198 @@ function initThemeSwatches() {
 
             container.appendChild(swatch);
         });
+        makeRoomForScrollbar();
     });
+}
+
+// The browser sizes the popup to its content, and only then a scrollbar comes (a tall popup, with
+// the accounts and the colors), which takes its width from the content: the colors stuck out of
+// their card. So then the popup asks for the scrollbar's width more. Measured again whenever the
+// popup or its content changes size (the browser growing it, pictures coming in), once a frame
+let roomForScrollbarAsked = false;
+function makeRoomForScrollbar() {
+    if (roomForScrollbarAsked)
+        return;
+    roomForScrollbarAsked = true;
+    requestAnimationFrame(function () {
+        roomForScrollbarAsked = false;
+        const body = document.body;
+        const scrollbar = window.innerWidth - document.documentElement.clientWidth;
+        body.style.minWidth = '';
+        body.style.width = 'max-content';
+        const content = body.getBoundingClientRect().width;
+        body.style.width = '';
+        body.style.minWidth = scrollbar > 0 ? Math.ceil(content + scrollbar) + 'px' : '';
+    });
+}
+
+// The saved accounts (background.accounts.js): a click switches to one, the background does the
+// switching and reloads the forum's tabs. Shown when turned on in the settings
+function initAccounts() {
+    chrome.storage.local.get('multiAccounts', function (items) {
+        if (!items.multiAccounts)
+            return;
+        document.getElementById('accountsSection').hidden = false;
+
+        // the background keeps them, it gives the list without their cookies
+        chrome.runtime.sendMessage({ type: 'listAccounts' }, function (list) {
+            if (chrome.runtime.lastError || !list || !list.accounts)
+                return;
+            const accounts = list.accounts;
+
+            chrome.cookies.get({ url: 'https://www.ivelt.com', name: 'phpbb3_sw7kk_u' }, function (cookie) {
+                const currentId = cookie && cookie.value !== '1' ? cookie.value : '';
+                showAccounts(accounts, currentId);
+                // signed in with an account that isn't saved yet
+                document.getElementById('save_account').hidden = !currentId || accounts.some(a => a.userId === currentId);
+
+                // no name yet for the signed-in account: the forum's pages find it (js/accounts.js), its
+                // own profile page always has it
+                const current = accounts.find(a => a.userId === currentId);
+                document.getElementById('open_own_profile').hidden = !current || !!current.name;
+            });
+        });
+    });
+}
+
+function open_own_profile() {
+    chrome.cookies.get({ url: 'https://www.ivelt.com', name: 'phpbb3_sw7kk_u' }, function (cookie) {
+        if (cookie)
+            openForumLink('https://www.ivelt.com/forum/memberlist.php?mode=viewprofile&u=' + encodeURIComponent(cookie.value));
+    });
+}
+
+function showAccounts(accounts, currentId) {
+    const list = document.getElementById('accountsList');
+    list.replaceChildren();
+
+    accounts.forEach(function (account) {
+        const name = account.name || 'באנוצער ' + account.userId;
+        const row = document.createElement('div');
+        row.className = 'account_row';
+        row.setAttribute('role', 'button');
+        row.tabIndex = 0;
+        row.classList.toggle('current', account.userId === currentId);
+        row.classList.toggle('expired', !!account.expired && account.userId !== currentId);
+
+        let avatar;
+        // the picture itself is kept with the account, the forum doesn't let the popup load its address
+        if (/^data:image\//.test(account.avatar || '')) {
+            avatar = document.createElement('img');
+            avatar.src = account.avatar;
+            avatar.alt = '';
+        } else {
+            avatar = document.createElement('span');
+            avatar.textContent = name.charAt(0);
+        }
+        avatar.className = 'account_avatar';
+
+        const nameElement = document.createElement('span');
+        nameElement.className = 'account_name';
+        nameElement.textContent = name;
+
+        const status = document.createElement('span');
+        status.className = 'account_status';
+        if (account.userId === currentId)
+            status.textContent = 'אריינגעלאגט';
+        else if (account.expired)
+            status.textContent = 'לאג אריין נאכאמאל';
+
+        const forget = document.createElement('button');
+        forget.className = 'account_forget';
+        forget.textContent = '×';
+        forget.title = 'מעק אויס דעם אקאונט פון דער ליסטע (מען ווערט נישט ארויסגעלאגט פונעם פארום, נאר דאס עקסטענשען געדענקט עס מער נישט)';
+        // asked right here, a second click: the browser's confirm() takes seconds to show in a popup
+        let undoAsk;
+        const stopAsking = function () {
+            clearTimeout(undoAsk);
+            forget.classList.remove('asking');
+            forget.textContent = '×';
+        };
+        forget.addEventListener('click', function (e) {
+            e.stopPropagation();
+            if (!forget.classList.contains('asking')) {
+                forget.classList.add('asking');
+                forget.textContent = 'אויסמעקן?';
+                undoAsk = setTimeout(stopAsking, 4000);
+                return;
+            }
+            stopAsking();
+            row.remove();
+            chrome.runtime.sendMessage({ type: 'forgetAccount', userId: account.userId }, initAccounts);
+        });
+        row.addEventListener('mouseleave', stopAsking);
+
+        row.append(avatar, nameElement, status, forget);
+        row.addEventListener('click', () => accountClicked(account, currentId));
+        row.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                accountClicked(account, currentId);
+            }
+        });
+        list.appendChild(row);
+    });
+
+    // with many accounts the list scrolls, the signed-in one is shown
+    const current = list.querySelector('.account_row.current');
+    if (current)
+        current.scrollIntoView({ block: 'nearest' });
+    makeRoomForScrollbar();
+}
+
+function showAccountsMessage(text) {
+    const message = document.getElementById('accountsMessage');
+    message.textContent = text;
+    message.hidden = !text;
+}
+
+function accountClicked(account, currentId) {
+    if (account.userId === currentId)
+        return;
+
+    // the forum doesn't take its cookies any more, so it signs in from the start
+    if (account.expired) {
+        add_account();
+        return;
+    }
+
+    showAccountsMessage('מען טוישט דעם אקאונט…');
+    // the tab it's switched in: with the setting, the only one reloaded
+    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+        switchTo(account, tabs[0] && tabs[0].id);
+    });
+}
+
+function switchTo(account, tabId) {
+    chrome.runtime.sendMessage({ type: 'switchAccount', userId: account.userId, tabId: tabId }, function (response) {
+        if (chrome.runtime.lastError || !response || response.error) {
+            showAccountsMessage('עס האט נישט געקלאפט, פרובירט נאכאמאל');
+            return;
+        }
+        if (response.expired) {
+            showAccountsMessage((account.name || 'דער אקאונט') + ' איז מער נישט אריינגעלאגט. קליקט אויף אים זיך אריינצולאגן נאכאמאל');
+            initAccounts();
+            return;
+        }
+        // tabs with a post being written weren't reloaded, so the text isn't lost: told, then closed
+        if (response.kept) {
+            showAccountsMessage((response.kept === 1 ? 'א טאב' : response.kept + ' טאבס') +
+                ' מיט א תגובה וואס איז נאך נישט אוועקגעשיקט ' + (response.kept === 1 ? 'איז' : 'זענען') +
+                ' נישט גערילאויד געווארן, ' + (response.kept === 1 ? 'ער ווייזט' : 'זיי ווייזן') + ' נאך דעם פריערדיגן אקאונט');
+            setTimeout(() => window.close(), 5000);
+            return;
+        }
+        window.close();
+    });
+}
+
+function add_account() {
+    chrome.runtime.sendMessage({ type: 'addAccount' }, () => window.close());
+}
+
+function save_account() {
+    chrome.runtime.sendMessage({ type: 'saveAccount' }, initAccounts);
 }
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -138,6 +329,18 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 document.addEventListener('DOMContentLoaded', initThemeSwatches);
+
+document.addEventListener('DOMContentLoaded', function () {
+    window.addEventListener('resize', makeRoomForScrollbar);
+    new ResizeObserver(makeRoomForScrollbar).observe(document.body);
+});
+
+document.addEventListener('DOMContentLoaded', function () {
+    document.getElementById('add_account').addEventListener('click', add_account);
+    document.getElementById('save_account').addEventListener('click', save_account);
+    document.getElementById('open_own_profile').addEventListener('click', open_own_profile);
+    initAccounts();
+});
 
 document.addEventListener('DOMContentLoaded', function () {
     const manifest = chrome.runtime.getManifest();

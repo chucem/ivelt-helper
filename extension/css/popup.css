@@ -83,8 +83,8 @@ body {
   /* one line each, the popup grows to fit: with the colors hidden it's narrow, and a wrapped line went under the icon */
   white-space: nowrap;
 }
-/* the color themes are a card of their own, so they don't look like more links */
-.popup_themes {
+/* the color themes and the accounts are cards of their own, so they don't look like more links */
+.popup_card {
   margin: 6px 8px 4px;
   padding: 2px 0 2px;
   border: 1px solid var(--ui-border);
@@ -94,11 +94,11 @@ body {
 .popup_themes .theme-swatches {
   padding: 0 8px;
 }
-.popup_themes .popup_options {
+.popup_card .popup_options {
   margin: 8px 10px 4px;
   font-size: 14px;
 }
-.popup_themes_title {
+.popup_card_title {
   margin: 8px 10px 6px;
   font-size: 13px;
   font-weight: 600;
@@ -149,4 +149,117 @@ body {
   color: var(--t-text);
   white-space: nowrap;
   text-overflow: ellipsis;
+}
+/* the saved accounts (background.accounts.js), a click switches to one */
+.accounts_list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 6px;
+  direction: rtl;
+  /* five and a half accounts, more scroll; the half one shows there's more */
+  max-height: 188px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+.account_row {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 6px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-size: 14px;
+  text-align: right;
+  cursor: pointer;
+}
+.account_row:hover {
+  background: color-mix(in srgb, var(--ui-text) 8%, transparent);
+}
+.account_row.current {
+  cursor: default;
+  font-weight: 600;
+}
+/* the signed-in account is tinted, so it stands out from the others */
+.account_row.current,
+.account_row.current:hover {
+  background: color-mix(in srgb, var(--ui-accent) 14%, transparent);
+}
+.account_avatar {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: color-mix(in srgb, var(--ui-accent) 20%, var(--ui-surface));
+  color: var(--ui-accent);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 24px;
+  text-align: center;
+}
+/* the whole name, the popup gets wider for a long one */
+.account_name {
+  flex: 1 0 auto;
+  white-space: nowrap;
+}
+.account_status {
+  font-size: 11px;
+  font-weight: normal;
+  color: var(--ui-muted);
+  white-space: nowrap;
+}
+.account_row.expired .account_status {
+  color: var(--ui-error);
+}
+.account_forget {
+  flex: none;
+  padding: 0 4px;
+  border: 0;
+  background: none;
+  color: var(--ui-muted);
+  font: inherit;
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+  visibility: hidden;
+}
+.account_row:hover .account_forget,
+.account_forget:focus {
+  visibility: visible;
+}
+.account_forget:hover {
+  color: var(--ui-error);
+}
+/* the second click removes it */
+.account_forget.asking {
+  visibility: visible;
+  color: var(--ui-error);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.accounts_message {
+  margin: 6px 10px 2px;
+  font-size: 12px;
+  color: var(--ui-error);
+  text-align: right;
+  direction: rtl;
+  white-space: normal;
+}
+.accounts_hint {
+  margin: 6px 10px 2px;
+  font-size: 12px;
+  color: var(--ui-muted);
+  text-align: right;
+  direction: rtl;
+  white-space: normal;
+  cursor: pointer;
+}
+.accounts_hint a {
+  color: var(--ui-link);
 }
