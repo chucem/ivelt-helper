@@ -202,12 +202,17 @@ function splitNotifications() {
 
     // Update original badge count. The forum only sends the newest notifications with the page, so
     // older unread ones aren't in any of the bells: the original bell counts only the unread ones it
-    // has, and a grey "+N" next to it, a plain link to the notifications page, counts the rest
+    // has, and a grey "+N" next to it, a plain link to the notifications page, counts the rest.
+    // With "olderNotifsPlus" turned off, the original bell counts them too, and there's no "+N".
     const originalBadge = originalLI.querySelector('strong.badge');
     if (originalBadge) {
       const currentCount = parseInt(originalBadge.textContent.trim(), 10);
-      const newCount = allItems.filter(li => li.isConnected && originalLI.contains(li) && isUnread(li)).length;
-      const missing = currentCount - citirtCount - badanktCount - dermantCount - pmCount - newCount;
+      let newCount = allItems.filter(li => li.isConnected && originalLI.contains(li) && isUnread(li)).length;
+      let missing = currentCount - citirtCount - badanktCount - dermantCount - pmCount - newCount;
+      if (missing > 0 && iveltSetting("olderNotifsPlus") === false) {
+        newCount += missing;
+        missing = 0;
+      }
 
       if (missing > 0 && parent) {
         const moreLI = document.createElement('li');

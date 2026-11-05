@@ -18,6 +18,7 @@ const preferencesOptions = [
 	'titleOpensUnread',
 	'doubleClickLike',
 	'ShowMultiNotifs',
+	'olderNotifsPlus',
 	'upDownArrowKeys',
 	'spoilerPolish',
 	'imageResizer',
@@ -137,6 +138,11 @@ function postSettingChange(items){
 
 	if(items.hasOwnProperty('printShowLikes')){
 		document.getElementById('printLikesStyle').disabled = !items.printShowLikes;
+	}
+
+	// only means something with the bells split
+	if(items.hasOwnProperty('ShowMultiNotifs')){
+		document.getElementById('olderNotifsPlus').disabled = !items.ShowMultiNotifs;
 	}
 
 	// on unless turned off
