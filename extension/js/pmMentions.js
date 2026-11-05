@@ -6,7 +6,8 @@
 // forum refuses to send ("you can't use the following BBCode: [smention]"). Here the tag
 // becomes BBCode that PMs allow and that looks like a mention: a link to the user's profile,
 // in bold and in the mention's blue. The link goes by the user ID (it stays right if the user is
-// renamed); a tag without one links by name.
+// renamed); a tag without one links by name. With the extension, js/mentionLinks.js shows such
+// a link as a real mention again, so it takes the theme's mention color too.
 //
 // Done when the PM editor opens, and again just before it's sent or previewed (send,
 // preview and Ctrl+Enter all submit the form), for a mention pasted in later.
@@ -19,7 +20,7 @@
     const params = new URLSearchParams(location.search);
     if (!/^(ucp_)?pm$/.test(params.get('i') || '')) return;
 
-    const MENTION_COLOR = '#115098'; // the forum's .mention color
+    const MENTION_COLOR = '#115098'; // the forum's .mention color; js/mentionLinks.js looks for it
     const MENTION_TAG = /\[(s?mention)\b([^\]]*)\]([\s\S]*?)\[\/\1\]/gi;
 
     function profileUrl(attrs, name) {
