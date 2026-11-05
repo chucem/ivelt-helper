@@ -150,6 +150,12 @@
     },
     {
       "matches": [
+        "*://*.ivelt.com/forum/ucp.php*"
+      ],
+      "js": ["js/pmMentions.js"]
+    },
+    {
+      "matches": [
         "*://*.ivelt.com/*"
       ],
       "css": ["css/quoteSelection.css"],
