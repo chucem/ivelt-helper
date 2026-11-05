@@ -46,13 +46,59 @@ let debugQueue = {};
 let debugQueueTimeout;
 const debugLogPrefix = 'debug-';
 
+// The check must not touch the sign-in. phpBB ties a session to the IP, and a filter like Geder
+// can send the check out from another IP than the tabs. phpBB then signs the check in again with
+// the "remember me" key and replaces that key, while a tab's request still carries the old one,
+// and the user is signed out. So the check goes without the key, and the cookies the forum sends
+// back to it are dropped: a check from another IP only gets a signed-out page, and the next one tries again
+const checkUrl = notificationUrl + '&ivhCheck=1'; // only the check's own requests match the rule
+const CHECK_RULE_ID = 2;
+const forumCookiePrefix = 'phpbb3_sw7kk_';
+
+// resolves whether the browser is signed in to the forum
+async function setCheckCookies(){
+  const cookies = await chrome.cookies.getAll({ url: notificationUrl });
+  const userCookie = cookies.find(c => c.name === forumCookiePrefix + 'u');
+  const header = cookies
+    .filter(c => c.name !== forumCookiePrefix + 'k')
+    .map(c => `${c.name}=${c.value}`)
+    .join('; ');
+
+  await chrome.declarativeNetRequest.updateSessionRules({
+    removeRuleIds: [CHECK_RULE_ID],
+    addRules: [{
+      id: CHECK_RULE_ID,
+      priority: 1,
+      action: {
+        type: 'modifyHeaders',
+        requestHeaders: [header ? { header: 'cookie', operation: 'set', value: header } : { header: 'cookie', operation: 'remove' }],
+        responseHeaders: [{ header: 'set-cookie', operation: 'remove' }]
+      },
+      condition: { urlFilter: `|${checkUrl}|`, resourceTypes: ['xmlhttprequest', 'other'] }
+    }]
+  });
+
+  return !!userCookie && userCookie.value !== '1'; // 1 is phpBB's guest
+}
+
 let checkNewNotification = function () {
-    fetch(notificationUrl, { headers: { 'X-Requested-With': chrome.runtime.id } })
+    let signedIn = true;
+    setCheckCookies()
+      .then((isSignedIn) => {
+        signedIn = isSignedIn;
+        return fetch(checkUrl, { headers: { 'X-Requested-With': chrome.runtime.id } });
+      })
       .then((response) => {
         if (!response.ok) throw new Error(response.status);
         return response.text();
       })
       .then((data) => {
+
+      // a signed-out page while the browser is signed in: the check went out from another IP, the badge stays
+      if (signedIn && !data.includes('id="notification_list_button"')) {
+        debugLog('backgroundSync', 'checkNewNotification: signed-out page, skipped');
+        return;
+      }
 
       let matches =
         data.match(/id="notification_list_button"\D*(\d{1,4})/) || [];
