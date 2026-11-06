@@ -468,34 +468,42 @@ const lastFetchTime = localStorage.getItem(CACHE_TIME_KEY);
 
 const forceRefresh = iveltSetting("forceUpdateTopicMapCache") === true;
 
-if (!forceRefresh && cachedData && lastFetchTime && now - lastFetchTime < CACHE_EXPIRY_MS) {
-    // Use cached data if available and valid
-    return cachedData;
+// With a saved list the post buttons don't wait for Google: an old one is used on this page and
+// downloaded again for the next one. (The button can't simply be added later: the forum's phone
+// menu takes the post buttons once, when parseDocument runs at the end of addBtn.) Only with no
+// saved list, or "update the list now", does this page wait for the download
+if (!forceRefresh && cachedData) {
+    if (!(lastFetchTime && now - lastFetchTime < CACHE_EXPIRY_MS)) {
+        downloadTopicMapping(now).catch(error => console.error("Error fetching topic mappings:", error));
     }
+    return cachedData;
+}
 
-// Otherwise, fetch new data from Google Sheets
     try {
-        const csvText = await requestTopicMappingCsv();
-        const mappings = {};
-
-        const rows = csvText.split("\n");
-        rows.forEach(row => {
-            const [sourceTopic, targetTopic] = row.split(",").map(cell => cell.trim());
-            if (sourceTopic && targetTopic) {
-                mappings[sourceTopic] = targetTopic;
-            }
-        });
-
-        // Save the fetched mappings and current time to localStorage
-        localStorage.setItem(CACHE_KEY, JSON.stringify(mappings));
-        localStorage.setItem(CACHE_TIME_KEY, now.toString());
-
-        return mappings;
+        return await downloadTopicMapping(now);
     } catch (error) {
         console.error("Error fetching topic mappings:", error);
         // keep using the list from last time, and try again on the next page
         return cachedData;
     }
+}
+
+// fetch the list from Google Sheets and save it, with the time
+async function downloadTopicMapping(now) {
+    const csvText = await requestTopicMappingCsv();
+    const mappings = {};
+
+    const rows = csvText.split("\n");
+    rows.forEach(row => {
+        const [sourceTopic, targetTopic] = row.split(",").map(cell => cell.trim());
+        if (sourceTopic && targetTopic) {
+            mappings[sourceTopic] = targetTopic;
+        }
+    });
+
+    localStorage.setItem(CACHE_KEY, JSON.stringify(mappings));
+    localStorage.setItem(CACHE_TIME_KEY, now.toString());
+    return mappings;
 }
 
 function getCurrentTopicIdFromDOM() {
