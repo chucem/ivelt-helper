@@ -14,7 +14,7 @@ function addGoogleSearch(){
 
         document.getElementById('g_search_keywords').addEventListener('keydown' ,function (e) {
             if (e.key === 'Enter') {
-                window.open(googleSearchUrl(`intitle:"${topicTitle}" site:www.ivelt.com ${document.getElementById('g_search_keywords').value}`), '_blank').focus();
+                window.open(googleSearchUrl(`intitle:"${topicTitle}" site:www.ivelt.com ${document.getElementById('g_search_keywords').value}`), '_blank')?.focus(); // null when the browser blocks the new tab
                 e.preventDefault();
             }
         });
@@ -43,7 +43,7 @@ function addGoogleSiteSearch(){
     // Enter in the box submits the form too
     siteSearch.previousElementSibling.addEventListener('submit', function (e) {
         e.preventDefault();
-        window.open(googleSearchUrl(`site:www.ivelt.com ${document.getElementById('g_site_search_keywords').value}`), '_blank').focus();
+        window.open(googleSearchUrl(`site:www.ivelt.com ${document.getElementById('g_site_search_keywords').value}`), '_blank')?.focus(); // null when the browser blocks the new tab
     });
 }
 
@@ -91,7 +91,7 @@ function addMobileSearchBar(){
 
     bar.querySelector('.ih-mobile-google').addEventListener('click', function () {
         if (!input.value.trim()) return input.focus();
-        window.open(googleSearchUrl(`site:www.ivelt.com ${input.value}`), '_blank').focus();
+        window.open(googleSearchUrl(`site:www.ivelt.com ${input.value}`), '_blank')?.focus(); // null when the browser blocks the new tab
     });
     // Nothing typed: the forum would only show an error page (Enter searches the forum)
     form.addEventListener('submit', function (e) {
