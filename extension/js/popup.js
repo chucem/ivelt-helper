@@ -250,10 +250,18 @@ function showAccounts(accounts, currentId) {
         list.appendChild(row);
     });
 
-    // with many accounts the list scrolls, the signed-in one is shown
+    // with many accounts the list scrolls, the signed-in one is shown. Only the list is scrolled:
+    // scrollIntoView() also scrolls the page, and while the browser is still growing the popup that
+    // left it scrolled, so the popup scrolled for nothing
     const current = list.querySelector('.account_row.current');
-    if (current)
-        current.scrollIntoView({ block: 'nearest' });
+    if (current) {
+        const row = current.getBoundingClientRect();
+        const box = list.getBoundingClientRect();
+        if (row.bottom > box.bottom)
+            list.scrollTop += row.bottom - box.bottom;
+        else if (row.top < box.top)
+            list.scrollTop -= box.top - row.top;
+    }
     makeRoomForScrollbar();
 }
 
