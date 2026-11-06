@@ -73,7 +73,8 @@
         }, true);
         document.addEventListener('click', (event) => {
             const link = getMarkedLink(event.target);
-            if (!link) return;
+            // not while it says "צוגעלייגט": a second tap would add the same quote again
+            if (!link || Date.now() < doneUntil) return;
             event.preventDefault();
             event.stopImmediatePropagation();
             const end = addQuote(marked.content, selectedText(marked.content, marked.range));
