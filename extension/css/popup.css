@@ -250,6 +250,10 @@ body {
   text-align: right;
   direction: rtl;
   white-space: normal;
+  /* the popup is as wide as its longest line: the message doesn't widen it, it wraps to what's there
+     (a long one, like the tabs that weren't reloaded, takes two lines instead) */
+  width: 0;
+  min-width: calc(100% - 20px);
 }
 .accounts_hint {
   margin: 6px 10px 2px;
