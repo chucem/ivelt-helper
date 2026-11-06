@@ -292,3 +292,21 @@
     outline-offset: 2px;
 }
 #ivd-wrap.ivd-dragover .ivd-popup { background: #f1f6fb; }
+
+/* On a phone (reply and PM pages alike) the popup is a panel along the bottom of the screen, 8px
+   from each side: opened from the button, wherever it is, it ran out past the edge of the screen */
+@media (max-width: 700px) {
+    html body #ivd-wrap .ivd-popup,
+    html body #ivd-wrap .ivd-popup.ivd-up {
+        position: fixed;
+        top: auto;
+        bottom: 8px;
+        left: 8px;
+        right: 8px;
+        width: auto;
+        max-height: 80vh;
+        overflow-y: auto;
+        box-sizing: border-box;
+        direction: rtl;
+    }
+}

@@ -1,10 +1,17 @@
-function enchancePage() {
+// Runs in the extension's own world: the settings come straight from its storage
+function enchancePage(items) {
   const url = new URL(window.location.href);
   const params = new URLSearchParams(url.search);
 
 
+// On a phone, quotes without the space at the sides (css/appcss.css), so quotes many levels deep
+  // aren't squeezed into a narrow column. The style only applies on a narrow screen
+  if (items.compactQuotesMobile !== false) {
+    document.documentElement.classList.add('ih-compact-quotes');
+  }
+
 // Sticky post buttons logic with logging
-  if (document.getElementById("iveltHelperSettings").getAttribute("data-sticky-post-buttons") === "true") {
+  if (items.stickyPostButtons === true) {
     const postButtons = document.querySelectorAll('.has-profile .post-buttons');
 
     const checkStickyPosition = () => {
@@ -19,16 +26,13 @@ function enchancePage() {
         // Add or remove the sticky-post class based on the parent's top position
         if (parentRect.top < 0 && parentRect.bottom > 30 && !firstStickyFound) {
           firstStickyFound = true;
-          // console.log(`found button set to stick. the parent.bottom is ${parentRect.bottom}, the parentRect.top is ${parentRect.top} `);
 
           if (!btn.classList.contains('sticky-post')) {
-            // console.log(`Adding 'sticky-post' to`, i);
             btn.style.left = `${btnRect.left}px`; // Keep the original X position
             btn.classList.add('sticky-post');
           }
         } else {
           if (btn.classList.contains('sticky-post')) {
-            // console.log(`Removing 'sticky-post' from`, i);
             btn.classList.remove('sticky-post');
             btn.style.left = '';
           }
@@ -41,7 +45,7 @@ function enchancePage() {
   }
   // Copy the post link (the small icon next to the author name) on a plain left click instead of navigating.
   // Right click, long press, middle click and modifier clicks keep the browser's default behavior.
-  if (document.getElementById("iveltHelperSettings").getAttribute("data-copy-post-link") !== "false") {
+  if (items.copyPostLink !== false) {
     document.addEventListener('click', (event) => {
       if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) {
         return;
@@ -126,4 +130,7 @@ function showCopiedTip(anchor) {
   setTimeout(() => tip.remove(), 1600);
 }
 
-enchancePage();
+// not the forum, e.g. Cloudflare's check page
+if (document.getElementById('page-body')) {
+  chrome.storage.local.get(['stickyPostButtons', 'copyPostLink', 'compactQuotesMobile'], enchancePage);
+}

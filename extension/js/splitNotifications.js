@@ -9,14 +9,26 @@ function splitNotifications() {
       return title.startsWith(type);
     };
 
-    const citirtItemsAll   = allItems.filter(li => matchType(li, 'ציטירט'));
-    const badanktItemsAll  = allItems.filter(li => matchType(li, 'באדאנקט'));
-    const dermantItemsAll  = allItems.filter(li => matchType(li, 'דערמאנט'));
-    // Private messages go to the forum's own PM icon (with its own count of unread messages), when
-    // it's there, instead of being among the general notifications
+    // Which kinds get a bell of their own (all of them unless turned off in the settings). A kind
+    // that doesn't stays in the general bell, and is counted there like the rest of what's in it
+    const splitQuoted    = iveltSetting('splitQuotedNotifs') !== false;
+    const splitLiked     = iveltSetting('splitLikedNotifs') !== false;
+    const splitMentioned = iveltSetting('splitMentionedNotifs') !== false;
+    const splitPms       = iveltSetting('splitPmNotifs') !== false;
+
+    // The PM icon is grouped with the bells even when private messages stay in the general bell
     const pmLink = [...originalLI.parentElement.querySelectorAll(':scope > li > a')]
       .find(a => /[?&]i=pm\b/.test(a.getAttribute('href') || '') && /folder=inbox/.test(a.getAttribute('href')));
-    const pmItemsAll       = pmLink ? allItems.filter(li => matchType(li, 'פריוואטע מעסעדזש')) : [];
+
+    // With none of them split, the bell is left as the forum has it
+    if (!splitQuoted && !splitLiked && !splitMentioned && !(splitPms && pmLink)) return;
+
+    const citirtItemsAll   = splitQuoted ? allItems.filter(li => matchType(li, 'ציטירט')) : [];
+    const badanktItemsAll  = splitLiked ? allItems.filter(li => matchType(li, 'באדאנקט')) : [];
+    const dermantItemsAll  = splitMentioned ? allItems.filter(li => matchType(li, 'דערמאנט')) : [];
+    // Private messages go to the forum's own PM icon (with its own count of unread messages), when
+    // it's there, instead of being among the general notifications
+    const pmItemsAll       = pmLink && splitPms ? allItems.filter(li => matchType(li, 'פריוואטע מעסעדזש')) : [];
 
     const isUnread = li => li.classList.contains('bg1') || li.classList.contains('bg2');
 
@@ -166,9 +178,9 @@ function splitNotifications() {
     }
 
     // Create notification bells by cloning the original
-    const badanktLI = createNotificationBell('badankt', 'באדאנקט', badanktCount, badanktItemsAll, 'fa-thumbs-up');
-    const dermantLI = createNotificationBell('dermant', 'דערמאנט', dermantCount, dermantItemsAll, 'fa-at');
-    const citirtLI  = createNotificationBell('citirt', 'ציטירט', citirtCount, citirtItemsAll, 'fa-quote-left');
+    const badanktLI = splitLiked && createNotificationBell('badankt', 'באדאנקט', badanktCount, badanktItemsAll, 'fa-thumbs-up');
+    const dermantLI = splitMentioned && createNotificationBell('dermant', 'דערמאנט', dermantCount, dermantItemsAll, 'fa-at');
+    const citirtLI  = splitQuoted && createNotificationBell('citirt', 'ציטירט', citirtCount, citirtItemsAll, 'fa-quote-left');
 
     // Insert the new notification bells to the left of the original bell
     const parent = originalLI.parentElement;
@@ -188,7 +200,7 @@ function splitNotifications() {
     if (originalUL && !originalUL.children.length) originalUL.appendChild(createEmptyRow());
 
     // The PM icon opens the private messages, the footer goes to the inbox
-    if (pmLink) {
+    if (pmLink && splitPms) {
       const pmLI = pmLink.parentElement;
       const dropdown = createDropdown('pm', 'פריוואטע מעסעדזשעס', pmItemsAll, pmLink.getAttribute('href'), 'גיי צום פאסט קעסטל');
       pmLI.classList.add('dropdown-container', 'notif-bell');
@@ -202,12 +214,17 @@ function splitNotifications() {
 
     // Update original badge count. The forum only sends the newest notifications with the page, so
     // older unread ones aren't in any of the bells: the original bell counts only the unread ones it
-    // has, and a grey "+N" next to it, a plain link to the notifications page, counts the rest
+    // has, and a grey "+N" next to it, a plain link to the notifications page, counts the rest.
+    // With "olderNotifsPlus" turned off, the original bell counts them too, and there's no "+N".
     const originalBadge = originalLI.querySelector('strong.badge');
     if (originalBadge) {
       const currentCount = parseInt(originalBadge.textContent.trim(), 10);
-      const newCount = allItems.filter(li => li.isConnected && originalLI.contains(li) && isUnread(li)).length;
-      const missing = currentCount - citirtCount - badanktCount - dermantCount - pmCount - newCount;
+      let newCount = allItems.filter(li => li.isConnected && originalLI.contains(li) && isUnread(li)).length;
+      let missing = currentCount - citirtCount - badanktCount - dermantCount - pmCount - newCount;
+      if (missing > 0 && iveltSetting("olderNotifsPlus") === false) {
+        newCount += missing;
+        missing = 0;
+      }
 
       if (missing > 0 && parent) {
         const moreLI = document.createElement('li');
@@ -216,8 +233,8 @@ function splitNotifications() {
         const link = document.createElement('a');
         link.href = './ucp.php?i=ucp_notifications';
         link.title = missing === 1
-          ? 'נאך 1 אומגעליינטע נאטיפיקאציע וואס איז נישט אין די גלעקלעך, דריק צו זען אלע'
-          : `נאך ${missing} אומגעליינטע נאטיפיקאציעס וואס זענען נישט אין די גלעקלעך, דריק צו זען אלע`;
+          ? 'נאך 1 אומגעליינטע נאטיפיקאציע וואס איז נישט אין די גלעקלעך, דרוק צו זען אלע'
+          : `נאך ${missing} אומגעליינטע נאטיפיקאציעס וואס זענען נישט אין די גלעקלעך, דרוק צו זען אלע`;
         const badge = document.createElement('strong');
         badge.className = 'badge';
         badge.style.backgroundColor = '#8a8a8a';
@@ -253,7 +270,8 @@ function splitNotifications() {
     }
 }
 
-// splitNotifications();
-if (document.getElementById("iveltHelperSettings").getAttribute("data-show-multi-notifs") === "true") {
-  splitNotifications();
-}
+whenIveltSettingsReady(() => {
+  if (iveltSetting("ShowMultiNotifs") === true) {
+    splitNotifications();
+  }
+});

@@ -1,7 +1,14 @@
 (function(){
+	if(!document.getElementById('page-body')) return; // not the forum, e.g. Cloudflare's check page
+
+	// The settings the scripts in the page's world use (they can't reach chrome.storage): the topic
+	// buttons, print, split notifications and editor undo. Only these go on the page.
+	const PAGE_SETTINGS = ['alwaysCopyTopic', 'copyAttachments', 'cachedTopicMappingExpire', 'forceUpdateTopicMapCache',
+		'quoteSourceLink', 'ShowMultiNotifs', 'olderNotifsPlus',
+		'splitQuotedNotifs', 'splitLikedNotifs', 'splitMentionedNotifs', 'splitPmNotifs', 'printShowLikes', 'printLikesStyle', 'editorUndo'];
 
 	if(chrome.storage){
-		chrome.storage.local.get(['alwaysCopyTopic', 'stickyPostButtons', 'copyAttachments', 'forceUpdateTopicMapCache', 'cachedTopicMappingExpire', 'hideUserName', 'warnOnLosingPost','backgroundSync', 'backgroundSyncPosts', 'ShowMultiNotifs', 'upDownArrowKeys', 'copyPostLink', 'printShowLikes', 'printLikesStyle', 'editorUndo'], function(items){
+		chrome.storage.local.get([...PAGE_SETTINGS, 'hideUserName', 'warnOnLosingPost'], function(items){
 			if(items.hideUserName){
 				let userName = document.querySelector('.header-avatar .username');
 				if (userName) {
@@ -27,12 +34,8 @@
 
 				let notificationLinks = document.querySelectorAll('#mark_all_notifications a, .pagination a[href*="mark="].mark');
 				notificationLinks.forEach (link => {
-					// for testing while development
-					// console.log(link);
-					// link.setAttribute('href', 'javascript:void(0);');
-
 					link.addEventListener('click', function(event) {
-						let confirmation = confirm('זענט איר זיכער אז איר ווילט פארצייכענען אלעס ווי געליינט?');
+						let confirmation = confirm('ביסטו זיכער אז דו ווילסט פארצייכענען אלעס ווי געליינט?');
 						if (!confirmation) {
 							event.preventDefault();
 							event.stopImmediatePropagation();
@@ -42,28 +45,19 @@
 
 			}
             
-            let e = document.createElement('div');
-            e.style.display = "none";
-            e.setAttribute('id', 'iveltHelperSettings');
-            e.setAttribute('data-background-sync',items.backgroundSync);
-            e.setAttribute('data-background-sync-posts',items.backgroundSyncPosts);
-			e.setAttribute('data-always-copy-topic',items.alwaysCopyTopic);
-			e.setAttribute('data-copy-attachments',items.copyAttachments);
-			e.setAttribute('data-cached-topic-mapping-expire',items.cachedTopicMappingExpire);
-			e.setAttribute('data-force-update-topic-map-cache',items.forceUpdateTopicMapCache);
-			e.setAttribute('data-sticky-post-buttons',items.stickyPostButtons);
-			e.setAttribute('data-show-multi-notifs',items.ShowMultiNotifs);
-			e.setAttribute('data-up-down-arrow-keys',items.upDownArrowKeys);
-			e.setAttribute('data-copy-post-link',items.copyPostLink);
-			e.setAttribute('data-print-show-likes',items.printShowLikes);
-			e.setAttribute('data-print-likes-style',items.printLikesStyle);
-			e.setAttribute('data-editor-undo',items.editorUndo);
+			// as JSON, so they keep their real values (true, 3600, 'names'); one never set is left out
+			const pageSettings = {};
+			PAGE_SETTINGS.forEach(name => { if(name in items) pageSettings[name] = items[name]; });
+			let e = document.createElement('div');
+			e.style.display = "none";
+			e.setAttribute('id', 'iveltHelperSettings');
+			e.dataset.settings = JSON.stringify(pageSettings);
 			document.body.appendChild(e);
+			// the page scripts wait for this (js/settingsReady.js), DOM events reach the page's world
+			document.dispatchEvent(new Event('iveltHelperSettingsReady'));
 
 			if(items.forceUpdateTopicMapCache === true){
-				chrome.storage.local.set({ forceUpdateTopicMapCache: false }, function () {
-					console.log('Topic mapping set back to false');
-				});
+				chrome.storage.local.set({ forceUpdateTopicMapCache: false });
 			}
 		});
 	}

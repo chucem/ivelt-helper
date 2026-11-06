@@ -11,6 +11,7 @@
 
 (function () {
     'use strict';
+    if (!document.getElementById('page-body')) return; // not the forum, e.g. Cloudflare's check page
 
     const KEYS = ['whatsNewVersion', 'whatsNewFrom', 'whatsNewCheckTiming', 'whatsNewLaterUntil'];
     const LATER_MS = 24 * 60 * 60 * 1000;
@@ -76,7 +77,7 @@
             const notice = element('div', 'ih-whats-new-notice');
             notice.append(
                 element('strong', null, 'די נאטיפיקאציע אנשטעלונגען האבן זיך געטוישט'),
-                element('p', null, 'מיר האבן מסדר געווען די אנשטעלונגען פון טשעקן פאר נייע תגובות אינעם אשכול און פאר נייע נאטיפיקאציעס, יעדער האט יעצט זיין אייגענע קעסטל און ווי אפט. דערפאר האבן מיר ביידע אויסגעלאשן ביי יעדעם, און מען דארף זיי צוריק אנשטעלן. ווילט איר זיי ווייטער? שטעלט זיי אן אין די אנשטעלונגען און קלייבט אויס ווי אפט.'),
+                element('p', null, 'מיר האבן מסדר געווען די אנשטעלונגען פון טשעקן פאר נייע תגובות אינעם אשכול און פאר נייע נאטיפיקאציעס, יעדער האט יעצט זיין אייגענע קעסטל און ווי אפט. דערפאר האבן מיר ביידע אויסגעלאשן ביי יעדעם, און מען דארף זיי צוריק אנשטעלן. ווילסטו זיי ווייטער? שטעל זיי אן אין די אנשטעלונגען און קלייב אויס ווי אפט.'),
                 button('עפן די נאטיפיקאציע אנשטעלונגען', 'ih-btn-outline', () => openSettings('notifications'))
             );
             dialog.appendChild(notice);

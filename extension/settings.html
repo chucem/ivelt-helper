@@ -6,7 +6,6 @@
   <link type='text/css' href='css/style.css' rel='stylesheet'>
   <link type='text/css' href='css/fonts.css' rel='stylesheet'>
   <link type='text/css' href='css/styles2.css' rel='stylesheet'>
-  <link href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet">
   <!-- the page follows the forum's color theme, loaded early so it doesn't flash white first -->
   <script src="js/themes.data.js"></script>
   <script src="js/theme.js"></script>
@@ -63,7 +62,7 @@
           <div class='row'>
             <label for='themeEditorBase' class='label'>אנהייבן פון</label>
             <select id='themeEditorBase'>
-              <option value=''>-- קלייבט א טעמע --</option>
+              <option value=''>-- קלייב א טעמע --</option>
             </select>
           </div>
           <div class='row'>
@@ -100,7 +99,16 @@
         </div>
         <div class='row'>
           <input type='checkbox' id='copyAttachments' class='option' />
-          <label for='copyAttachments' class='label'>ביים ציטירן אין אנדערע אשכול, נעם אויך מיט די בילדער און אטעטשמענטס</label>
+          <label for='copyAttachments' class='label'>ביים ציטירן אין אנדערע אשכול, נעם אויך מיט די בילדער און עטעטשמענטס</label>
+        </div>
+        <div class='row'>
+          <label for='quoteSourceLink' class='label'>ביים ציטירן אין אנדערע אשכול, א לינק צו דער ציטירטער תגובה</label>
+          <select id='quoteSourceLink' class='option'>
+            <option value="topic">אויבן: "קעפל" פונעם אשכול</option>
+            <option value="source">אונטן: "מקור"</option>
+            <option value="both">ביידע</option>
+            <option value="none">קיין לינק</option>
+          </select>
         </div>
         <div class='row'>
           <input type='checkbox' id='warnOnLosingPost' class='option' />
@@ -124,7 +132,7 @@
         </div>
         <div class='row'>
           <input type='checkbox' id='imageResizer' class='option' />
-          <label for='imageResizer' class='label'>פארקלענער אויטאמאטיש בילדער וואס זענען צו גרויס פאר אן אטעטשמענט, און מאך א פאלדער (אדער מער פיילס ווי עס איז דא פלאץ) אין א ZIP</label>
+          <label for='imageResizer' class='label'>פארקלענער אויטאמאטיש בילדער וואס זענען צו גרויס פאר אן עטעטשמענט, און מאך א פאלדער (אדער מער פיילס ווי עס איז דא פלאץ) אין א ZIP</label>
         </div>
         <div class='row'>
           <input type='checkbox' id='pasteImages' class='option' />
@@ -132,7 +140,7 @@
         </div>
         <div class='row'>
           <input type='checkbox' id='openAttachmentsTab' class='option' />
-          <label for='openAttachmentsTab' class='label'>ביים שרייבן א תגובה, עפן גלייך דעם "אטעטשמענטס" טעב (אנשטאט "אפציעס")</label>
+          <label for='openAttachmentsTab' class='label'>ביים שרייבן א תגובה, עפן גלייך דעם "עטעטשמענטס" טעב (אנשטאט "אפציעס")</label>
         </div>
       </div>
 
@@ -148,7 +156,7 @@
         </div>
         <div class='row'>
           <input type='checkbox' id='dropboxUpload' class='option' />
-          <label for='dropboxUpload' class='label'>ווייז אויך Dropbox <span style="font-size: 0.8em;">(די פיילס גייען אין <bdi dir='ltr'>Apps/iVelt Helper</bdi> אויף אייער Dropbox)</span></label>
+          <label for='dropboxUpload' class='label'>ווייז אויך Dropbox <span style="font-size: 0.8em;">(די פיילס גייען אין <bdi dir='ltr'>Apps/iVelt Helper</bdi> אויף דיין Dropbox)</span></label>
         </div>
         <div class='row'>
           <input type='checkbox' id='cloudUploadInPms' class='option' />
@@ -161,7 +169,7 @@
         <div class='row row-field'>
           <label for='driveButtonPlace' class='label'>וואו צו ווייזן דעם קנעפל</label>
           <select id='driveButtonPlace' class='option'>
-            <option value="attachments">ביי די אטעטשמענטס</option>
+            <option value="attachments">ביי די עטעטשמענטס</option>
             <option value="toolbar">צווישן די קנעפלעך איבער דער תגובה</option>
           </select>
         </div>
@@ -180,6 +188,10 @@
         <div class='row'>
           <input type='checkbox' id='stickyPostButtons' class='option' />
           <label for='stickyPostButtons' class='label'>ווייז די תגובה קנעפלעך די גאנצע צייט (אויך ביים סקראלן)</label>
+        </div>
+        <div class='row'>
+          <input type='checkbox' id='compactQuotesMobile' class='option' />
+          <label for='compactQuotesMobile' class='label'>אויף א טעלעפאן, ציטאטן אן דעם פלאץ אין די זייטן <span style="font-size: 0.8em;">(אז ציטאטן אין ציטאטן ווערן נישט א שמאלע זייל)</span></label>
         </div>
         <div class='row'>
           <input type='checkbox' id='whoLiked' class='option' />
@@ -224,6 +236,21 @@
           <input type='checkbox' id='ShowMultiNotifs' class='option' />
           <label for='ShowMultiNotifs' class='label'>ווייז די נאטיפיקאציעס באזונדער לויט סארט <span style="font-size: 0.8em;">(ציטירט, באדאנקט, דערמאנט)</span></label>
         </div>
+        <div class='row row-indented inline-options' role='group' aria-labelledby='splitNotifsKinds'>
+          <span id='splitNotifsKinds' class='inline-options-title'>אן אייגן גלעקל פאר: <span style="font-size: 0.8em;">(אויסגעלאשן: זיי בלייבן אינעם "נאטיפיקאציעס" גלעקל)</span></span>
+          <input type='checkbox' id='splitQuotedNotifs' class='option' />
+          <label for='splitQuotedNotifs' class='label'>ציטירט</label>
+          <input type='checkbox' id='splitLikedNotifs' class='option' />
+          <label for='splitLikedNotifs' class='label'>באדאנקט</label>
+          <input type='checkbox' id='splitMentionedNotifs' class='option' />
+          <label for='splitMentionedNotifs' class='label'>דערמאנט</label>
+          <input type='checkbox' id='splitPmNotifs' class='option' />
+          <label for='splitPmNotifs' class='label'>פריוואטע מעסעדזשעס <span style="font-size: 0.8em;">(אינעם פאסט קעסטל אייקאן)</span></label>
+        </div>
+        <div class='row row-indented'>
+          <input type='checkbox' id='olderNotifsPlus' class='option' />
+          <label for='olderNotifsPlus' class='label'>ווייז עלטערע אומגעליינטע נאטיפיקאציעס באזונדער, אין א גרויען "+N" <span style="font-size: 0.8em;">(אויסגעלאשן: זיי ווערן געציילט אינעם "נאטיפיקאציעס" גלעקל)</span></label>
+        </div>
         <div class='row'>
           <input type='checkbox' id='backgroundSync' class='option' />
           <label for='backgroundSync' class='label'>טשעק פאר נייע תגובות אינעם אשכול יעדע</label>
@@ -251,7 +278,15 @@
         <div class='row'>
           <input type='checkbox' id='hideUserName' class='option' />
           <del> <label for='hideUserName' class='label' >ווייז נישט מיין ניק ווען איך בין אריינגעסיינט</label></del>
-          <div style="font-size: 0.8em;">ביטע שטעלט די <a href="https://www.ivelt.com/forum/ucp.php?i=165">"באהאלט מיין ניק"</a> אפציע אויף "יא". <a href="https://www.ivelt.com/forum/viewtopic.php?p=5080519#p5080519">ליינט מער</a></div>
+          <div style="font-size: 0.8em;">ביטע שטעל די <a href="https://www.ivelt.com/forum/ucp.php?i=165">"באהאלט מיין ניק"</a> אפציע אויף "יא". <a href="https://www.ivelt.com/forum/viewtopic.php?p=5080519#p5080519">ליינט מער</a></div>
+        </div>
+        <div class='row'>
+          <input type='checkbox' id='multiAccounts' class='option' />
+          <label for='multiAccounts' class='label'>מערערע אקאונטס: בלייב אריינגעלאגט אין עטליכע אקאונטס, און טויש צווישן זיי פונעם עקסטענשען מעניו <span style="font-size: 0.8em;">(יעדע אקאונט'ס לאגין קוקיס ווערן אפגעהיטן נאר אויף דעם קאמפיוטער, אין דעם עקסטענשען, נישט אויפן פארום'ס בלאט און נישט אין סינק. ווער עס קען נוצן דעם בראוזער קען זיך אריינלאגן אין זיי. אויסלעשן דאס מעקט זיי אויס)</span></label>
+        </div>
+        <div class='row'>
+          <input type='checkbox' id='switchReloadsOneTab' class='option' />
+          <label for='switchReloadsOneTab' class='label'>ביים טוישן אקאונט, רילאוד נאר דעם טעב וואו מען האט געטוישט <span style="font-size: 0.8em;">(די אנדערע טעבס ווייזן א מעלדונג אז זיי ווייזן נאך דעם פריערדיגן אקאונט, מיט א רילאוד קנעפל)</span></label>
         </div>
         <div class='row'>
           <input type='checkbox' id='popupSameTab' class='option' />
@@ -267,6 +302,7 @@
           </select>
           <div>
             <a style="font-size: 0.8em;" id='forceUpdateTopicMapCache' class='button'>אפדעיט די ליסטע יעצט</a>
+            <div style="font-size: 0.8em;" id='topicMappingStatus'></div>
           </div>
         </div>
         <div class='row' >
@@ -286,13 +322,13 @@
 
       <div class='row'>
         <ul>
-          <li>דרוקט די רעכטס/לינקס עראוס <span class="shortcut-key">→</span><span class="shortcut-key">←</span> אויפן קיבאורד צו גיין צום פריערדיגן/קומענדיגן בלאט אינעם אשכול.</li>
-          <li>דרוקט די ארויף/אראפ עראוס <span class="shortcut-key">↑</span><span class="shortcut-key">↓</span> אויפן קיבאורד צו שפרינגען צום אנהייב/סוף פונעם בלאט. <span style="font-size: 0.8em;">(מען קען דאס אויסלעשן אין די אנשטעלונגען)</span></li>
-          <li>דרוקט <span class="shortcut-key">Ctrl</span>+<span class="shortcut-key">Enter</span> צו שיקן די תגובה.</li>
-          <li>דרוקט <span class="shortcut-key">Alt</span>+<span class="shortcut-key">v</span> צו זען א פריוויו פון דער תגובה.</li>
-          <li>דרוקט <span class="shortcut-key">Alt</span>+<span class="shortcut-key">a</span> צו גיין צו אקטיווע אשכולות.</li>
-          <li>דרוקט <span class="shortcut-key">Alt</span>+<span class="shortcut-key">n</span> צו עפענען די נאטיפיקאציעס.</li>
-          <li>דרוקט <span class="shortcut-key">Alt</span>+<span class="shortcut-key">m</span> צו עפענען די קומענדיגע אומגעליינטע נאטיפיקאציע.</li>
+          <li>דרוק די רעכטס/לינקס עראוס <span class="shortcut-key">→</span><span class="shortcut-key">←</span> אויפן קיבאורד צו גיין צום פריערדיגן/קומענדיגן בלאט אינעם אשכול.</li>
+          <li>דרוק די ארויף/אראפ עראוס <span class="shortcut-key">↑</span><span class="shortcut-key">↓</span> אויפן קיבאורד צו שפרינגען צום אנהייב/סוף פונעם בלאט. <span style="font-size: 0.8em;">(מען קען דאס אויסלעשן אין די אנשטעלונגען)</span></li>
+          <li>דרוק <span class="shortcut-key">Ctrl</span>+<span class="shortcut-key">Enter</span> צו שיקן די תגובה.</li>
+          <li>דרוק <span class="shortcut-key">Alt</span>+<span class="shortcut-key">v</span> צו זען א פריוויאו פון דער תגובה.</li>
+          <li>דרוק <span class="shortcut-key">Alt</span>+<span class="shortcut-key">a</span> צו גיין צו אקטיווע אשכולות.</li>
+          <li>דרוק <span class="shortcut-key">Alt</span>+<span class="shortcut-key">n</span> צו עפענען די נאטיפיקאציעס.</li>
+          <li>דרוק <span class="shortcut-key">Alt</span>+<span class="shortcut-key">m</span> צו עפענען די קומענדיגע אומגעליינטע נאטיפיקאציע.</li>
         </ul>
       </div>
 

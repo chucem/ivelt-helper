@@ -1,5 +1,6 @@
 (function () {
     'use strict';
+    if (!document.getElementById('page-body')) return; // not the forum, e.g. Cloudflare's check page
 
     const SETTING_KEY = 'doubleClickLike';
     const IGNORED = 'a, button, input, textarea, select, .post-buttons, .spoilwrapper';

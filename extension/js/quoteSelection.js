@@ -6,10 +6,15 @@
 // button again. Nothing pops up over the text, so it doesn't get in the way of double-clicking
 // or copying. Only where there's a reply box on the page, and not for words inside a quote.
 //
+// On a phone (or zoomed in) the post's buttons are in its ⋯ menu, where phpBB keeps a copy of
+// each one, so the copy is marked too. Tapping ⋯ clears the selection on a touch screen, so the
+// selected words are kept while that menu is being used, and quoted from what was kept.
+//
 // Runs as a content script (isolated world), controlled by the "quoteSelection" setting.
 
 (function () {
     'use strict';
+    if (!document.getElementById('page-body')) return; // not the forum, e.g. Cloudflare's check page
 
     const SETTING_KEY = 'quoteSelection';
     const JUMP_KEY = 'quoteJumpToReply'; // after quoting, go down to the reply box (on by default)
@@ -17,11 +22,16 @@
     const MARKED_ICON = 'fa-i-cursor';
     const MARKED_TEXT = 'ציטיר אנגעצייכנט';
 
-    // The post's quote button while it's marked: { link, icon, label, iconClass, labelText, title }
+    // The post whose quote button is marked, with what the button was before and the selection it
+    // would quote: { post, iconClass, labelText, title, content, range }
     let marked = null;
-    // The post content the marked button would quote from: { content }
-    let pending = null;
     let doneUntil = 0;
+    // When the marked post's ⋯ menu was last pressed (its toggle or a button in it)
+    let menuPressAt = 0;
+    // The selection is gone, but because the post's ⋯ menu was pressed: the mark and the selected
+    // words stay until the menu is used, or something else is pressed
+    let held = false;
+    const MENU_PRESS_MS = 1500;
     // Where the user left the cursor in the reply box, once they clicked or typed in it: a quote goes
     // there. Kept as they go, since selecting text in the page can reset the box's own cursor
     let caret = null;
@@ -52,19 +62,59 @@
         });
 
         // in the capture phase, before the forum's own handlers on the button
+        document.addEventListener('pointerdown', (event) => {
+            if (isInMenu(event.target)) menuPressAt = Date.now();
+            else leftMenu();
+        }, true);
+        // a key (like Escape) clears the selection without a press outside the menu
+        document.addEventListener('keydown', leftMenu, true);
         document.addEventListener('mousedown', (event) => {
-            // pressing the marked button mustn't clear the selection it's about to quote
-            if (marked && marked.link.contains(event.target)) event.preventDefault();
+            // pressing the marked button (or the ⋯ menu it's in) mustn't clear the selection it's
+            // about to quote
+            if (getMarkedLink(event.target) || isInMenu(event.target)) event.preventDefault();
         }, true);
         document.addEventListener('click', (event) => {
-            if (!marked || !pending || !marked.link.contains(event.target)) return;
+            const link = getMarkedLink(event.target);
+            // not while it says "צוגעלייגט": a second tap would add the same quote again
+            if (!link || Date.now() < doneUntil) return;
             event.preventDefault();
             event.stopImmediatePropagation();
-            const end = addQuote(pending.content, selectedText(pending.content));
+            const end = addQuote(marked.content, selectedText(marked.content, marked.range));
             showDone();
             window.getSelection().removeAllRanges();
-            if (jumpToReply) goToReply(end);
+            if (jumpToReply) {
+                closeMenu(link);
+                goToReply(end);
+            }
         }, true);
+    }
+
+    // The ⋯ menu was left without quoting: a selection cleared from now on isn't kept for it
+    function leftMenu() {
+        menuPressAt = 0;
+        if (held) unmark();
+    }
+
+    // The marked post's quote button (on the bar or in its ⋯ menu) that the target is in
+    function getMarkedLink(target) {
+        if (!marked || !(target instanceof Element)) return null;
+        const link = target.closest('a');
+        return link && findQuoteLinks(marked.post).includes(link) ? link : null;
+    }
+
+    // Whether the target is in the marked post's ⋯ menu (phpBB's .responsive-menu)
+    function isInMenu(target) {
+        if (!marked || !(target instanceof Element)) return false;
+        const menu = target.closest('.post-buttons .responsive-menu');
+        return !!menu && marked.post.contains(menu);
+    }
+
+    // Closes the ⋯ menu the button was clicked in, since the click doesn't reach the forum's own
+    // handler that would close it
+    function closeMenu(link) {
+        const menu = link.closest('.dropdown-container.dropdown-visible');
+        const toggle = menu && menu.querySelector(':scope > .dropdown-toggle');
+        if (toggle) toggle.click();
     }
 
     function getTextarea() {
@@ -78,22 +128,31 @@
         const selection = window.getSelection();
         const text = selection.toString().trim();
         const content = text && selection.rangeCount && getQuotableContent(selection);
-        const link = content && findQuoteLink(content);
-        if (!link) {
-            unmark();
+        const post = content && content.closest('.post');
+        if (!post || !findQuoteLinks(post).length) {
+            // tapping ⋯ on a touch screen clears the selection: it's kept for the menu
+            if (marked && (held || Date.now() - menuPressAt < MENU_PRESS_MS)) held = true;
+            else unmark();
             return;
         }
 
-        if (marked && marked.link !== link) unmark();
-        if (!marked) mark(link);
-        pending = { content };
+        held = false;
+        if (marked && marked.post !== post) unmark();
+        mark(post);
+        marked.content = content;
+        marked.range = selection.getRangeAt(0).cloneRange();
     }
 
     // The selected words, only from the post the selection was started in: a selection dragged on
     // past the post (into the signature, the next post…, or up into the one before) is cut back to
-    // the post first. Taken from the selection itself, which has the line breaks as they show
-    function selectedText(content) {
+    // the post first. Taken from the selection itself, which has the line breaks as they show: the
+    // kept one is selected again if it's gone (on a touch screen, by tapping ⋯)
+    function selectedText(content, kept) {
         const selection = window.getSelection();
+        if (!selection.rangeCount || selection.isCollapsed) {
+            selection.removeAllRanges();
+            selection.addRange(kept);
+        }
         const range = selection.getRangeAt(0);
         const startsIn = content.contains(range.startContainer), endsIn = content.contains(range.endContainer);
         if (!startsIn || !endsIn) {
@@ -112,48 +171,58 @@
         return selection.toString().trim();
     }
 
-    // The forum's own ציטיר button of the post (not the extension's "ציטיר לעצטע", which has "last")
-    function findQuoteLink(content) {
-        const post = content.closest('.post');
-        if (!post) return null;
+    // The forum's own ציטיר buttons of the post (not the extension's "ציטיר לעצטע", which has
+    // "last"): the one on the bar, and phpBB's copy of it in the ⋯ menu
+    function findQuoteLinks(post) {
         return [...post.querySelectorAll('.post-buttons a[href*="mode=quote"]')]
-            .find((link) => !link.querySelector('.last')) || null;
+            .filter((link) => !link.querySelector('.last'));
     }
 
-    function mark(link) {
-        const icon = link.querySelector('i.icon');
-        const label = link.querySelector('span');
-        marked = {
-            link, icon, label,
-            iconClass: icon ? icon.className : '',
-            labelText: label ? label.textContent : '',
-            title: link.getAttribute('title')
-        };
-        if (icon) icon.className = `icon ${MARKED_ICON} fa-fw`;
-        if (label) label.textContent = MARKED_TEXT;
-        link.setAttribute('title', MARKED_TEXT);
-        link.classList.add('ih-quote-marked');
+    // Marks all of the post's quote buttons (again each time, so a copy made since is marked too)
+    function mark(post) {
+        if (!marked) {
+            const link = findQuoteLinks(post)[0];
+            const icon = link.querySelector('i.icon');
+            const label = link.querySelector('span');
+            marked = {
+                post,
+                iconClass: icon ? icon.className : '',
+                labelText: label ? label.textContent : '',
+                title: link.getAttribute('title')
+            };
+        }
+        setLinks(`icon ${MARKED_ICON} fa-fw`, MARKED_TEXT, MARKED_TEXT, true);
     }
 
     function unmark() {
-        pending = null;
+        held = false;
         if (!marked) return;
-        const { link, icon, label, iconClass, labelText, title } = marked;
-        if (icon) icon.className = iconClass;
-        if (label) label.textContent = labelText;
-        if (title === null) link.removeAttribute('title');
-        else link.setAttribute('title', title);
-        link.classList.remove('ih-quote-marked');
+        const { iconClass, labelText, title } = marked;
+        setLinks(iconClass, labelText, title, false);
         marked = null;
+    }
+
+    function setLinks(iconClass, labelText, title, isMarked) {
+        findQuoteLinks(marked.post).forEach((link) => {
+            const icon = link.querySelector('i.icon');
+            const label = link.querySelector('span');
+            // only what differs: this runs on every selection change while dragging
+            if (icon && icon.className !== iconClass) icon.className = iconClass;
+            if (label && label.textContent !== labelText) label.textContent = labelText;
+            if (link.getAttribute('title') !== title) {
+                if (title === null) link.removeAttribute('title');
+                else link.setAttribute('title', title);
+            }
+            link.classList.toggle('ih-quote-marked', isMarked);
+        });
     }
 
     // "צוגעלייגט ✓" on the button for a moment, then it's the forum's own button again
     function showDone() {
         if (!marked) return;
+        held = false;
         doneUntil = Date.now() + DONE_MS;
-        if (marked.icon) marked.icon.className = 'icon fa-check fa-fw';
-        if (marked.label) marked.label.textContent = 'צוגעלייגט';
-        marked.link.setAttribute('title', 'צוגעלייגט');
+        setLinks('icon fa-check fa-fw', 'צוגעלייגט', 'צוגעלייגט', true);
         setTimeout(() => {
             doneUntil = 0;
             unmark();

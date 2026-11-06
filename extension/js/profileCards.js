@@ -1,5 +1,6 @@
 (function () {
     'use strict';
+    if (!document.getElementById('page-body')) return; // not the forum, e.g. Cloudflare's check page
 
     const SETTING_KEY = 'profileCards';
     const SHOW_DELAY_MS = 800;

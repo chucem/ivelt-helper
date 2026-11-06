@@ -26,12 +26,13 @@ const DRIVE_ACCOUNT_KEY = 'driveAccount'; // chrome.storage.local: { email, name
 // Sign-in
 // ---------------------------------------------------------------------------
 
-function buildAuthUrl({ selectAccount, silent, email }) {
+function buildAuthUrl({ selectAccount, silent, email }, state) {
   const params = new URLSearchParams({
     client_id: DRIVE_CLIENT_ID,
     response_type: 'token',
     redirect_uri: chrome.identity.getRedirectURL(),
-    scope: DRIVE_SCOPE
+    scope: DRIVE_SCOPE,
+    state
   });
   if (selectAccount) params.set('prompt', 'select_account');
   else if (silent) params.set('prompt', 'none');
@@ -41,7 +42,9 @@ function buildAuthUrl({ selectAccount, silent, email }) {
 
 async function runAuthFlow(options) {
   const interactive = !options.silent;
-  const flow = { url: buildAuthUrl(options), interactive };
+  // a new random state for each sign-in, which Google sends back: an answer without it isn't to this request
+  const state = crypto.randomUUID();
+  const flow = { url: buildAuthUrl(options, state), interactive };
   if (!interactive) {
     // Google answers prompt=none through a few redirects, give it time to land
     flow.abortOnLoadForNonInteractive = false;
@@ -51,6 +54,7 @@ async function runAuthFlow(options) {
   const redirect = await chrome.identity.launchWebAuthFlow(flow);
   const result = new URLSearchParams(new URL(redirect).hash.slice(1));
   if (result.get('error')) throw new Error('Google sign-in: ' + result.get('error'));
+  if (result.get('state') !== state) throw new Error('Google sign-in: the answer is not for this sign-in');
 
   const token = result.get('access_token');
   if (!token) throw new Error('Google sign-in did not return a token');
