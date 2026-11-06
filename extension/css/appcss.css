@@ -171,3 +171,16 @@
 #more_unread_notifications { padding: 1px 6px 0 4px; }
 #more_unread_notifications > a { display: block; height: 21px; padding-top: 3px; }
 #more_unread_notifications .badge { top: 0; margin: 0; }
+
+/* On a phone, quotes without the space at the sides: each quote inside a quote took 25px of margin
+   and 5px of padding on each side, so a few levels deep the text was a narrow column, a letter or two
+   wide. The borders stay, so it still shows which quote is inside which. The "compactQuotesMobile"
+   setting (js/pageEnhancements.js puts the class on) */
+@media (max-width: 700px) {
+    html.ih-compact-quotes .postbody .content blockquote {
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        padding-left: 4px !important;
+        padding-right: 4px !important;
+    }
+}

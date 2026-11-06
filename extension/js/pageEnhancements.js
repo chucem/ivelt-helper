@@ -4,6 +4,12 @@ function enchancePage(items) {
   const params = new URLSearchParams(url.search);
 
 
+// On a phone, quotes without the space at the sides (css/appcss.css), so quotes many levels deep
+  // aren't squeezed into a narrow column. The style only applies on a narrow screen
+  if (items.compactQuotesMobile !== false) {
+    document.documentElement.classList.add('ih-compact-quotes');
+  }
+
 // Sticky post buttons logic with logging
   if (items.stickyPostButtons === true) {
     const postButtons = document.querySelectorAll('.has-profile .post-buttons');
@@ -126,5 +132,5 @@ function showCopiedTip(anchor) {
 
 // not the forum, e.g. Cloudflare's check page
 if (document.getElementById('page-body')) {
-  chrome.storage.local.get(['stickyPostButtons', 'copyPostLink'], enchancePage);
+  chrome.storage.local.get(['stickyPostButtons', 'copyPostLink', 'compactQuotesMobile'], enchancePage);
 }

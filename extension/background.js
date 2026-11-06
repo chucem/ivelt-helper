@@ -19,6 +19,7 @@ const defualtPreferences = {
   cachedTopicMappingExpire: 3600,
   forceUpdateTopicMapCache: false,
   stickyPostButtons: false,
+  compactQuotesMobile: true, // on a phone, quotes inside quotes without the space at the sides
   titleOpensUnread: true,
   doubleClickLike: false,
   ShowMultiNotifs: true,
