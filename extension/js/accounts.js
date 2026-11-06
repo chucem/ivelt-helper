@@ -36,7 +36,7 @@
             const note = document.createElement('div');
             note.id = 'ih-remember-note';
             note.style.cssText = 'margin:4px 0;font-size:0.9em;color:#5c4400';
-            note.textContent = 'לאזט "געדענק מיך" אנגעצייכנט: אן דעם בלייבט דער אקאונט אין iVelt Helper נאר א קורצע צייט, און מען דארף זיך אריינלאגן נאכאמאל';
+            note.textContent = 'לאז "געדענק מיך" אנגעצייכנט: אן דעם בלייבט דער אקאונט אין iVelt Helper נאר א קורצע צייט, און מען דארף זיך אריינלאגן נאכאמאל';
             (remember.closest('label') || remember).after(note);
         }
 
