@@ -200,7 +200,7 @@
             cleanups.push(() => target.removeEventListener(type, handler, capture));
         }
 
-        const fullMessage = `עס מעג זיין מאקסימום ${MAX_ATTACHMENTS} אטעטשמענטס. מעקט אויס איינס איידער איר לייגט צו נאך.`;
+        const fullMessage = `עס מעג זיין מאקסימום ${MAX_ATTACHMENTS} עטעטשמענטס. מעק אויס איינס איידער דו לייגסט צו נאך.`;
 
         // Opens the attachments tab when the uploader isn't there yet, and waits for it
         async function ensureAttachmentInput() {
@@ -212,7 +212,7 @@
 
             const until = Date.now() + INPUT_WAIT_MS;
             while (!(input = findAttachmentInput()) && Date.now() < until) await delay(100);
-            if (!input) throw new Error('קען נישט געפינען וואו מען לייגט צו אטעטשמענטס.');
+            if (!input) throw new Error('קען נישט געפינען וואו מען לייגט צו עטעטשמענטס.');
             return input;
         }
 
@@ -254,9 +254,9 @@
             // has to start with Yiddish - a line starting with "OK" comes out scrambled.
             if (resize && files.length > slots) {
                 const zip = confirm(
-                    `איר האט אויסגעקליבן ${files.length} פיילס, אבער עס איז נאר דא פלאץ פאר ${plural(slots, 'אטעטשמענט', 'אטעטשמענטס')}.\n\n` +
-                    `• דרוקט OK צו לייגן זיי אלע אריין אין איין ZIP פייל (די בילדער ווערן פארקלענערט אז עס זאל אריינפאסן)\n` +
-                    `• דרוקט Cancel צו צולייגן נאר די ערשטע ${slots}`
+                    `דו האסט אויסגעקליבן ${files.length} פיילס, אבער עס איז נאר דא פלאץ פאר ${plural(slots, 'עטעטשמענט', 'עטעטשמענטס')}.\n\n` +
+                    `• דרוק OK צו לייגן זיי אלע אריין אין איין ZIP פייל (די בילדער ווערן פארקלענערט אז עס זאל אריינפאסן)\n` +
+                    `• דרוק Cancel צו צולייגן נאר די ערשטע ${slots}`
                 );
                 if (zip) {
                     await zipAndAttach(files.map(f => ({ path: f.name, file: f })), 'files-' + new Date().toLocaleDateString('sv'));
@@ -278,8 +278,8 @@
             }
             if (animated.length) {
                 const ok = confirm(
-                    `${plural(animated.length, 'באוועגלעכער בילד איז', 'באוועגלעכע בילדער זענען')} צו גרויס, אדער אין א פארמאט וואס דער פארום נעמט נישט.\n\n` +
-                    `פארקלענערן מאכט עס א שטילע בילד, און די באוועגונג גייט פארלוירן.\n\n` +
+                    `${plural(animated.length, 'רוקעדיגע בילד (GIF) איז', 'רוקעדיגע בילדער (GIF) זענען')} צו גרויס, אדער אין א פארמאט וואס דער פארום נעמט נישט.\n\n` +
+                    `נאכן פארקלענערן רוקט עס זיך מער נישט.\n\n` +
                     `פארקלענערן סיי ווי? (Cancel לאזט עס אויס)`
                 );
                 if (!ok) files = files.filter(f => !animated.includes(f));
@@ -510,7 +510,7 @@
         zipButton.type = 'button';
         // The page is right-to-left, so the arrow has to point left to read "folder to ZIP"
         zipButton.value = '🗂️ פאלדער ← ZIP';
-        zipButton.title = 'קלייבט אויס א פאלדער, און ער ווערט צוגעלייגט אלס איין ZIP פייל';
+        zipButton.title = 'קלייב אויס א פאלדער, און ער ווערט צוגעלייגט אלס איין ZIP פייל';
 
         // Without the old floating button nothing shows that big images are fine to add,
         // so say so right after the forum's own "...ביז: 400 KiB." line. The limit itself
@@ -612,7 +612,7 @@
 
             const sourceBytes = entries.reduce((sum, e) => sum + e.file.size, 0);
             if (sourceBytes > ZIP_SOURCE_LIMIT) {
-                showStatus(`דער פאלדער איז ${formatSize(sourceBytes)} - פיל צו גרויס פאר איין אטעטשמענט.`, 'error', HOLD_STATUS_MS * 2);
+                showStatus(`דער פאלדער איז ${formatSize(sourceBytes)} - פיל צו גרויס פאר איין עטעטשמענט.`, 'error', HOLD_STATUS_MS * 2);
                 return;
             }
 

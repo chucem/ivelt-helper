@@ -125,6 +125,7 @@ function makeRoomForScrollbar() {
     roomForScrollbarAsked = true;
     requestAnimationFrame(function () {
         roomForScrollbarAsked = false;
+        fitInPopupHeight();
         const body = document.body;
         const scrollbar = window.innerWidth - document.documentElement.clientWidth;
         body.style.minWidth = '';
@@ -133,6 +134,51 @@ function makeRoomForScrollbar() {
         body.style.width = '';
         body.style.minWidth = scrollbar > 0 ? Math.ceil(content + scrollbar) + 'px' : '';
     });
+}
+
+function showCurrentAccount() {
+    const list = document.getElementById('accountsList');
+    const current = list.querySelector('.account_row.current');
+    if (!current)
+        return;
+    const row = current.getBoundingClientRect();
+    const box = list.getBoundingClientRect();
+    if (row.bottom > box.bottom)
+        list.scrollTop += row.bottom - box.bottom;
+    else if (row.top < box.top)
+        list.scrollTop -= box.top - row.top;
+}
+
+// The browser makes a popup at most 600px high (and 800px wide), more scrolls. With the accounts
+// and the colors it can be more (two accounts were 630px). Then the colors take more columns, as
+// few as make it fit (16 colors: 6 columns are a row less than 4), the popup gets wider instead.
+// Only if eight columns aren't enough, the accounts list shows fewer accounts and scrolls by itself
+const POPUP_MAX_HEIGHT = 600;
+const ACCOUNTS_MIN_HEIGHT = 52; // one and a half accounts: the half one shows there are more
+function fitInPopupHeight() {
+    const swatches = document.getElementById('themeSwatches');
+    const list = document.getElementById('accountsList');
+    swatches.style.gridTemplateColumns = '';
+    list.style.maxHeight = '';
+    // the page's scroll height is never less than the popup, which is never more than 600px
+    const tooTall = () => document.documentElement.scrollHeight - POPUP_MAX_HEIGHT;
+    if (tooTall() <= 0)
+        return;
+    const colors = swatches.children.length;
+    if (!document.getElementById('themesSection').hidden && colors > 4) {
+        for (let columns = 5; columns <= 8; columns++) {
+            // a count that's no row less than the one before is skipped (16 colors in 5 columns are still 4 rows)
+            if (Math.ceil(colors / columns) === Math.ceil(colors / (columns - 1)))
+                continue;
+            swatches.style.gridTemplateColumns = 'repeat(' + columns + ', 84px)';
+            if (tooTall() <= 0 || columns >= colors)
+                break;
+        }
+    }
+    const over = tooTall();
+    if (over > 0 && !document.getElementById('accountsSection').hidden && list.clientHeight > ACCOUNTS_MIN_HEIGHT)
+        list.style.maxHeight = Math.max(list.clientHeight - over, ACCOUNTS_MIN_HEIGHT) + 'px';
+    showCurrentAccount();
 }
 
 // The saved accounts (background.accounts.js): a click switches to one, the background does the
@@ -212,7 +258,7 @@ function showAccounts(accounts, currentId) {
             status.textContent = 'אן "געדענק מיך"';
         if (account.remembered === false && !account.expired)
             row.title = 'אריינגעלאגט אן "געדענק מיך": נאך א צייט אן באנוצן וועט מען זיך דארפן אריינלאגן נאכאמאל. ' +
-                'צו פארמיידן דאס, לאגט אויס פון דעם אקאונט און לאגט אריין נאכאמאל מיט "געדענק מיך" אנגעצייכנט';
+                'צו פארמיידן דאס, לאג אויס פון דעם אקאונט און לאג אריין נאכאמאל מיט "געדענק מיך" אנגעצייכנט';
 
         const forget = document.createElement('button');
         forget.className = 'account_forget';
@@ -250,10 +296,10 @@ function showAccounts(accounts, currentId) {
         list.appendChild(row);
     });
 
-    // with many accounts the list scrolls, the signed-in one is shown
-    const current = list.querySelector('.account_row.current');
-    if (current)
-        current.scrollIntoView({ block: 'nearest' });
+    // with many accounts the list scrolls, the signed-in one is shown. Only the list is scrolled:
+    // scrollIntoView() also scrolls the page, and while the browser is still growing the popup that
+    // left it scrolled, so the popup scrolled for nothing
+    showCurrentAccount();
     makeRoomForScrollbar();
 }
 
@@ -283,19 +329,19 @@ function accountClicked(account, currentId) {
 function switchTo(account, tabId) {
     chrome.runtime.sendMessage({ type: 'switchAccount', userId: account.userId, tabId: tabId }, function (response) {
         if (chrome.runtime.lastError || !response || response.error) {
-            showAccountsMessage('עס האט נישט געקלאפט, פרובירט נאכאמאל');
+            showAccountsMessage('עס האט נישט געקלאפט, פרוביר נאכאמאל');
             return;
         }
         if (response.expired) {
-            showAccountsMessage((account.name || 'דער אקאונט') + ' איז מער נישט אריינגעלאגט. קליקט אויף אים זיך אריינצולאגן נאכאמאל');
+            showAccountsMessage((account.name || 'דער אקאונט') + ' איז מער נישט אריינגעלאגט. קליק אויף אים זיך אריינצולאגן נאכאמאל');
             initAccounts();
             return;
         }
         // tabs with a post being written weren't reloaded, so the text isn't lost: told, then closed
         if (response.kept) {
-            showAccountsMessage((response.kept === 1 ? 'א טאב' : response.kept + ' טאבס') +
+            showAccountsMessage((response.kept === 1 ? 'א טעב' : response.kept + ' טעבס') +
                 ' מיט א תגובה וואס איז נאך נישט אוועקגעשיקט ' + (response.kept === 1 ? 'איז' : 'זענען') +
-                ' נישט גערילאויד געווארן, ' + (response.kept === 1 ? 'ער ווייזט' : 'זיי ווייזן') + ' נאך דעם פריערדיגן אקאונט');
+                ' נישט רילאודעד געווארן, ' + (response.kept === 1 ? 'ער ווייזט' : 'זיי ווייזן') + ' נאך דעם פריערדיגן אקאונט');
             setTimeout(() => window.close(), 5000);
             return;
         }

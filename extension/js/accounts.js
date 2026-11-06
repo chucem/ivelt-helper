@@ -93,10 +93,10 @@
             'align-items:center;justify-content:center;padding:8px 12px;background:#fff4ce;color:#5c4400;' +
             'border-bottom:1px solid #e6cf7a;font:14px system-ui,sans-serif;box-shadow:0 2px 6px rgba(0,0,0,.15)';
         const text = document.createElement('span');
-        text.textContent = 'מען האט געטוישט דעם אקאונט, דער טאב ווייזט נאך דעם פריערדיגן אקאונט.';
+        text.textContent = 'מען האט געטוישט דעם אקאונט, דער טעב ווייזט נאך דעם פריערדיגן אקאונט.';
         const reload = document.createElement('button');
         reload.type = 'button';
-        reload.textContent = 'רילאויד';
+        reload.textContent = 'רילאוד';
         reload.style.cssText = 'padding:3px 12px;border:1px solid #c9a227;border-radius:4px;background:#fff;color:#5c4400;font:inherit;cursor:pointer';
         reload.addEventListener('click', () => {
             if (location.hash) location.reload();
@@ -105,7 +105,7 @@
         const close = document.createElement('button');
         close.type = 'button';
         close.textContent = '×';
-        close.title = 'צומאכן';
+        close.title = 'פארמאך';
         close.style.cssText = 'border:0;background:none;color:inherit;font-size:18px;line-height:1;cursor:pointer';
         close.addEventListener('click', () => bar.remove());
         bar.append(text, reload, close);

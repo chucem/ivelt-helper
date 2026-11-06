@@ -35,7 +35,7 @@
 				let notificationLinks = document.querySelectorAll('#mark_all_notifications a, .pagination a[href*="mark="].mark');
 				notificationLinks.forEach (link => {
 					link.addEventListener('click', function(event) {
-						let confirmation = confirm('זענט איר זיכער אז איר ווילט פארצייכענען אלעס ווי געליינט?');
+						let confirmation = confirm('ביסטו זיכער אז דו ווילסט פארצייכענען אלעס ווי געליינט?');
 						if (!confirmation) {
 							event.preventDefault();
 							event.stopImmediatePropagation();

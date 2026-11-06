@@ -135,7 +135,7 @@ function startNotificationCheck(){
 
 // The defaults live in background.js, so it does the reset
 function resetSettings(){
-	if(!confirm('זענט איר זיכער אז איר ווילט צוריקשטעלן אלע אנשטעלונגען ווי זיי זענען געווען פון אנהייב?'))
+	if(!confirm('ביסטו זיכער אז דו ווילסט צוריקשטעלן אלע אנשטעלונגען ווי זיי זענען געווען פון אנהייב?'))
 		return;
 
 	chrome.runtime.sendMessage({ type: 'resetSettings' }, () => location.reload());
@@ -263,12 +263,12 @@ function initSettingsSyncToggle(enabled){
 		chrome.runtime.sendMessage({ type: 'settingsSyncStart' }, response => {
 			if(chrome.runtime.lastError || !response || response.error){
 				checkbox.checked = false;
-				notify('עס האט נישט געקלאפט, פרובירט נאכאמאל');
+				notify('עס האט נישט געקלאפט, פרוביר נאכאמאל');
 				return;
 			}
 
 			if(response.pulled.length){
-				notify('די אנשטעלונגען פון אייערע אנדערע קאמפיוטערס זענען אריינגעברענגט געווארן');
+				notify('די אנשטעלונגען פון דיינע אנדערע קאמפיוטערס זענען אריינגעברענגט געווארן');
 				setTimeout(() => location.reload(), 1500);
 			}
 			else
@@ -407,7 +407,7 @@ async function showInstallSource(){
 		// version opens it again (reopenSettingsAfterUpdate in background.js)
 		action.href = '#';
 		action.textContent = 'אפדעיט יעצט';
-		action.title = 'לייגט אריין די נייע ווערסיע. די בלאט מאכט זיך צו און עפנט זיך ווידער מיט דער נייער ווערסיע';
+		action.title = 'לייג אריין די נייע ווערסיע. דער בלאט מאכט זיך צו און עפנט זיך ווידער מיט דער נייער ווערסיע';
 		action.addEventListener('click', async e => {
 			e.preventDefault();
 			await chrome.storage.local.set({ reopenSettingsUntil: Date.now() + 60 * 1000 });

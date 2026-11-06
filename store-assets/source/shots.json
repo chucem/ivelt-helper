@@ -29,7 +29,7 @@
       { "icon": "files-o", "yi": "ציטיר אין אנדערע אשכול", "en": "Quote in another topic" },
       { "icon": "envelope", "yi": "פריוואטע מעסעדזש מיט א ציטאט", "en": "A private message with the quote in it" },
       { "icon": "link", "yi": "קאפיר דעם לינק מיט איין קליק", "en": "Copy the post link in one click" },
-      { "icon": "caret-down", "yi": "זעט ווער עס האט באדאנקט", "en": "See who liked a post" }
+      { "icon": "caret-down", "yi": "זע ווער עס האט באדאנקט", "en": "See who liked a post" }
     ],
     "url": "ivelt.com/forum/viewtopic.php?t=46302",
     "window": { "x": 56, "y": 290, "w": 744, "h": 360 },
@@ -98,7 +98,7 @@
   {
     "name": "settings",
     "file": "screenshot-5-settings.png",
-    "title": "אלעס לויט *אייער געשמאק*",
+    "title": "אלעס לויט *דיין געשמאק*",
     "subtitle": "Turn any feature on or off from a simple settings page",
     "features": [
       { "icon": "sliders", "yi": "צינדט אן אדער לעשט אויס יעדע זאך", "en": "Every feature has its own switch" },
@@ -124,7 +124,7 @@
       { "alt": ["→", "←"], "yi": "פריערדיגער / קומענדיגער בלאט", "en": "Previous / next page" },
       { "alt": ["↓", "↑"], "yi": "צום אנהייב / סוף פונעם בלאט", "en": "Jump to top / bottom" },
       { "combo": ["Ctrl", "Enter"], "yi": "שיק די תגובה", "en": "Submit your post" },
-      { "combo": ["Alt", "V"], "yi": "פריוויו", "en": "Preview your post" },
+      { "combo": ["Alt", "V"], "yi": "פריוויאו", "en": "Preview your post" },
       { "combo": ["Alt", "A"], "yi": "אקטיווע אשכולות", "en": "Active topics" },
       { "combo": ["Alt", "N"], "yi": "עפן די נאטיפיקאציעס", "en": "Open notifications" },
       { "combo": ["Ctrl", "Z"], "yi": "צוריקדרייען ביים שרייבן", "en": "Undo while writing" },
@@ -135,12 +135,12 @@
   {
     "name": "themes",
     "file": "screenshot-7-themes.png",
-    "title": "אייוועלט אין *אייערע קאלירן*",
+    "title": "אייוועלט אין *דיינע קאלירן*",
     "subtitle": "Color themes for the forum, dark modes included",
     "features": [
       { "icon": "paint-brush", "yi": "15 פארטיגע טעמעס", "en": "15 ready-made themes" },
       { "icon": "moon-o", "yi": "טונקעלע טעמעס פאר די אויגן", "en": "Easy-on-the-eyes dark themes" },
-      { "icon": "eyedropper", "yi": "מאכט אייער אייגענע", "en": "Build your own theme" }
+      { "icon": "eyedropper", "yi": "מאך דיין אייגענע", "en": "Build your own theme" }
     ],
     "url": "ivelt.com/forum/viewtopic.php?t=46302",
     "window": { "x": 56, "y": 100, "w": 744, "h": 600 },
@@ -161,7 +161,7 @@
     "subtitle": "Quote just the words you need, see who liked a post, and never lose a draft",
     "features": [
       { "icon": "i-cursor", "yi": "ציטיר נאר די אנגעצייכנטע ווערטער", "en": "Select words, quote only them" },
-      { "icon": "thumbs-o-up", "yi": "זעט ווער עס האט באדאנקט", "en": "See who liked a post" },
+      { "icon": "thumbs-o-up", "yi": "זע ווער עס האט באדאנקט", "en": "See who liked a post" },
       { "icon": "floppy-o", "yi": "דראפטס ווערן אפגעהיט", "en": "Drafts are kept, even after a crash" },
       { "icon": "undo", "yi": "צוריקדרייען און ווידער טון", "en": "Undo and redo while writing" },
       { "icon": "eye-slash", "yi": "שענערע ספוילערס", "en": "Nicer spoilers" }

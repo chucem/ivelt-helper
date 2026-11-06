@@ -109,7 +109,7 @@ function initThemeEditor(){
 
 	document.getElementById('themeCopy').addEventListener('click', () => {
 		navigator.clipboard.writeText(customThemeJson())
-			.then(() => notify('די קאלירן זענען קאפירט, איר קענט זיי שיקן פאר אנדערע'));
+			.then(() => notify('די קאלירן זענען קאפירט, דו קענסט זיי שיקן פאר אנדערע'));
 	});
 
 	document.getElementById('themeImport').addEventListener('click', importCustomTheme);
@@ -157,7 +157,7 @@ function importCustomTheme(){
 	} catch(e) {}
 
 	if(!theme){
-		notify('די קאלירן זענען נישט גוט, פרובירט נאכאמאל');
+		notify('די קאלירן זענען נישט גוט, פרוביר נאכאמאל');
 		return;
 	}
 
