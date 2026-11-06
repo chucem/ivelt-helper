@@ -33,8 +33,10 @@
         return text.replace(MENTION_TAG, (whole, tag, attrs, inner) => {
             const name = inner.trim().replace(/^@/, '');
             if (!name) return inner;
-            // the color inside the link, or the link's own color wins
-            return `[url=${profileUrl(attrs, name)}][color=${MENTION_COLOR}][b]@${name}[/b][/color][/url]`;
+            // the shown name without [ or ], which would break the BBCode around it (the link keeps
+            // the whole name). The color inside the link, or the link's own color wins
+            const shown = name.replace(/[[\]]/g, '');
+            return `[url=${profileUrl(attrs, name)}][color=${MENTION_COLOR}][b]@${shown}[/b][/color][/url]`;
         });
     }
 
