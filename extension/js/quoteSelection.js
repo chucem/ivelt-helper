@@ -64,8 +64,10 @@
         // in the capture phase, before the forum's own handlers on the button
         document.addEventListener('pointerdown', (event) => {
             if (isInMenu(event.target)) menuPressAt = Date.now();
-            else if (held) unmark(); // the ⋯ menu was left without quoting
+            else leftMenu();
         }, true);
+        // a key (like Escape) clears the selection without a press outside the menu
+        document.addEventListener('keydown', leftMenu, true);
         document.addEventListener('mousedown', (event) => {
             // pressing the marked button (or the ⋯ menu it's in) mustn't clear the selection it's
             // about to quote
@@ -85,6 +87,12 @@
                 goToReply(end);
             }
         }, true);
+    }
+
+    // The ⋯ menu was left without quoting: a selection cleared from now on isn't kept for it
+    function leftMenu() {
+        menuPressAt = 0;
+        if (held) unmark();
     }
 
     // The marked post's quote button (on the bar or in its ⋯ menu) that the target is in
