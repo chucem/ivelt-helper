@@ -2,6 +2,7 @@
 let TOPIC_MAPPING_EXPIRE, COPY_ATTACHMENTS, CACHE_EXPIRY_MS;
 const CACHE_KEY = "topicMappingCache";
 const CACHE_TIME_KEY = "topicMappingLastFetchTime";
+const CACHE_STARTED_KEY = "topicMappingDownloadStartedAt";
 
 function createButton(reference, customClass, title, text, onclick, itext="") {
     let li = document.createElement('li');
@@ -473,7 +474,10 @@ const forceRefresh = iveltSetting("forceUpdateTopicMapCache") === true;
 // menu takes the post buttons once, when parseDocument runs at the end of addBtn.) Only with no
 // saved list, or "update the list now", does this page wait for the download
 if (!forceRefresh && cachedData) {
-    if (!(lastFetchTime && now - lastFetchTime < CACHE_EXPIRY_MS)) {
+    // one tab downloads it: another page opened while that download is under way doesn't start its own
+    const startedAt = Number(localStorage.getItem(CACHE_STARTED_KEY)) || 0;
+    if (!(lastFetchTime && now - lastFetchTime < CACHE_EXPIRY_MS) && now - startedAt > 60 * 1000) {
+        localStorage.setItem(CACHE_STARTED_KEY, now.toString());
         downloadTopicMapping(now).catch(error => console.error("Error fetching topic mappings:", error));
     }
     return cachedData;
