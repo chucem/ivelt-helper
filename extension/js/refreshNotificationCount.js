@@ -14,21 +14,24 @@ let unreadNotifications = function() {
 }
 
 let checkNewNotification = function() {
+    // the extension was reloaded or updated while this tab stayed open: this copy can't reach it
+    // any more ("Extension context invalidated"), so it stops watching
+    if (!chrome.runtime?.id) {
+        observer?.disconnect();
+        return;
+    }
     let newCount = unreadNotifications();
-    if (newCount !== '0') {
-        chrome.runtime.sendMessage({text: newCount, type: 'badgeText'});
-    }
-    else{
-        chrome.runtime.sendMessage({text: '', type: 'badgeText'});
-    }
+    chrome.runtime.sendMessage({text: newCount !== '0' ? newCount : '', type: 'badgeText'});
 }
+
+let observer = null;
 
 const notificationNode = document.getElementById('notification_list_button');
 if(notificationNode){
     // The whole header menu, since the bells are made (and moved into one group) after this starts,
     // and a PM notification marked read only changes its row's class
     const config = { characterData : true, childList: true, subtree: true, attributes: true, attributeFilter: ['class'] };
-    const observer = new MutationObserver(checkNewNotification);
+    observer = new MutationObserver(checkNewNotification);
     observer.observe(notificationNode.closest('ul') || notificationNode, config);
 
     checkNewNotification();
