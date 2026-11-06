@@ -149,10 +149,10 @@ function showCurrentAccount() {
         list.scrollTop -= box.top - row.top;
 }
 
-// The browser makes a popup at most 600px high, more scrolls. With the accounts and the colors it
-// can be more (two accounts were 630px). Then the colors take five columns instead of four, a row
-// less, and if that's not enough the accounts list shows fewer accounts and scrolls by itself,
-// so the popup as a whole never does
+// The browser makes a popup at most 600px high (and 800px wide), more scrolls. With the accounts
+// and the colors it can be more (two accounts were 630px). Then the colors take more columns, as
+// few as make it fit (16 colors: 6 columns are a row less than 4), the popup gets wider instead.
+// Only if eight columns aren't enough, the accounts list shows fewer accounts and scrolls by itself
 const POPUP_MAX_HEIGHT = 600;
 const ACCOUNTS_MIN_HEIGHT = 52; // one and a half accounts: the half one shows there are more
 function fitInPopupHeight() {
@@ -164,8 +164,17 @@ function fitInPopupHeight() {
     const tooTall = () => document.documentElement.scrollHeight - POPUP_MAX_HEIGHT;
     if (tooTall() <= 0)
         return;
-    if (!document.getElementById('themesSection').hidden && swatches.children.length > 4)
-        swatches.style.gridTemplateColumns = 'repeat(5, 84px)';
+    const colors = swatches.children.length;
+    if (!document.getElementById('themesSection').hidden && colors > 4) {
+        for (let columns = 5; columns <= 8; columns++) {
+            // a count that's no row less than the one before is skipped (16 colors in 5 columns are still 4 rows)
+            if (Math.ceil(colors / columns) === Math.ceil(colors / (columns - 1)))
+                continue;
+            swatches.style.gridTemplateColumns = 'repeat(' + columns + ', 84px)';
+            if (tooTall() <= 0 || columns >= colors)
+                break;
+        }
+    }
     const over = tooTall();
     if (over > 0 && !document.getElementById('accountsSection').hidden && list.clientHeight > ACCOUNTS_MIN_HEIGHT)
         list.style.maxHeight = Math.max(list.clientHeight - over, ACCOUNTS_MIN_HEIGHT) + 'px';
