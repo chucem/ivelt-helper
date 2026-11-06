@@ -263,9 +263,9 @@ function accountClicked(account, currentId) {
     if (account.userId === currentId)
         return;
 
-    // the forum doesn't take its cookies any more, so it signs in from the start
+    // the forum doesn't take its cookies any more, so it signs in from the start, with its name filled in
     if (account.expired) {
-        add_account();
+        add_account(account.userId);
         return;
     }
 
@@ -299,8 +299,9 @@ function switchTo(account, tabId) {
     });
 }
 
-function add_account() {
-    chrome.runtime.sendMessage({ type: 'addAccount' }, () => window.close());
+// userId: a saved account to sign in again (its name is filled in on the sign-in page)
+function add_account(userId) {
+    chrome.runtime.sendMessage({ type: 'addAccount', userId: typeof userId === 'string' ? userId : undefined }, () => window.close());
 }
 
 function save_account() {

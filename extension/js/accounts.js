@@ -39,6 +39,18 @@
             note.textContent = 'לאזט "געדענק מיך" אנגעצייכנט: אן דעם בלייבט דער אקאונט אין iVelt Helper נאר א קורצע צייט, און מען דארף זיך אריינלאגן נאכאמאל';
             (remember.closest('label') || remember).after(note);
         }
+
+        // signing in again to a saved account: its name is filled in, only the password is left
+        const passwordBox = document.querySelector('form input[type="password"]');
+        const nameBox = passwordBox && passwordBox.form.querySelector('input[name="username"]');
+        if (nameBox && !nameBox.value) {
+            chrome.runtime.sendMessage({ type: 'signInName' }, function (answer) {
+                if (chrome.runtime.lastError || !answer || !answer.name || nameBox.value) return;
+                nameBox.value = answer.name;
+                nameBox.dispatchEvent(new Event('input', { bubbles: true }));
+                if (passwordBox) passwordBox.focus();
+            });
+        }
     }
 
     chrome.storage.local.get('multiAccounts', function (items) {

@@ -25,6 +25,7 @@ const ACCOUNTS_DB = 'accounts'; // the database, with one store and one entry in
 const ACCOUNTS_KEY = 'savedAccounts'; // where they were kept before, in chrome.storage.local
 const ACCOUNT_ADD_KEY = 'accountAddUntil'; // session storage: the next account to sign in gets saved, until then
 const ACCOUNT_ADD_TIME = 30 * 60 * 1000;
+const SIGN_IN_NAME_KEY = 'accountSignInName'; // session storage: the name to fill in on the sign-in page, once
 const SEEN_NAMES_KEY = 'seenAccountNames'; // session storage: the names forum pages showed, for accounts not saved yet
 const PROFILE_CHECK_TIME = 24 * 60 * 60 * 1000; // the name and avatar are looked up again after a day
 const AVATAR_MAX_BYTES = 200 * 1024;
@@ -242,8 +243,12 @@ async function saveSignedInAccount(add){
 }
 
 // Signed out here only (the account stays signed in on the server), and the forum's sign-in page
-// opens: the account that signs in there is saved too
-async function startAddingAccount(){
+// opens: the account that signs in there is saved too. With userId (a saved account that has to sign
+// in again) its name waits in session storage for the sign-in page to ask (signInName), so only the
+// password is left to type. Not in the address, which would keep it in the browser's history
+async function startAddingAccount(userId){
+  const again = userId && (await getSavedAccounts()).find(a => a.userId === userId);
+  await chrome.storage.session.set({ [SIGN_IN_NAME_KEY]: again && again.name ? again.name : '' });
   if(await signedInUserId())
     await saveSignedInAccount(true);
 
@@ -363,6 +368,17 @@ async function accountSeen(request){
 
 const lookUpAsked = new Map();
 
+// The forum's sign-in page that "add an account" opened asks for the name to fill in: given once, to
+// a page that's signed out, while an account is being added
+async function signInName(){
+  const items = await chrome.storage.session.get([SIGN_IN_NAME_KEY, ACCOUNT_ADD_KEY]);
+  const name = items[SIGN_IN_NAME_KEY];
+  if(!name || !(items[ACCOUNT_ADD_KEY] > Date.now()) || await signedInUserId())
+    return {};
+  await chrome.storage.session.remove(SIGN_IN_NAME_KEY);
+  return { name };
+}
+
 // What the page found on the profile page: kept only for the account that is signed in, and only
 // a picture as data (not an address the popup would load)
 async function accountProfile(request){
@@ -415,7 +431,7 @@ chrome.storage.onChanged.addListener((changes, area) => {
   if(area === 'local' && changes.multiAccounts && changes.multiAccounts.newValue !== true){
     deleteSavedAccounts();
     chrome.storage.local.remove(ACCOUNTS_KEY);
-    chrome.storage.session.remove([ACCOUNT_ADD_KEY, SEEN_NAMES_KEY]);
+    chrome.storage.session.remove([ACCOUNT_ADD_KEY, SEEN_NAMES_KEY, SIGN_IN_NAME_KEY]);
   }
 });
 
@@ -423,8 +439,10 @@ chrome.storage.onChanged.addListener((changes, area) => {
 // popup) may ask for the rest
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   const fromForumPage = sender.id === chrome.runtime.id && /^https:\/\/([\w-]+\.)*ivelt\.com\//.test(sender.url || '');
-  if(fromForumPage && (request.type === 'accountSeen' || request.type === 'accountProfile')){
-    (request.type === 'accountSeen' ? accountSeen(request) : accountProfile(request))
+  const forumActions = { accountSeen, accountProfile, signInName };
+  if(fromForumPage && forumActions[request.type]){
+    isMultiAccountsOn()
+      .then(on => on || request.type !== 'signInName' ? forumActions[request.type](request) : {})
       .then(answer => sendResponse(answer || {}), () => sendResponse({}));
     return true;
   }
@@ -432,7 +450,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   const fromExtensionPage = sender.id === chrome.runtime.id && (sender.url || '').startsWith(chrome.runtime.getURL(''));
   const actions = {
     listAccounts: () => listAccounts(),
-    addAccount: () => startAddingAccount(),
+    addAccount: () => startAddingAccount(request.userId ? String(request.userId) : ''),
     saveAccount: () => saveSignedInAccount(true),
     switchAccount: () => switchAccount(String(request.userId), request.tabId),
     forgetAccount: () => forgetAccount(String(request.userId))
