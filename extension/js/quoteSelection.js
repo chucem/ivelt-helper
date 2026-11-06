@@ -198,10 +198,13 @@
         findQuoteLinks(marked.post).forEach((link) => {
             const icon = link.querySelector('i.icon');
             const label = link.querySelector('span');
-            if (icon) icon.className = iconClass;
-            if (label) label.textContent = labelText;
-            if (title === null) link.removeAttribute('title');
-            else link.setAttribute('title', title);
+            // only what differs: this runs on every selection change while dragging
+            if (icon && icon.className !== iconClass) icon.className = iconClass;
+            if (label && label.textContent !== labelText) label.textContent = labelText;
+            if (link.getAttribute('title') !== title) {
+                if (title === null) link.removeAttribute('title');
+                else link.setAttribute('title', title);
+            }
             link.classList.toggle('ih-quote-marked', isMarked);
         });
     }
