@@ -532,9 +532,9 @@
             pickBtn.classList.toggle('ivd-pending', !!pending);
             if (pending) {
                 pickBtn.innerHTML = provider.icon;
-                pickBtn.append(el('span', '', `לייגט ארויף ${pendingName} אויף ${provider.name}`));
+                pickBtn.append(el('span', '', `לייג ארויף ${pendingName} אויף ${provider.name}`));
             } else {
-                pickBtn.textContent = '⬆ קלייבט אויס פיילס, אדער שלעפט זיי אהער';
+                pickBtn.textContent = '⬆ קלייב אויס פיילס, אדער שלעפ זיי אהער';
             }
 
             if (connected) {
@@ -788,8 +788,8 @@
         function showOffer(files) {
             offerFiles = files;
             const what = files.length > 1 ? `${files.length} פיילס זענען` : `"${files[0].name}" איז`;
-            offerText.textContent = `⚠️ ${what} צו גרויס פאר אן אטעטשמענט (ביז ${formatSize(attachLimit)}).`;
-            offerBtnText.textContent = (files.length > 1 ? 'לייגט זיי ארויף אויף ' : 'לייגט עס ארויף אויף ') + buttonLabel;
+            offerText.textContent = `⚠️ ${what} צו גרויס פאר אן עטעטשמענט (ביז ${formatSize(attachLimit)}).`;
+            offerBtnText.textContent = (files.length > 1 ? 'לייג זיי ארויף אויף ' : 'לייג עס ארויף אויף ') + buttonLabel;
             offer.hidden = false;
         }
 
@@ -936,7 +936,7 @@
                 if (err.code === 'not_connected' || err.code === 'account_mismatch') await refreshAccount();
                 if (/missing_scope/.test(err.message)) {
                     // Connected before a permission was added - only a fresh connect picks it up
-                    showStatus(`❌ די ${provider.accountWord} פארבינדונג האט נישט קיין פערמישן. דרוקט "ארויסלאגן" און פארבינדט נאכאמאל.`, 'error', HOLD_STATUS_MS * 4);
+                    showStatus(`❌ די ${provider.accountWord} פארבינדונג האט נישט קיין פערמישן. דרוק "ארויסלאגן" און פארבינד נאכאמאל.`, 'error', HOLD_STATUS_MS * 4);
                 } else {
                     showStatus('❌ ' + err.message, 'error', HOLD_STATUS_MS * 3);
                 }

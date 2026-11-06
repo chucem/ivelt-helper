@@ -233,8 +233,8 @@ function splitNotifications() {
         const link = document.createElement('a');
         link.href = './ucp.php?i=ucp_notifications';
         link.title = missing === 1
-          ? 'נאך 1 אומגעליינטע נאטיפיקאציע וואס איז נישט אין די גלעקלעך, דריק צו זען אלע'
-          : `נאך ${missing} אומגעליינטע נאטיפיקאציעס וואס זענען נישט אין די גלעקלעך, דריק צו זען אלע`;
+          ? 'נאך 1 אומגעליינטע נאטיפיקאציע וואס איז נישט אין די גלעקלעך, דרוק צו זען אלע'
+          : `נאך ${missing} אומגעליינטע נאטיפיקאציעס וואס זענען נישט אין די גלעקלעך, דרוק צו זען אלע`;
         const badge = document.createElement('strong');
         badge.className = 'badge';
         badge.style.backgroundColor = '#8a8a8a';

@@ -386,7 +386,7 @@ function copyQuote(url, post_id, imageData){
         res = withTopicLink(replaceAttachmentsWithImgBBCode(res, imageData), post_id);
             return navigator.clipboard.writeText(res).then(
                 () => iveltNotify("קאפירט צום קליפבאורד"),
-                () => iveltNotify("קען נישט קאפירן צום קליפבאורד, פרובירט נאכאמאל", 5000)
+                () => iveltNotify("קען נישט קאפירן צום קליפבאורד, פרוביר נאכאמאל", 5000)
             )
         }
     ).catch(e => iveltNotify(fetchFailedMessage(e), 5000))
@@ -556,8 +556,8 @@ function fetchMsgText(url) {
 function fetchFailedMessage(error) {
     // Cloudflare lets it through once its check is passed in a normal tab
     return error && error.message === "cloudflare"
-        ? "Cloudflare האט אפגעשטעלט. עפנט איינמאל דעם ציטיר בלאט פון דער תגובה, און פרובירט נאכאמאל"
-        : "קען נישט ברענגען די תגובה, פרובירט נאכאמאל";
+        ? "Cloudflare האט אפגעשטעלט. עפן איינמאל דעם ציטיר בלאט פון דער תגובה, און פרוביר נאכאמאל"
+        : "קען נישט ברענגען די תגובה, פרוביר נאכאמאל";
 }
 
 async function quoteInOtherTopic(url, postID, targetTopicId, imageData) {
@@ -579,7 +579,7 @@ async function quoteInOtherTopic(url, postID, targetTopicId, imageData) {
         const replyWindow = window.open(replyURL, '_blank');
 
         if (!replyWindow) {
-            iveltNotify("דער בראוזער האט נישט געלאזט עפענען א נייעם טעב. ערלויבט פאפ-אפס פאר אייוועלט, און פרובירט נאכאמאל", 5000);
+            iveltNotify("דער בראוזער האט נישט געלאזט עפענען א נייעם טעב. ערלויב פאפ-אפס פאר אייוועלט, און פרוביר נאכאמאל", 5000);
             return;
         }
 

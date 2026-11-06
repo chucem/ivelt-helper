@@ -258,7 +258,7 @@ function showAccounts(accounts, currentId) {
             status.textContent = 'אן "געדענק מיך"';
         if (account.remembered === false && !account.expired)
             row.title = 'אריינגעלאגט אן "געדענק מיך": נאך א צייט אן באנוצן וועט מען זיך דארפן אריינלאגן נאכאמאל. ' +
-                'צו פארמיידן דאס, לאגט אויס פון דעם אקאונט און לאגט אריין נאכאמאל מיט "געדענק מיך" אנגעצייכנט';
+                'צו פארמיידן דאס, לאג אויס פון דעם אקאונט און לאג אריין נאכאמאל מיט "געדענק מיך" אנגעצייכנט';
 
         const forget = document.createElement('button');
         forget.className = 'account_forget';
@@ -329,11 +329,11 @@ function accountClicked(account, currentId) {
 function switchTo(account, tabId) {
     chrome.runtime.sendMessage({ type: 'switchAccount', userId: account.userId, tabId: tabId }, function (response) {
         if (chrome.runtime.lastError || !response || response.error) {
-            showAccountsMessage('עס האט נישט געקלאפט, פרובירט נאכאמאל');
+            showAccountsMessage('עס האט נישט געקלאפט, פרוביר נאכאמאל');
             return;
         }
         if (response.expired) {
-            showAccountsMessage((account.name || 'דער אקאונט') + ' איז מער נישט אריינגעלאגט. קליקט אויף אים זיך אריינצולאגן נאכאמאל');
+            showAccountsMessage((account.name || 'דער אקאונט') + ' איז מער נישט אריינגעלאגט. קליק אויף אים זיך אריינצולאגן נאכאמאל');
             initAccounts();
             return;
         }

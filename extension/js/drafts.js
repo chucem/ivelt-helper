@@ -194,7 +194,7 @@
         bar.className = 'ih-draft-bar ih-draft-missing';
         bar.innerHTML = `
             <i class="icon fa-paperclip fa-fw ih-draft-icon" aria-hidden="true"></i>
-            <span class="ih-draft-text">די עטעטשמענטס זענען שוין נישט דא, לייגט זיי צו נאכאמאל:<span class="ih-draft-words"></span></span>
+            <span class="ih-draft-text">די עטעטשמענטס זענען שוין נישט דא, לייג זיי צו נאכאמאל:<span class="ih-draft-words"></span></span>
             <button type="button" class="button button-secondary ih-draft-drop">אקעי</button>`;
         bar.querySelector('.ih-draft-words').textContent = names.join(', ');
         bar.querySelector('.ih-draft-drop').addEventListener('click', () => bar.remove());

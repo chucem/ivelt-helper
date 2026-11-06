@@ -173,14 +173,14 @@
             $('<div>').text(why),
             $('<div>').css('margin-top', '8px').text(
                 'געלאודט ביז יעצט: בלעטער ' + ltr(on_page + '–' + page) + '. ' +
-                'עפנט אן אייוועלט בלאט אין א נייעם טעב, אויב עס ווייזט זיך ארויס א Cloudflare וועריפיקעישאן – מאכט עס, ' +
-                'ווארט א מינוט, און דערנאך קומט צוריק אהער און קליקט "טרייט נאכאמאל".'),
+                'עפן אן אייוועלט בלאט אין א נייעם טעב, אויב עס ווייזט זיך ארויס א Cloudflare וועריפיקעישאן – מאך עס, ' +
+                'ווארט א מינוט, און דערנאך קום צוריק אהער און קליק "טריי נאכאמאל".'),
             $('<div>').css('margin', '8px 0').append(
                 $('<a>').attr({href: pageUrl(page), target: '_blank', rel: 'noopener'})
-                    .css({'font-weight': 'bold'}).text('↗ עפנט בלאט ' + pageNum + ' אין א נייעם טעב')),
+                    .css({'font-weight': 'bold'}).text('↗ עפן בלאט ' + pageNum + ' אין א נייעם טעב')),
             $('<div>').css({'text-align': 'center', 'margin-top': '10px'}).append(
                 $('<button type="button">').attr('style', btn + 'background:#105289;color:#fff;border-color:#105289;')
-                    .text('טרייט נאכאמאל').on('click', function () {
+                    .text('טריי נאכאמאל').on('click', function () {
                         panel.remove();
                         $('#loading-page').text(page);
                         loadNextPage(page); // retry the same page
@@ -223,7 +223,7 @@
         baseUrl = ($('.topic-title a:first').prop('href') || document.URL).replace(/&start=\d*/, '').replace(/#.*$/, '');
 
         if (on_page < totalPages) {
-            let answer = prompt(printTag + '\r\n\r\nאיר זענט אויף בלאט ' + on_page + ' פון ' + totalPages + '.\r\nביז וועלכן בלאט ווילט איר פרינטן?', totalPages);
+            let answer = prompt(printTag + '\r\n\r\nדו ביסט אויף בלאט ' + on_page + ' פון ' + totalPages + '.\r\nביז וועלכן בלאט ווילסטו פרינטן?', totalPages);
             if (answer === null) { // Cancel = do nothing
                 return;
             }
