@@ -155,6 +155,7 @@ function initAccounts() {
                 // own profile page always has it
                 const current = accounts.find(a => a.userId === currentId);
                 document.getElementById('open_own_profile').hidden = !current || !!current.name;
+                document.getElementById('not_remembered').hidden = !current || current.remembered !== false;
             });
         });
     });
@@ -202,6 +203,12 @@ function showAccounts(accounts, currentId) {
             status.textContent = 'אריינגעלאגט';
         else if (account.expired)
             status.textContent = 'לאג אריין נאכאמאל';
+        // signed in without "remember me": it lasts only as long as its session
+        else if (account.remembered === false)
+            status.textContent = 'אן "געדענק מיך"';
+        if (account.remembered === false && !account.expired)
+            row.title = 'אריינגעלאגט אן "געדענק מיך": נאך א צייט אן באנוצן וועט מען זיך דארפן אריינלאגן נאכאמאל. ' +
+                'צו פארמיידן דאס, לאגט אויס פון דעם אקאונט און לאגט אריין נאכאמאל מיט "געדענק מיך" אנגעצייכנט';
 
         const forget = document.createElement('button');
         forget.className = 'account_forget';

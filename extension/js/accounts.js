@@ -26,6 +26,21 @@
         if (request.type === 'accountSwitched') showSwitchedBar();
     });
 
+    // The sign-in page the popup's "add an account" opened (#ih-add-account): "remember me" is ticked,
+    // with a word why. Without it the forum gives no key, and the saved account lasts only as long
+    // as its session: after a while unused it has to be signed in again
+    if (location.hash === '#ih-add-account') {
+        const remember = document.querySelector('form input[type="checkbox"][name="autologin"]');
+        if (remember && !remember.checked) remember.checked = true;
+        if (remember && !document.getElementById('ih-remember-note')) {
+            const note = document.createElement('div');
+            note.id = 'ih-remember-note';
+            note.style.cssText = 'margin:4px 0;font-size:0.9em;color:#5c4400';
+            note.textContent = 'לאזט "געדענק מיך" אנגעצייכנט: אן דעם בלייבט דער אקאונט אין iVelt Helper נאר א קורצע צייט, און מען דארף זיך אריינלאגן נאכאמאל';
+            (remember.closest('label') || remember).after(note);
+        }
+    }
+
     chrome.storage.local.get('multiAccounts', function (items) {
         if (!items.multiAccounts || !document.getElementById('username_logged_in')) return;
 

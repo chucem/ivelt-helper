@@ -256,6 +256,9 @@ body {
   min-width: calc(100% - 20px);
 }
 .accounts_hint {
+  /* wraps to the popup's width, like the message above */
+  width: 0;
+  min-width: calc(100% - 20px);
   margin: 6px 10px 2px;
   font-size: 12px;
   color: var(--ui-muted);

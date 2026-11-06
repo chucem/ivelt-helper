@@ -96,9 +96,14 @@ function deleteSavedAccounts(){
   return accountsStore('readwrite', store => store.delete('list'));
 }
 
-// For the popup's list: everything but the cookies
+// Whether the account was signed in with "remember me": only then is there a key in the _k cookie
+function hasRememberKey(cookies){
+  return (cookies || []).some(c => c.name === ACCOUNT_COOKIE_PREFIX + 'k' && c.value);
+}
+
+// For the popup's list: everything but the cookies, and whether they have the "remember me" key
 async function listAccounts(){
-  return { accounts: (await getSavedAccounts()).map(({ cookies, ...account }) => account) };
+  return { accounts: (await getSavedAccounts()).map(({ cookies, ...account }) => ({ ...account, remembered: hasRememberKey(cookies) })) };
 }
 
 // The signed-in account's number, '' for a guest or no cookie
@@ -249,7 +254,8 @@ async function startAddingAccount(){
     accountSwitching = false;
   }
   await chrome.storage.session.set({ [ACCOUNT_ADD_KEY]: Date.now() + ACCOUNT_ADD_TIME });
-  chrome.tabs.create({ url: 'https://www.ivelt.com/forum/ucp.php?mode=login' });
+  // the #part tells js/accounts.js to tick "remember me" there, without it the account lasts only as long as its session
+  chrome.tabs.create({ url: 'https://www.ivelt.com/forum/ucp.php?mode=login#ih-add-account' });
 }
 
 // Gives { switched: true }, { expired: true } when the forum doesn't take the account's cookies
