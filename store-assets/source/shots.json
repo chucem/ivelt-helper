@@ -124,7 +124,7 @@
       { "alt": ["→", "←"], "yi": "פריערדיגער / קומענדיגער בלאט", "en": "Previous / next page" },
       { "alt": ["↓", "↑"], "yi": "צום אנהייב / סוף פונעם בלאט", "en": "Jump to top / bottom" },
       { "combo": ["Ctrl", "Enter"], "yi": "שיק די תגובה", "en": "Submit your post" },
-      { "combo": ["Alt", "V"], "yi": "פריוויו", "en": "Preview your post" },
+      { "combo": ["Alt", "V"], "yi": "פריוויאו", "en": "Preview your post" },
       { "combo": ["Alt", "A"], "yi": "אקטיווע אשכולות", "en": "Active topics" },
       { "combo": ["Alt", "N"], "yi": "עפן די נאטיפיקאציעס", "en": "Open notifications" },
       { "combo": ["Ctrl", "Z"], "yi": "צוריקדרייען ביים שרייבן", "en": "Undo while writing" },

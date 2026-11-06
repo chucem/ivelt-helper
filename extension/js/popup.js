@@ -293,9 +293,9 @@ function switchTo(account, tabId) {
         }
         // tabs with a post being written weren't reloaded, so the text isn't lost: told, then closed
         if (response.kept) {
-            showAccountsMessage((response.kept === 1 ? 'א טאב' : response.kept + ' טאבס') +
+            showAccountsMessage((response.kept === 1 ? 'א טעב' : response.kept + ' טעבס') +
                 ' מיט א תגובה וואס איז נאך נישט אוועקגעשיקט ' + (response.kept === 1 ? 'איז' : 'זענען') +
-                ' נישט גערילאויד געווארן, ' + (response.kept === 1 ? 'ער ווייזט' : 'זיי ווייזן') + ' נאך דעם פריערדיגן אקאונט');
+                ' נישט רילאודעד געווארן, ' + (response.kept === 1 ? 'ער ווייזט' : 'זיי ווייזן') + ' נאך דעם פריערדיגן אקאונט');
             setTimeout(() => window.close(), 5000);
             return;
         }

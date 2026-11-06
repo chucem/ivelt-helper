@@ -102,8 +102,8 @@
     function addPrintInfo() {
         let full = on_page === 1 && lastPage === totalPages;
         let pages = on_page === lastPage
-            ? 'זייט ' + on_page + ' פון ' + totalPages
-            : 'זייטן ' + ltr(on_page + '–' + lastPage) + ' פון ' + totalPages;
+            ? 'בלאט ' + on_page + ' פון ' + totalPages
+            : 'בלעטער ' + ltr(on_page + '–' + lastPage) + ' פון ' + totalPages;
         let scope = full ? 'דער גאנצער אשכול' : 'נישט דער גאנצער אשכול';
         let posts = $('.post').length + ' תגובות';
         let d = new Date();
@@ -144,7 +144,7 @@
                     showBlockedPanel(page, pageNum, 'challenge');
                     return;
                 }
-                $('.post:last').after($('<h3>').addClass('page-number').text('זייט ' + pageNum));
+                $('.post:last').after($('<h3>').addClass('page-number').text('בלאט ' + pageNum));
                 $('.page-number:last').after(posts);
                 setTimeout(function () { loadPage(pageNum); }, REQUEST_DELAY_MS);
             },
@@ -160,8 +160,8 @@
         let why = status === 429
             ? 'דער סערווער זאגט "Too Many Requests" (429) – מ\'האט געשיקט צופיל ריקוועסטס נאכאנאנד.'
             : (status === 'challenge'
-                ? 'זייט ' + pageNum + ' איז נישט געקומען ווי עס דארף צו זיין (ווארשיינליך א Cloudflare וועריפיקעישן).'
-                : 'זייט ' + pageNum + ' האט זיך נישט געלאודט (ערראר ' + (status || 'נעטווארק') + ').');
+                ? 'בלאט ' + pageNum + ' איז נישט געקומען ווי עס דארף צו זיין (מסתם א Cloudflare וועריפיקעישאן).'
+                : 'בלאט ' + pageNum + ' האט זיך נישט געלאודט (ערראר ' + (status || 'נעטווארק') + ').');
         let btn = 'padding:6px 14px;margin:4px;border:1px solid #999;border-radius:4px;cursor:pointer;font-size:13px;';
         let panel = $('<div id="pq-blocked">').css({
             position: 'fixed', top: '20%', left: '50%', transform: 'translateX(-50%)', 'z-index': 100000,
@@ -169,15 +169,15 @@
             'max-width': '460px', width: '90%', 'box-shadow': '0 4px 20px rgba(0,0,0,.3)',
             direction: 'rtl', 'text-align': 'right', 'font-size': '14px', 'line-height': '1.5'
         }).append(
-            $('<div>').css({'font-weight': 'bold', 'font-size': '16px', 'margin-bottom': '6px'}).text('⚠ דאס לאודן האט זיך אפגעשטעלט ביי זייט ' + pageNum),
+            $('<div>').css({'font-weight': 'bold', 'font-size': '16px', 'margin-bottom': '6px'}).text('⚠ דאס לאודן האט זיך אפגעשטעלט ביי בלאט ' + pageNum),
             $('<div>').text(why),
             $('<div>').css('margin-top', '8px').text(
-                'געלאודט ביז יעצט: זייטן ' + ltr(on_page + '–' + page) + '. ' +
-                'עפנט אן אייוועלט זייט אין א נייעם טעב, אויב עס ווייזט זיך ארויס א Cloudflare וועריפיקעישן – מאכט עס, ' +
+                'געלאודט ביז יעצט: בלעטער ' + ltr(on_page + '–' + page) + '. ' +
+                'עפנט אן אייוועלט בלאט אין א נייעם טעב, אויב עס ווייזט זיך ארויס א Cloudflare וועריפיקעישאן – מאכט עס, ' +
                 'ווארט א מינוט, און דערנאך קומט צוריק אהער און קליקט "טרייט נאכאמאל".'),
             $('<div>').css('margin', '8px 0').append(
                 $('<a>').attr({href: pageUrl(page), target: '_blank', rel: 'noopener'})
-                    .css({'font-weight': 'bold'}).text('↗ עפנט זייט ' + pageNum + ' אין א נייעם טעב')),
+                    .css({'font-weight': 'bold'}).text('↗ עפנט בלאט ' + pageNum + ' אין א נייעם טעב')),
             $('<div>').css({'text-align': 'center', 'margin-top': '10px'}).append(
                 $('<button type="button">').attr('style', btn + 'background:#105289;color:#fff;border-color:#105289;')
                     .text('טרייט נאכאמאל').on('click', function () {

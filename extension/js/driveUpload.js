@@ -936,7 +936,7 @@
                 if (err.code === 'not_connected' || err.code === 'account_mismatch') await refreshAccount();
                 if (/missing_scope/.test(err.message)) {
                     // Connected before a permission was added - only a fresh connect picks it up
-                    showStatus(`❌ די ${provider.accountWord} פארבינדונג פעלט אן ערלויבעניש. דרוקט "ארויסלאגן" און פארבינדט נאכאמאל.`, 'error', HOLD_STATUS_MS * 4);
+                    showStatus(`❌ די ${provider.accountWord} פארבינדונג האט נישט קיין פערמישן. דרוקט "ארויסלאגן" און פארבינדט נאכאמאל.`, 'error', HOLD_STATUS_MS * 4);
                 } else {
                     showStatus('❌ ' + err.message, 'error', HOLD_STATUS_MS * 3);
                 }
