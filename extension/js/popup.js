@@ -2,16 +2,20 @@
 // the forum (or cleared its cookies) has none, which is signed out too
 let logoutSid = null; // the session's number, which the forum's sign-out link needs
 
-chrome.cookies.get({ url: 'https://www.ivelt.com', name: 'phpbb3_sw7kk_u' }, function (cookie) {
-    const userId = cookie ? cookie.value : '';
-    if (userId.length > 1) {
-        chrome.cookies.get({ url: 'https://www.ivelt.com', name: 'phpbb3_sw7kk_sid' }, function (sid) {
-            logoutSid = sid ? sid.value : null;
-        });
-        document.getElementById('emergency_sign_out').style.display = 'block';
-    } else {
-        document.getElementById('quick_sign_in').style.display = 'block';
-    }
+// once the page is there: this script loads in the <head>, and the cookie can come back before the
+// buttons exist
+document.addEventListener('DOMContentLoaded', function () {
+    chrome.cookies.get({ url: 'https://www.ivelt.com', name: 'phpbb3_sw7kk_u' }, function (cookie) {
+        const userId = cookie ? cookie.value : '';
+        if (userId.length > 1) {
+            chrome.cookies.get({ url: 'https://www.ivelt.com', name: 'phpbb3_sw7kk_sid' }, function (sid) {
+                logoutSid = sid ? sid.value : null;
+            });
+            document.getElementById('emergency_sign_out').style.display = 'block';
+        } else {
+            document.getElementById('quick_sign_in').style.display = 'block';
+        }
+    });
 });
 
 const FORUM_HOSTS = /(^|\.)ivelt\.com$/;
