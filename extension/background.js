@@ -217,6 +217,13 @@ async function markWhatsNew(details){
 // topic mapping via google sheet by טעכניש גערעדט, used by js/addTopicButtons.js
 const topicMappingUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS8-2oWC0g995y_fNyR4scrXBEimeYpI5Hm0TPqt1IyvVqEdVUDKYw2n7Z6A2d1DDj3Ef6ofpwe2s3T/pub?gid=986512672&single=true&output=csv";
 
+// when the list was last downloaded (and when the last try failed), for the settings page.
+// Local only: it's about this computer
+async function recordTopicMappingFetch(change){
+  const { topicMappingFetch } = await chrome.storage.local.get('topicMappingFetch');
+  await chrome.storage.local.set({ topicMappingFetch: { ...topicMappingFetch, ...change } });
+}
+
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   if(request.type === 'resetSettings'){
     chrome.storage.local.set(defualtPreferences, () => {
@@ -226,16 +233,24 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     return true;
   }
 
-  // the forum's CSP blocks the page from reaching Google Sheets, so the topic mapping is fetched here
+  // the forum's CSP blocks the page from reaching Google Sheets, so the topic mapping is fetched here.
+  // Without cookies: the sheet is public, and with someone's Google cookies Google sometimes sends
+  // the request to its sign-in page first, which blocks extensions (CORS)
   if(request.type === 'topicMappingCsv'){
-    fetch(topicMappingUrl)
+    fetch(topicMappingUrl, { credentials: 'omit' })
       .then(response => {
         if(!response.ok)
           throw new Error(`Failed to fetch CSV data: ${response.status} ${response.statusText}`);
         return response.text();
       })
-      .then(text => sendResponse({ text }))
-      .catch(e => sendResponse({ error: e.message }));
+      .then(text => {
+        sendResponse({ text });
+        recordTopicMappingFetch({ updatedAt: Date.now() });
+      })
+      .catch(e => {
+        sendResponse({ error: e.message });
+        recordTopicMappingFetch({ failedAt: Date.now() });
+      });
     return true;
   }
 
