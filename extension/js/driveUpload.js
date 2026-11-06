@@ -108,7 +108,9 @@
     // The forum uses the ABBC3 toolbar and hides phpBB's own #format-buttons,
     // so prefer the last visible ABBC3 row and only fall back to the stock toolbar
     function findToolbar() {
-        const isVisible = (node) => node && node.getClientRects().length > 0;
+        // a row on a phone has no box of its own (display:contents, css/editorToolbar.css): its buttons do
+        const isVisible = (node) => node && (node.getClientRects().length > 0 ||
+            Array.from(node.children).some((child) => child.getClientRects().length > 0));
         const rows = Array.from(document.querySelectorAll('#abbc3_buttons .abbc3_buttons_row')).filter(isVisible);
         if (rows.length) return rows[rows.length - 1];
         const stock = document.getElementById('format-buttons');

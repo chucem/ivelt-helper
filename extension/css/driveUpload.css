@@ -292,3 +292,16 @@
     outline-offset: 2px;
 }
 #ivd-wrap.ivd-dragover .ivd-popup { background: #f1f6fb; }
+
+/* On a phone the toolbar is one panel (css/editorToolbar.css) and the button can be anywhere in it:
+   the popup opens under the whole panel, as wide as it, instead of from the button out past the screen */
+@media (max-width: 700px) {
+    html body #abbc3_buttons { position: relative; }
+    #ivd-wrap.ivd-in-toolbar { position: static; }
+    #ivd-wrap.ivd-in-toolbar .ivd-popup {
+        left: 0;
+        right: 0;
+        width: auto;
+        box-sizing: border-box;
+    }
+}
