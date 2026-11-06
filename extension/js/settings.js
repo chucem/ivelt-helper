@@ -62,8 +62,29 @@ function startListeners(){
 			notify();
 		});
 	});
+	showTopicMappingStatus();
+	chrome.storage.onChanged.addListener((changes, area) => {
+		if(area === 'local' && (changes.topicMappingFetch || changes.forceUpdateTopicMapCache))
+			showTopicMappingStatus();
+	});
 	document.querySelector('.js-copy-logs').addEventListener('click', copyLogs);
 	document.getElementById('resetSettings').addEventListener('click', resetSettings);
+}
+
+// Under "update the list now": when the commentary topics list was last downloaded (background.js
+// records it). The button itself only marks it, the next forum page downloads it, so till then it says so
+async function showTopicMappingStatus(){
+	const { topicMappingFetch = {}, forceUpdateTopicMapCache } = await chrome.storage.local.get(['topicMappingFetch', 'forceUpdateTopicMapCache']);
+	const { updatedAt, failedAt } = topicMappingFetch;
+	// isolated, so the browser's (often English) date doesn't get mixed into the Yiddish around it
+	const when = time => '⁨' + new Date(time).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) + '⁩';
+
+	let text = updatedAt ? 'לעצט אפדעיטעט ' + when(updatedAt) : '';
+	if(failedAt && (!updatedAt || failedAt > updatedAt))
+		text += (text ? '. ' : '') + 'דער לעצטער פרואוו (' + when(failedAt) + ') האט נישט געארבעט';
+	if(forceUpdateTopicMapCache === true)
+		text = 'ווערט אפדעיטעט ווען מען עפנט דעם קומענדיגן בלאט אויפן פארום';
+	document.getElementById('topicMappingStatus').textContent = text;
 }
 
 // The notification check is off by default (an empty backgroundSyncNotifMinutes). Its checkbox
