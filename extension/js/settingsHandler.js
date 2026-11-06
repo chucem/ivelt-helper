@@ -4,7 +4,8 @@
 	// The settings the scripts in the page's world use (they can't reach chrome.storage): the topic
 	// buttons, print, split notifications and editor undo. Only these go on the page.
 	const PAGE_SETTINGS = ['alwaysCopyTopic', 'copyAttachments', 'cachedTopicMappingExpire', 'forceUpdateTopicMapCache',
-		'quoteSourceLink', 'ShowMultiNotifs', 'olderNotifsPlus', 'printShowLikes', 'printLikesStyle', 'editorUndo'];
+		'quoteSourceLink', 'ShowMultiNotifs', 'olderNotifsPlus',
+		'splitQuotedNotifs', 'splitLikedNotifs', 'splitMentionedNotifs', 'splitPmNotifs', 'printShowLikes', 'printLikesStyle', 'editorUndo'];
 
 	if(chrome.storage){
 		chrome.storage.local.get([...PAGE_SETTINGS, 'hideUserName', 'warnOnLosingPost'], function(items){

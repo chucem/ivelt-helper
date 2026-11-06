@@ -23,6 +23,11 @@ const defualtPreferences = {
   doubleClickLike: false,
   ShowMultiNotifs: true,
   olderNotifsPlus: true, // with split bells: older unread notifications in a grey +N; off, they're counted in the general bell
+  // with split bells, which kinds get a bell of their own; one turned off stays in the general bell
+  splitQuotedNotifs: true,
+  splitLikedNotifs: true,
+  splitMentionedNotifs: true,
+  splitPmNotifs: true,
   upDownArrowKeys: true,
   spoilerPolish: false,
   imageResizer: true,
