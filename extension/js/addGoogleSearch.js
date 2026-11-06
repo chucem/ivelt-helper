@@ -53,3 +53,71 @@ function googleSearchUrl(query){
 }
 
 addGoogleSiteSearch();
+
+// On a phone the forum hides the search box above and its navbar has a search icon that only
+// links to search.php. That icon opens a search bar under the breadcrumbs instead: the forum's search
+// and the Google search on one box, with a gear to the advanced search page. Only the phone
+// layout shows the icon (and this bar, css/appcss.css), so the desktop is untouched
+function addMobileSearchBar(){
+    if (!document.getElementById('page-body')) return; // not the forum, e.g. Cloudflare's check page
+    let iconLink = document.querySelector('.navbar .responsive-search > a'); // at the end of the breadcrumbs
+    let siteSearch = document.getElementById('search');
+    if (!iconLink || !siteSearch) return;
+
+    let bar = document.createElement('div');
+    bar.id = 'ih-mobile-search';
+    bar.setAttribute('role', 'search');
+    bar.hidden = true;
+    bar.innerHTML =
+        '<form method="get"><fieldset>' +
+            '<input name="keywords" type="search" maxlength="128" class="inputbox search" placeholder="זוך…" title="זוך פאר קיווארדס">' +
+            '<button class="button button-search" type="submit" title="זוך">' +
+                '<i class="icon fa-search fa-fw" aria-hidden="true"></i><span class="sr-only">זוך</span>' +
+            '</button>' +
+            '<button class="button button-search ih-mobile-google" type="button" title="זוך אין גוגל">' +
+                '<i class="icon fa-google fa-fw" aria-hidden="true"></i><span class="sr-only">זוך אין גוגל</span>' +
+            '</button>' +
+            '<a class="button button-search-end" role="button" title="פארגעשריטענע זוכעניש">' +
+                '<i class="icon fa-cog fa-fw" aria-hidden="true"></i><span class="sr-only">פארגעשריטענע זוכעניש</span>' +
+            '</a>' +
+        '</fieldset></form>';
+
+    // The forum's own search form says where to go and has the hidden fields (like the session id)
+    let form = bar.querySelector('form');
+    form.action = siteSearch.action;
+    siteSearch.querySelectorAll('input[type="hidden"]').forEach(hidden => form.appendChild(hidden.cloneNode()));
+    bar.querySelector('a').href = iconLink.href;
+    let input = form.elements.keywords;
+
+    bar.querySelector('.ih-mobile-google').addEventListener('click', function () {
+        if (!input.value.trim()) return input.focus();
+        window.open(googleSearchUrl(`site:www.ivelt.com ${input.value}`), '_blank').focus();
+    });
+    // Nothing typed: the forum would only show an error page (Enter searches the forum)
+    form.addEventListener('submit', function (e) {
+        if (!input.value.trim()) {
+            e.preventDefault();
+            input.focus();
+        }
+    });
+    bar.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') {
+            bar.hidden = true;
+            iconLink.focus();
+        }
+    });
+
+    iconLink.closest('ul').after(bar);
+    iconLink.setAttribute('aria-expanded', 'false');
+    iconLink.setAttribute('aria-controls', bar.id);
+    iconLink.addEventListener('click', function (e) {
+        // A click to open it in a new tab still goes to the search page
+        if (e.button !== 0 || e.ctrlKey || e.metaKey || e.shiftKey || e.altKey) return;
+        e.preventDefault();
+        bar.hidden = !bar.hidden;
+        iconLink.setAttribute('aria-expanded', String(!bar.hidden));
+        if (!bar.hidden) input.focus();
+    });
+}
+
+addMobileSearchBar();
