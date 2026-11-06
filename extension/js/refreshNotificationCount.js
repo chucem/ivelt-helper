@@ -13,15 +13,23 @@ let unreadNotifications = function() {
     return String(count);
 }
 
+// the extension was reloaded or updated while this tab stayed open: this copy can't reach it any
+// more ("Extension context invalidated"), so it stops watching
+let stopWatching = function() {
+    observer?.disconnect();
+}
+
 let checkNewNotification = function() {
-    // the extension was reloaded or updated while this tab stayed open: this copy can't reach it
-    // any more ("Extension context invalidated"), so it stops watching
-    if (!chrome.runtime?.id) {
-        observer?.disconnect();
-        return;
-    }
+    if (!chrome.runtime?.id) return stopWatching();
     let newCount = unreadNotifications();
-    chrome.runtime.sendMessage({text: newCount !== '0' ? newCount : '', type: 'badgeText'});
+    try {
+        // while the extension reloads the id can still be there and sending throws; a send that
+        // fails later comes back as a rejected promise
+        chrome.runtime.sendMessage({text: newCount !== '0' ? newCount : '', type: 'badgeText'})
+            ?.catch?.(() => { if (!chrome.runtime?.id) stopWatching(); });
+    } catch (e) {
+        stopWatching();
+    }
 }
 
 let observer = null;
