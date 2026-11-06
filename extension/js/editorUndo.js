@@ -30,7 +30,9 @@
 
     // The forum uses the ABBC3 toolbar and hides phpBB's own #format-buttons
     function findToolbar(scope) {
-        const isVisible = (node) => node && node.getClientRects().length > 0;
+        // a row on a phone has no box of its own (display:contents, css/editorToolbar.css): its buttons do
+        const isVisible = (node) => node && (node.getClientRects().length > 0 ||
+            Array.from(node.children).some((child) => child.getClientRects().length > 0));
         const rows = Array.from(scope.querySelectorAll('#abbc3_buttons .abbc3_buttons_row')).filter(isVisible);
         if (rows.length) return { row: rows[0], abbc3: true };
         const stock = scope.querySelector('#format-buttons');
