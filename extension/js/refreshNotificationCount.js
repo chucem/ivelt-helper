@@ -19,14 +19,23 @@ let stopWatching = function() {
     observer?.disconnect();
 }
 
-let checkNewNotification = function() {
-    if (!chrome.runtime?.id) return stopWatching();
-    let newCount = unreadNotifications();
+// whether this copy can still reach the extension: once it's gone even reading chrome.runtime throws
+let extensionThere = function() {
     try {
+        return !!chrome.runtime?.id;
+    } catch (e) {
+        return false;
+    }
+}
+
+let checkNewNotification = function() {
+    try {
+        if (!extensionThere()) return stopWatching();
+        let newCount = unreadNotifications();
         // while the extension reloads the id can still be there and sending throws; a send that
         // fails later comes back as a rejected promise
         chrome.runtime.sendMessage({text: newCount !== '0' ? newCount : '', type: 'badgeText'})
-            ?.catch?.(() => { if (!chrome.runtime?.id) stopWatching(); });
+            ?.catch?.(() => { if (!extensionThere()) stopWatching(); });
     } catch (e) {
         stopWatching();
     }
