@@ -1,0 +1,44 @@
+/* ABBC3's link window (#bbcode_wizard) on a narrow screen (js/mobileLinkButton.js opens it there).
+   It's 500px wide, centered with a -250px margin, so on a phone it sticks out on both sides.
+   ABBC3's stylesheet comes after this one, and on a phone sets width:300px!important, so these
+   need !important and a more specific selector */
+@media (max-width: 700px) {
+    html body #bbcode_wizard {
+        width: auto !important;
+        left: 8px !important;
+        right: 8px !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        /* Higher up, so the keyboard doesn't cover it */
+        top: 12% !important;
+        margin-top: 0 !important;
+        max-height: 80vh;
+        overflow-y: auto;
+        box-sizing: border-box;
+    }
+    html body #bbcode_wizard form,
+    html body #bbcode_wizard .panel,
+    html body #bbcode_wizard .inner,
+    html body #bbcode_wizard fieldset,
+    html body #bbcode_wizard dl {
+        width: auto !important;
+        min-width: 0 !important;
+    }
+    html body #bbcode_wizard fieldset dt,
+    html body #bbcode_wizard fieldset dd {
+        float: none !important;
+        width: auto !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+    }
+    html body #bbcode_wizard fieldset dd {
+        margin-bottom: 6px !important;
+    }
+    html body #bbcode_wizard .inputbox {
+        width: 100% !important;
+        max-width: none !important;
+        margin: 0 !important;
+        box-sizing: border-box;
+        font-size: 16px; /* 16px or more, or iOS zooms in when the field gets focus */
+    }
+}

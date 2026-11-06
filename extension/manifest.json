@@ -129,6 +129,15 @@
     },
     {
       "matches": [
+        "*://*.ivelt.com/forum/posting.php*",
+        "*://*.ivelt.com/forum/ucp.php*"
+      ],
+      "css": ["css/mobileLinkButton.css"],
+      "js": ["js/mobileLinkButton.js"],
+      "world": "MAIN"
+    },
+    {
+      "matches": [
         "*://*.ivelt.com/*"
       ],
       "css": ["css/doubleClickLike.css"],
