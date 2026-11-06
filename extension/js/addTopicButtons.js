@@ -449,18 +449,28 @@ function requestTopicMappingCsv() {
     });
 }
 
+// the saved list, or null when there's none or it's damaged (so a bad copy can't stop the post buttons)
+function parseSavedTopicMapping(saved) {
+    try {
+        const mappings = saved ? JSON.parse(saved) : null;
+        return mappings && typeof mappings === 'object' ? mappings : null;
+    } catch (e) {
+        return null;
+    }
+}
+
 async function fetchTopicMapping() {
     const now = Date.now();
 
 // Check if we have cached data and if it's still valid
-const cachedData = localStorage.getItem(CACHE_KEY);
+const cachedData = parseSavedTopicMapping(localStorage.getItem(CACHE_KEY));
 const lastFetchTime = localStorage.getItem(CACHE_TIME_KEY);
 
 const forceRefresh = iveltSetting("forceUpdateTopicMapCache") === true;
 
 if (!forceRefresh && cachedData && lastFetchTime && now - lastFetchTime < CACHE_EXPIRY_MS) {
     // Use cached data if available and valid
-    return JSON.parse(cachedData);
+    return cachedData;
     }
 
 // Otherwise, fetch new data from Google Sheets
@@ -484,7 +494,7 @@ if (!forceRefresh && cachedData && lastFetchTime && now - lastFetchTime < CACHE_
     } catch (error) {
         console.error("Error fetching topic mappings:", error);
         // keep using the list from last time, and try again on the next page
-        return cachedData ? JSON.parse(cachedData) : null;
+        return cachedData;
     }
 }
 
