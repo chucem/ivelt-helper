@@ -125,6 +125,7 @@ function makeRoomForScrollbar() {
     roomForScrollbarAsked = true;
     requestAnimationFrame(function () {
         roomForScrollbarAsked = false;
+        fitInPopupHeight();
         const body = document.body;
         const scrollbar = window.innerWidth - document.documentElement.clientWidth;
         body.style.minWidth = '';
@@ -133,6 +134,42 @@ function makeRoomForScrollbar() {
         body.style.width = '';
         body.style.minWidth = scrollbar > 0 ? Math.ceil(content + scrollbar) + 'px' : '';
     });
+}
+
+function showCurrentAccount() {
+    const list = document.getElementById('accountsList');
+    const current = list.querySelector('.account_row.current');
+    if (!current)
+        return;
+    const row = current.getBoundingClientRect();
+    const box = list.getBoundingClientRect();
+    if (row.bottom > box.bottom)
+        list.scrollTop += row.bottom - box.bottom;
+    else if (row.top < box.top)
+        list.scrollTop -= box.top - row.top;
+}
+
+// The browser makes a popup at most 600px high, more scrolls. With the accounts and the colors it
+// can be more (two accounts were 630px). Then the colors take five columns instead of four, a row
+// less, and if that's not enough the accounts list shows fewer accounts and scrolls by itself,
+// so the popup as a whole never does
+const POPUP_MAX_HEIGHT = 600;
+const ACCOUNTS_MIN_HEIGHT = 52; // one and a half accounts: the half one shows there are more
+function fitInPopupHeight() {
+    const swatches = document.getElementById('themeSwatches');
+    const list = document.getElementById('accountsList');
+    swatches.style.gridTemplateColumns = '';
+    list.style.maxHeight = '';
+    // the page's scroll height is never less than the popup, which is never more than 600px
+    const tooTall = () => document.documentElement.scrollHeight - POPUP_MAX_HEIGHT;
+    if (tooTall() <= 0)
+        return;
+    if (!document.getElementById('themesSection').hidden && swatches.children.length > 4)
+        swatches.style.gridTemplateColumns = 'repeat(5, 84px)';
+    const over = tooTall();
+    if (over > 0 && !document.getElementById('accountsSection').hidden && list.clientHeight > ACCOUNTS_MIN_HEIGHT)
+        list.style.maxHeight = Math.max(list.clientHeight - over, ACCOUNTS_MIN_HEIGHT) + 'px';
+    showCurrentAccount();
 }
 
 // The saved accounts (background.accounts.js): a click switches to one, the background does the
@@ -253,15 +290,7 @@ function showAccounts(accounts, currentId) {
     // with many accounts the list scrolls, the signed-in one is shown. Only the list is scrolled:
     // scrollIntoView() also scrolls the page, and while the browser is still growing the popup that
     // left it scrolled, so the popup scrolled for nothing
-    const current = list.querySelector('.account_row.current');
-    if (current) {
-        const row = current.getBoundingClientRect();
-        const box = list.getBoundingClientRect();
-        if (row.bottom > box.bottom)
-            list.scrollTop += row.bottom - box.bottom;
-        else if (row.top < box.top)
-            list.scrollTop -= box.top - row.top;
-    }
+    showCurrentAccount();
     makeRoomForScrollbar();
 }
 
