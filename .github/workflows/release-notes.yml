@@ -46,7 +46,7 @@ jobs:
             exit 1
           fi
           # Keep this workflow's own (current) script: the release's commit may have an older one
-          cp .github/scripts/ai-release-notes.sh "$RUNNER_TEMP/ai-release-notes.sh"
+          cp .github/scripts/ai-release-notes.sh .github/scripts/previous-tag.sh "$RUNNER_TEMP/"
           git checkout -q "$tag"
           case "$tag" in *-*) kind=test ;; *) kind=release ;; esac
           echo "tag=$tag" >> "$GITHUB_OUTPUT"

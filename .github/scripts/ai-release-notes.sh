@@ -65,8 +65,15 @@ fi
 if [ "$kind" = "release" ]; then
   prev=$(git describe --tags --abbrev=0 --exclude '*-*' HEAD^ 2>/dev/null || true)
 else
-  prev=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || true)
+  # by version number, not dev's history: dev never gets master's release commits, so
+  # `git describe` there skips every release (v2.8.0-beta.1 compared to v2.6.0, not v2.7.1)
+  version=$(jq -r '.version_name // .version' extension/manifest.json 2>/dev/null || true)
+  prev=$(bash "$(dirname "$0")/previous-tag.sh" "$version" test 2>/dev/null || true)
+  if [ -z "$prev" ]; then
+    prev=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || true)
+  fi
 fi
+echo "Notes cover the changes since ${prev:-the beginning}"
 
 # Only changes to the extension itself matter to users (not workflows, store assets...)
 range="${prev:+$prev..}HEAD"

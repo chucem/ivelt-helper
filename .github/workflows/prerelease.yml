@@ -112,9 +112,15 @@ jobs:
           else
             cp install.md notes.md
           fi
-          gh release create "${{ steps.version.outputs.tag }}" "${{ steps.version.outputs.zip }}" \
+          # GitHub's list of changes starts at the tag before this version by number: left to
+          # itself it looks back through dev, which never gets master's release commits, so it
+          # skipped every release (2.8.0-beta.1 compared to v2.6.0, not v2.7.1)
+          tag="${{ steps.version.outputs.tag }}"
+          prev=$(bash .github/scripts/previous-tag.sh "$tag" test)
+          gh release create "$tag" "${{ steps.version.outputs.zip }}" \
             --prerelease \
             --target "$GITHUB_SHA" \
-            --title "${{ steps.version.outputs.tag }} (test version)" \
+            --title "$tag (test version)" \
             --notes-file notes.md \
-            --generate-notes
+            --generate-notes \
+            ${prev:+--notes-start-tag "$prev"}
