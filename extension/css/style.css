@@ -143,6 +143,16 @@ a.active {
 .row.row-indented {
     padding-right: 30px;
 }
+.version-part:empty {
+    display: none;
+}
+.version-part::before {
+    content: ' · ';
+}
+.version a {
+    color: inherit;
+    text-decoration: underline;
+}
 .settings-group ul {
     margin: 0;
     padding-right: 20px;
@@ -198,6 +208,18 @@ input[type='checkbox'] + label:after {
 input[type='checkbox']:checked + label:before {
     border-color: var(--ui-accent-dark);
     background: var(--ui-accent);
+}
+input[type='checkbox']:disabled + label {
+    cursor: default;
+    opacity: 0.6;
+}
+.row.inline-options .inline-options-title {
+    display: block;
+    margin-bottom: 6px;
+}
+.row.inline-options input[type='checkbox'] + label {
+    display: inline-block;
+    margin-left: 24px;
 }
 input[type='checkbox']:checked + label:after {
     transform: translateX(-20px);
@@ -266,6 +288,22 @@ select {
     font-size: 0.85em;
     line-height: 1;
 }
+/* Font Awesome 4.7 ships with the extension (fonts/, license in fontawesome-OFL.txt), so the
+   settings page loads nothing from outside. Only the icons the page uses: */
+@font-face {
+	font-family: FontAwesome;
+	src: url('../fonts/fontawesome-webfont.woff2') format('woff2');
+	font-weight: normal;
+	font-style: normal;
+}
+.fa-at:before { content: "\f1fa"; }
+.fa-file:before { content: "\f15b"; }
+.fa-print:before { content: "\f02f"; }
+.fa-quote-left:before { content: "\f10d"; }
+.fa-copy:before { content: "\f0c5"; }
+.fa-comment:before { content: "\f075"; }
+.fa-fw { width: 1.28571429em; text-align: center; }
+
 .shortcut-key .icon {
 	display: inline-block;
   	font-family: FontAwesome;

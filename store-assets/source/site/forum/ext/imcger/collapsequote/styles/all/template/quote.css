@@ -1,0 +1,22 @@
+.imcger-quote {
+	position: relative;
+}
+
+.imcger-quote-text {
+  transition: 0.5s ease height;
+}
+
+.imcger-quote-shadow {
+	display: none;
+	position: absolute;
+	width: 100%;
+	bottom: 0px;
+}
+
+.imcger-quote-button {
+	cursor: pointer;
+	display: none;
+	position: relative;
+	text-align: center;
+	z-index: 999;
+}

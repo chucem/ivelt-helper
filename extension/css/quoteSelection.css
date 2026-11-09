@@ -1,0 +1,13 @@
+/* The post's own ציטיר button while words in the post are selected (js/quoteSelection.js):
+   another icon, "ציטיר אנגעצייכנט", and the theme's link color, so it's clear it quotes only the
+   selection. !important because the forum's and the themes' button styles are specific */
+
+.post-buttons .ih-quote-marked {
+    border-color: var(--t-link, #105289) !important;
+    background: color-mix(in srgb, var(--t-link, #105289) 14%, var(--t-surface, #fff)) !important;
+    color: var(--t-link, #105289) !important;
+    box-shadow: 0 0 0 1px var(--t-link, #105289);
+}
+.post-buttons .ih-quote-marked .icon {
+    color: var(--t-link, #105289) !important;
+}

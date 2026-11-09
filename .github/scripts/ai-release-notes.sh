@@ -65,8 +65,15 @@ fi
 if [ "$kind" = "release" ]; then
   prev=$(git describe --tags --abbrev=0 --exclude '*-*' HEAD^ 2>/dev/null || true)
 else
-  prev=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || true)
+  # by version number, not dev's history: dev never gets master's release commits, so
+  # `git describe` there skips every release (v2.8.0-beta.1 compared to v2.6.0, not v2.7.1)
+  version=$(jq -r '.version_name // .version' extension/manifest.json 2>/dev/null || true)
+  prev=$(bash "$(dirname "$0")/previous-tag.sh" "$version" test 2>/dev/null || true)
+  if [ -z "$prev" ]; then
+    prev=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || true)
+  fi
 fi
+echo "Notes cover the changes since ${prev:-the beginning}"
 
 # Only changes to the extension itself matter to users (not workflows, store assets...)
 range="${prev:+$prev..}HEAD"
@@ -89,11 +96,7 @@ You write release notes for "iVelt Helper" (אייוועלט העלפער), a fr
 
 This is $what. Below are the commit messages since the previous release, oldest first.
 
-Write the release notes in GitHub Markdown:
-1. First in Yiddish, the way it's written on ivelt (Hasidic Yiddish in Hebrew letters, with forum words like תגובה, אשכול, עטעטשמענט, אנשטעלונגען). Wrap the whole Yiddish part in <div dir="rtl"> and </div>, with a blank line after the opening tag and before the closing tag.
-2. Then a line with ---, then the same notes in English.
-
-In each language: a short heading, then the changes grouped under a few headings with an emoji each (for example uploads, images, colors, fixes). Describe what users can now do or what got fixed, in plain words. $extra
+Write the release notes in GitHub Markdown, in English only: a short heading, then the changes grouped under a few headings with an emoji each (for example uploads, images, colors, fixes). Describe what users can now do or what got fixed, in plain words. $extra
 
 Rules: only mention what is in the commits - never invent features. If a change was later undone by a "Revert" commit, leave out both the change and the revert. Leave out internal things (code refactoring, workflows, build files, branding files, README, version bumps, review suggestions) unless users notice them. No commit hashes, file names or function names. Keep it short. Output only the Markdown, with no introduction and no code fences.
 

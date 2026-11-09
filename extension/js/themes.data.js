@@ -32,7 +32,7 @@ const themePresets = [
 		bg: '#F0EEE6', surface: '#FAF9F5', text: '#3D3D3A', strong: '#141413', muted: '#73726C',
 		link: '#B6532F', linkHover: '#8F3D20', accent: '#D97757', accentDark: '#C15F3C', onAccent: '#FFFFFF',
 		row1: '#F6F4EE', row2: '#EEEBE2', row3: '#E6E2D6', hover: '#E9E3D3', border: '#DEDAD0',
-		quoteBg: '#F3EFE6', codeText: '#8A4B2E', highlight: '#F5D9C9', error: '#B5452C' } },
+		codeText: '#8A4B2E', highlight: '#F5D9C9', error: '#B5452C' } },
 
 	{ id: 'claude-dark', name: 'Claude טונקל', dark: true, colors: {
 		bg: '#1F1E1D', surface: '#262624', text: '#C2C0B6', strong: '#F5F4EE', muted: '#9C9A92',
@@ -163,8 +163,11 @@ function themeVars(theme){
 		buttonBg: c.surface,
 		buttonBorder: mix(c.border, c.text, 80),
 		buttonHover: c.row2,
-		quoteBg: c.row2,
-		quoteBorder: mix(c.border, c.text, 75),
+		// quotes stand apart from both post colors (a step toward the text color, lightly tinted
+		// with the accent, like the forum's beige quotes), and nested quotes alternate with a deeper step
+		quoteBg: mix(mix(c.row2, c.text, 93), c.accent, 94),
+		quoteBg2: mix(mix(c.row2, c.text, 86), c.accent, 94),
+		quoteBorder: mix(c.border, c.text, 65),
 		codeBg: c.bg,
 		codeText: c.link,
 		dropdown: c.surface,
@@ -174,6 +177,8 @@ function themeVars(theme){
 		warn: theme.dark ? '#E3B341' : '#7A4F01',
 		...c
 	};
+	// the notification count badge: the error red, toned down toward the page on dark themes (white text stays readable)
+	all.badge = theme.dark ? mix(all.error, c.bg, 72) : all.error;
 
 	const vars = {};
 	Object.keys(all).forEach(key => {

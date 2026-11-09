@@ -100,6 +100,12 @@
     white-space: normal;
 }
 
+/* Not enough room under the button: open upwards */
+#ivd-wrap .ivd-popup.ivd-up {
+    top: auto;
+    bottom: calc(100% + 6px);
+}
+
 #ivd-wrap .ivd-popup[hidden],
 #ivd-wrap .ivd-popup [hidden] { display: none !important; }
 
@@ -263,3 +269,44 @@
 #ivd-wrap .ivd-status.ivd-ok { color: #1B5E20; }
 #ivd-wrap .ivd-status.ivd-warn { color: #7A4F01; }
 #ivd-wrap .ivd-status.ivd-error { color: #B71C1C; }
+
+/* Files already waiting (dropped, or too big for an attachment): a wide button
+   that names them and the service they go to */
+#ivd-wrap .ivd-btn.ivd-pending {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 8px 12px;
+    font-weight: bold;
+    text-align: right;
+}
+#ivd-wrap .ivd-btn.ivd-pending svg { width: 18px; height: 18px; flex-shrink: 0; }
+#ivd-wrap .ivd-btn.ivd-pending span { min-width: 0; overflow-wrap: anywhere; }
+
+/* Files dragged over the button or the popup; the upload button is where they land */
+#ivd-wrap.ivd-dragover #ivd-button,
+#ivd-wrap.ivd-dragover .ivd-popup,
+#ivd-wrap.ivd-dragover .ivd-btn.ivd-primary {
+    outline: 2px dashed #1a73e8;
+    outline-offset: 2px;
+}
+#ivd-wrap.ivd-dragover .ivd-popup { background: #f1f6fb; }
+
+/* On a phone (reply and PM pages alike) the popup is a panel along the bottom of the screen, 8px
+   from each side: opened from the button, wherever it is, it ran out past the edge of the screen */
+@media (max-width: 700px) {
+    html body #ivd-wrap .ivd-popup,
+    html body #ivd-wrap .ivd-popup.ivd-up {
+        position: fixed;
+        top: auto;
+        bottom: 8px;
+        left: 8px;
+        right: 8px;
+        width: auto;
+        max-height: 80vh;
+        overflow-y: auto;
+        box-sizing: border-box;
+        direction: rtl;
+    }
+}

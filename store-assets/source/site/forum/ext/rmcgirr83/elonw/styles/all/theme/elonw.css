@@ -1,0 +1,12 @@
+a.elonw:after {  
+	font-family: FontAwesome;
+	content: "\f08e";
+	left: 3px;
+	padding-right: 3px;
+	position: relative;
+	text-align: center;
+	vertical-align: middle;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;	
+	pointer-events: none;
+}

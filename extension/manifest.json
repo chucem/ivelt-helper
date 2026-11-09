@@ -2,9 +2,10 @@
   "manifest_version": 3,
   "name": "iVelt Helper v2",
   "description": "Adds accessibility and usability improvements to אייוועלט.",
-  "version": "2.7.0",
-  "version_name": "2.7.0-beta.1",
-  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAhcvRhavqG/7V9ar6NLXtvHS1fgBfhNdHk+zkkYQYkhEwF9ZoRF2V2+RZA3bl/VpSwSDjp4wPXxfbMomNOobCy/FhBGgn9DPINnFHFdbw6wLnL57f/5dDPXoP9anuTw5/RFbBZtBI+0SHeR5+28lCvbYQjmHPzfq+Hwrdu7BCDMIdaNLVs8BQaxn/FFzTPPyetEj94XYfEX/w+VXD+riN41bgXf0t2dS+buMHTNKHAdQ9eIEXu6i02bVjPhkcyjyEGzVO8nQ1/jHhBjqA/a23q1JPWAfiW9FV71coi5FCR18eTKyvpMDvDw7cvoaoFnK0VjYks87hyJ9zackMNOZyGQIDAQAB",
+  "version": "2.8.0",
+  "version_name": "2.8.0-beta.1",
+  "minimum_chrome_version": "111",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAug3mNmj+LQBR8dRF7SMCNnoVu9VSartpHPTQGeUoxzLSSHNz00sxc41m/EiEtn8y6KJ6za9nIFpzwpOJkHp1CLAagM6igLn/xQZoimhYlb62ltClSm9ks0zmNToo6/Yl0oKW5jf2mkp/cDaeKeBYwZWuBPKSB8kktqvZwwcFDH1Z9b1sCLRaTPp43rpHqa34i/kvQpj+aJFtpALvYduoZOg8Y82r0O9Z2imiOPTEnYlKH7in1LijCTp9sK0ySh0guipBBZzHZET14MdgHZVMBPCy4osnUtDYwlgw1xBelcDSvPxogm0eH3UCylZsK7pKV/Q24mhvLr57P506uUGNzwIDAQAB",
   "icons": {
     "48": "img/icon48.png",
     "128": "img/icon128.png"
@@ -19,9 +20,14 @@
   "content_scripts": [
     {
       "matches": [
-        "*://*.ivelt.com/*",
-        "*://*.yiddishworld.com/*",
-        "*://*.198.153.76.147/*"
+        "*://*.ivelt.com/*"
+      ],
+      "css": ["css/spoilers.css"],
+      "js": ["js/spoilers.js"]
+    },
+    {
+      "matches": [
+        "*://*.ivelt.com/*"
       ],
       "css": ["css/themes.css"],
       "js": ["js/themes.data.js", "js/theme.js"],
@@ -29,76 +35,164 @@
     },
     {
       "matches": [
-        "*://*.ivelt.com/*",
-        "*://*.yiddishworld.com/*",
-        "*://*.198.153.76.147/*"
+        "*://*.ivelt.com/*"
+      ],
+      "js": ["js/titleOpensUnread.js"]
+    },
+    {
+      "matches": [
+        "*://*.ivelt.com/*"
+      ],
+      "css": ["css/whatsNew.css"],
+      "js": ["js/whatsNew.data.js", "js/whatsNew.js"]
+    },
+    {
+      "matches": [
+        "*://*.ivelt.com/*"
+      ],
+      "css": ["css/drafts.css"],
+      "js": ["js/drafts.js"]
+    },
+    {
+      "matches": [
+        "*://*.ivelt.com/*"
+      ],
+      "css": ["css/whoLiked.css"],
+      "js": ["js/whoLiked.js"]
+    },
+    {
+      "matches": [
+        "*://*.ivelt.com/*"
+      ],
+      "css": ["css/profileCards.css"],
+      "js": ["js/profileCards.js"]
+    },
+    {
+      "matches": [
+        "*://*.ivelt.com/*"
+      ],
+      "css": ["css/editorUndo.css"]
+    },
+    {
+      "matches": [
+        "*://*.ivelt.com/*"
       ],
 	  "css":["css/appcss.css"],
       "js": [
         "js/settingsHandler.js",
-        "js/contentScript.js",
-        "js/refreshNotificationCount.js"
+        "js/topicMappingRelay.js",
+        "js/refreshNotificationCount.js",
+        "js/mentionLinks.js"
       ]
     },
     {
       "matches": [
+        "*://*.ivelt.com/*"
+      ],
+      "js": [
+        "js/settingsReady.js",
+        "js/splitNotifications.js",
+        "js/addTopicButtons.js"
+      ],
+      "world": "MAIN"
+    },
+    {
+      "matches": [
+        "*://*.ivelt.com/*"
+      ],
+      "js": [
+        "js/keyboardShortcuts.js",
+        "js/pageEnhancements.js",
+        "js/addGoogleSearch.js"
+      ]
+    },
+    {
+      "matches": [
+        "*://*.ivelt.com/forum/viewtopic.php*"
+      ],
+      "js": ["js/settingsReady.js", "js/print.js"],
+      "world": "MAIN"
+    },
+    {
+      "matches": [
+        "*://*.ivelt.com/forum/viewtopic.php*"
+      ],
+      "js": ["js/newResponseNotification.js"]
+    },
+    {
+      "matches": [
         "*://*.ivelt.com/forum/posting.php*",
-        "*://*.yiddishworld.com/forum/posting.php*",
-        "*://*.198.153.76.147/forum/posting.php*"
+        "*://*.ivelt.com/forum/viewtopic.php*",
+        "*://*.ivelt.com/forum/ucp.php*"
+      ],
+      "js": ["js/settingsReady.js", "js/editorUndo.js"],
+      "world": "MAIN"
+    },
+    {
+      "matches": [
+        "*://*.ivelt.com/forum/posting.php*",
+        "*://*.ivelt.com/forum/ucp.php*"
+      ],
+      "css": ["css/mobileLinkButton.css", "css/editorToolbar.css"],
+      "js": ["js/mobileLinkButton.js"],
+      "world": "MAIN"
+    },
+    {
+      "matches": [
+        "*://*.ivelt.com/*"
+      ],
+      "css": ["css/doubleClickLike.css"],
+      "js": ["js/doubleClickLike.js"]
+    },
+    {
+      "matches": [
+        "*://*.ivelt.com/forum/posting.php*"
       ],
       "css": ["css/imageResizer.css", "css/driveUpload.css"],
       "js": ["js/imageResizer.js", "js/driveUpload.js"]
+    },
+    {
+      "matches": [
+        "*://*.ivelt.com/forum/ucp.php*"
+      ],
+      "css": ["css/driveUpload.css"],
+      "js": ["js/driveUpload.js"]
+    },
+    {
+      "matches": [
+        "*://*.ivelt.com/forum/ucp.php*"
+      ],
+      "js": ["js/pmMentions.js"]
+    },
+    {
+      "matches": [
+        "*://*.ivelt.com/*"
+      ],
+      "css": ["css/quoteSelection.css"],
+      "js": ["js/quoteSelection.js"]
+    },
+    {
+      "matches": [
+        "*://*.ivelt.com/*"
+      ],
+      "js": ["js/accounts.js"]
     }
   ],
   "background": {
     "service_worker": "background.js"
   },
-  "options_page": "settings.html",
   "permissions": [
     "alarms",
     "identity",
     "cookies",
     "storage",
     "notifications",
-    "background",
-    "declarativeNetRequestWithHostAccess",
-    "declarativeNetRequestFeedback"
+    "declarativeNetRequestWithHostAccess"
   ],
   "host_permissions": [
     "*://*.ivelt.com/*",
-    "*://*.198.153.76.147/*",
-    "*://*.yiddishworld.com/*",
     "*://www.xn--4dbhss5b.com/*",
     "https://docs.google.com/*"
-  ],
-  "declarative_net_request": {
-    "rule_resources": [
-      {
-        "id": "ruleset_1",
-        "enabled": true,
-        "path": "rules.json"
-      }
-    ]
-  },
-  "web_accessible_resources": [
-    {
-      "resources": [
-        "js/keyboardShortcuts.js",
-        "js/newResponseNotification.js",
-        "js/addGoogleSearch.js",
-        "js/pageEnhancements.js",
-        "js/splitNotifications.js",
-		"js/addTopicButtons.js",
-        "js/settingsHandler.js",
-        "js/print.js"
-      ],
-      "matches": [
-        "*://*.ivelt.com/*",
-        "*://*.yiddishworld.com/*",
-        "*://*.198.153.76.147/*"
-      ],
-      "extension_ids": []
-    }
   ],
   "options_ui": {
     "page": "settings.html",

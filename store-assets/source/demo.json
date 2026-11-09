@@ -1,0 +1,155 @@
+{
+  "_about": "The made-up users, posts and notifications on the demo forum pages. render.py puts them into the forum's own markup (site/forum/*.html). Content is HTML, as the forum renders a post.",
+  "me": "בערל",
+  "users": {
+    "בערל": {
+      "id": 101,
+      "letter": "ב",
+      "color": "#3f7fc4",
+      "rank": "שר המאה",
+      "posts": "1,284",
+      "joined": "מיטוואך יאנואר 12, 2022 8:15:02 pm"
+    },
+    "זלמן": {
+      "id": 102,
+      "letter": "ז",
+      "color": "#5fa04e",
+      "rank": "שר האלפים",
+      "posts": "3,902",
+      "joined": "דינסטאג מערץ 3, 2020 9:02:44 am"
+    },
+    "שמערל": {
+      "id": 103,
+      "letter": "ש",
+      "color": "#e07a5f",
+      "rank": "שר חמישים",
+      "posts": "512",
+      "joined": "זונטאג מאי 8, 2023 4:20:11 pm"
+    },
+    "מאטל": {
+      "id": 104,
+      "letter": "מ",
+      "color": "#8e7cc3",
+      "rank": "שר המאה",
+      "posts": "877",
+      "joined": "פרייטאג יוני 2, 2021 11:48:30 am"
+    }
+  },
+  "topic": {
+    "id": 46302,
+    "title": "אייוועלט קראום עקסטענשאן",
+    "forum_id": 9,
+    "replies": "1496",
+    "page": 60,
+    "pages": 60
+  },
+  "posts": [
+    {
+      "id": 7012001,
+      "author": "בערל",
+      "time": "מאנטאג אקטאבער 12, 2026 9:41:07 am",
+      "content": "<blockquote><div><cite><a href=\"./memberlist.php?mode=viewprofile&amp;u=103\">שמערל</a> האט געשריבן: <a href=\"./viewtopic.php?p=7011990#p7011990\" data-post-id=\"7011990\">↑</a><span class=\"responsive-hide\">מאנטאג אקטאבער 12, 2026 9:30:12 am</span></cite>ווייסט איינער וויאזוי מען קען שיקן א לינק צו א געוויסע תגובה, נישט צום גאנצן אשכול?</div></blockquote>זיכער פשוט! מיט'ן <strong class=\"text-strong\">אייוועלט העלפער</strong> דריקט מען אויפ'ן קליינעם אייקאן נעבן דעם נאמען, און דער לינק איז שוין קאפירט. 👍<br>עס קומט אויך מיט שארטקאטס, באזונדערע נאטיפיקאציעס, און א בילדער פארקלענערער.",
+      "likers": [
+        "זלמן",
+        "שמערל",
+        "מאטל",
+        "יענקל"
+      ]
+    },
+    {
+      "id": 7012014,
+      "author": "זלמן",
+      "time": "מאנטאג אקטאבער 12, 2026 10:05:52 am",
+      "content": "<blockquote><div><cite><a href=\"./memberlist.php?mode=viewprofile&amp;u=101\">בערל</a> האט געשריבן: <a href=\"./viewtopic.php?p=7012001#p7012001\" data-post-id=\"7012001\">↑</a><span class=\"responsive-hide\">מאנטאג אקטאבער 12, 2026 9:41:07 am</span></cite>עס קומט אויך מיט שארטקאטס, באזונדערע נאטיפיקאציעס, און א בילדער פארקלענערער.</div></blockquote>יישר כח! איך האב עס יעצט אינסטאלירט, ארבעט פיין.",
+      "likers": [
+        "בערל",
+        "שמערל",
+        "מאטל",
+        "הערשל"
+      ]
+    },
+    {
+      "id": 7012030,
+      "author": "מאטל",
+      "time": "מאנטאג אקטאבער 12, 2026 10:22:15 am",
+      "content": "די טונקעלע טעמע איז א מחיה פאר די אויגן ביי נאכט. און דער דאבל-קליק צו באדאנקען איז זייער באקוועם.",
+      "likers": [
+        "בערל",
+        "זלמן"
+      ]
+    }
+  ],
+  "notifications": {
+    "_about": "Unread ones (unread: true) are counted on the bells. 'badge' is the forum's own count of unread notifications; the ones not in the list show as the grey +N.",
+    "badge": 11,
+    "items": [
+      {
+        "type": "ציטירט",
+        "by": "שמערל",
+        "ref": "Re: וואס טוט זיך מיט די וועטער?",
+        "time": "היינט, 9:15 am",
+        "unread": true
+      },
+      {
+        "type": "ציטירט",
+        "by": "בערל",
+        "ref": "Re: אייוועלט קראום עקסטענשאן",
+        "time": "היינט, 10:22 am",
+        "unread": true
+      },
+      {
+        "type": "ציטירט",
+        "by": "זלמן",
+        "ref": "Re: גוטע עצות פאר א נייעם קאמפיוטער",
+        "time": "היינט, 11:29 am",
+        "unread": true
+      },
+      {
+        "type": "דערמאנט",
+        "by": "מאטל",
+        "ref": "Re: פרישע ניגונים פאר שבת",
+        "time": "היינט, 12:36 pm",
+        "unread": true
+      },
+      {
+        "type": "באדאנקט",
+        "by": "זלמן",
+        "ref": "Re: אייוועלט קראום עקסטענשאן",
+        "time": "היינט, 12:40 pm",
+        "unread": true
+      },
+      {
+        "type": "באדאנקט",
+        "by": "מאטל",
+        "ref": "Re: אייוועלט קראום עקסטענשאן",
+        "time": "היינט, 12:41 pm",
+        "unread": true
+      },
+      {
+        "type": "באדאנקט",
+        "by": "שמערל",
+        "ref": "Re: גוטע עצות פאר א נייעם קאמפיוטער",
+        "time": "היינט, 12:52 pm",
+        "unread": true
+      },
+      {
+        "type": "באדאנקט",
+        "by": "זלמן",
+        "ref": "Re: פרישע ניגונים פאר שבת",
+        "time": "היינט, 1:05 pm",
+        "unread": true
+      },
+      {
+        "type": "באדאנקט",
+        "by": "מאטל",
+        "ref": "Re: וואס טוט זיך מיט די וועטער?",
+        "time": "היינט, 1:17 pm",
+        "unread": true
+      }
+    ]
+  },
+  "drive_account": {
+    "name": "בערל",
+    "email": "berel.demo@gmail.com"
+  }
+}

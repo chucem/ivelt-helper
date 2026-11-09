@@ -66,49 +66,53 @@ function parseAndSendNotifications(data){
       }
     });
     
-    // filter sent items
-    if(items.notificationsSent){
-      unread = unread.filter(u => {
-        debugLog(u.id, 'Was already sent: ' + !!items.notificationsSent.includes(u.id));
-        return !items.notificationsSent.includes(u.id)
-      });
-    }
+    const sent = sentIds(items.notificationsSent);
+
+    // filter sent items, and ones already waiting in the queue
+    unread = unread.filter(u => {
+      debugLog(u.id, 'Was already sent: ' + sent.includes(u.id));
+      return !sent.includes(u.id) && !queue.some(q => q.id === u.id);
+    });
 
     if(!unread.length)
       return;
 
-    var saveNewIds = unread.map(u => {
-      debugLog(u.id, 'storeOnly: ' + storeOnly);
-      return u.id;
-    }).join(',');
+    // dont send the initial batch, only remember it
+    if(storeOnly){
+      debugLog(unread[0].id, 'storeOnly: saving ' + unread.length);
+      saveSentIds(sent.concat(unread.map(u => u.id)));
+      return;
+    }
 
-    var notificationsSent = (items.notificationsSent ? items.notificationsSent + ',' : '') + saveNewIds;
+    // already shown on another computer: remember them here too, but dont show them twice
+    const shownElsewhere = unread.filter(u => sentElsewhere.includes(u.id));
+    shownElsewhere.forEach(u => debugLog(u.id, 'Was sent on another computer'));
+    if(shownElsewhere.length)
+      saveSentIds(sent.concat(shownElsewhere.map(u => u.id)));
 
-    debugLog(unread[0].id, 'savingBytes: ' + notificationsSent.length);
-
-    // save sent items in storage
-    // TODO: prune old ids to avoid storage quota errors
-    chrome.storage.local.set({
-      'notificationsSent': notificationsSent
-    }, () => {
-      // dont send the initial batch
-      if(storeOnly){
-        storeOnly = false;
-        return;
-      }
-
-      // saved above as sent, so they're not checked again, but not shown twice
-      const toSend = unread.filter(u => {
-        const shownElsewhere = sentElsewhere.includes(u.id);
-        if(shownElsewhere)
-          debugLog(u.id, 'Was sent on another computer');
-        return !shownElsewhere;
-      });
-
-      toSend.forEach(u => queueNotification(u));
-      shareSentNotifications(toSend.map(u => u.id));
-    });
+    unread.filter(u => !sentElsewhere.includes(u.id)).forEach(u => queueNotification(u));
   });
+}
+
+// keep only the newest ids, a check never sees more than one page of notifications
+const maxSentIds = 250;
+
+function sentIds(stored){
+  return stored ? stored.split(',') : [];
+}
+
+function saveSentIds(ids){
+  chrome.storage.local.set({ 'notificationsSent': ids.slice(-maxSentIds).join(',') });
+}
+
+// remember an id only once its notification was shown, so a failed one is retried on the next check
+function markSent(id){
+  chrome.storage.local.get(['notificationsSent'], items => {
+    const sent = sentIds(items.notificationsSent);
+    if(!sent.includes(id))
+      saveSentIds(sent.concat(id));
+  });
+  shareSentNotifications([id]);
 }
 
 // send one browser notification at a time, every 10 seconds
@@ -134,11 +138,18 @@ function sendBrowserNotification(item){
   debugLog(item.id, 'Sending notification');
   chrome.notifications.create(item.id, {
     type: 'basic',
-    iconUrl: origin + 'fav/apple-icon-60x60.png',
+    // bundled icon: the site's own icon gets a Cloudflare challenge, which makes create() fail
+    iconUrl: chrome.runtime.getURL('img/icon128.png'),
     title: item.title,
     message: item.message,
     contextMessage: item.subMessage,
     priority: 2
+  }, () => {
+    if(chrome.runtime.lastError){
+      debugLog(item.id, 'Notification failed: ' + chrome.runtime.lastError.message);
+      return;
+    }
+    markSent(item.id);
   });
 }
 

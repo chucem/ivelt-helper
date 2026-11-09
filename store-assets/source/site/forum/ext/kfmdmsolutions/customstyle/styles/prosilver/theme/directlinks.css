@@ -1,0 +1,17 @@
+/*remove direction atrr from the html tag*/
+html{
+	direction:unset;
+}
+/*end*/
+
+/*add direction atrr to the wrap class */
+#wrap{
+	direction:rtl;
+}
+/*end*/
+
+/*remove the side scrollbar*/
+.skiplink{
+	display:none;
+}
+/*end*/

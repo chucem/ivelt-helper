@@ -1,0 +1,51 @@
+.pinned {
+	background-color: #FFF ;
+	background-image: url("");
+	border: 10px solid #cfdfea;
+	background-position: right 12px top 12px !important;
+}
+
+.pinned div div div h3 a{
+	display: none;
+	visibility: hidden;
+}
+
+.pinned div dl {
+	display: none;
+}
+
+.pinned div .postbody {
+	float: none;
+	width: unset;
+	color: #536482;
+}
+.pinned .top{
+	display: none;
+}
+.pinned .signature{
+	display: none;
+}
+.pinned .notice{
+	display: none;
+}
+	
+.pinned .post-buttons {
+	transform: scale(0.9);
+}
+
+@media screen and (min-width :701px) {
+	.pinned .postbody{
+		margin-left: 5px;
+	}
+}
+
+@media (max-width: 700px){
+	.pinned .author .responsive-hide {
+    	display: unset !important;
+	}
+	
+	.pinned .post-buttons {
+		transform: scale(0.9) translateY(-5px);
+		left: 5px !important;
+	}
+}

@@ -1,0 +1,355 @@
+/*used*/
+.site_logo {
+  background-image: url("./images/site_logo.png");
+  padding-left: 95px;
+  width: 0px;
+  height: 0px ;
+  
+}
+
+.site_logo {
+  padding-top: 95px;
+}
+
+.rtl .logo {
+      padding: 5px 10px 0 13px !important;
+}
+/*header ad*/
+#site-description {
+    width: 30%;
+}
+
+#notification_list {
+  z-index: 2;
+}
+
+.wrap {
+    border: 1px solid transparent;
+    border-radius: 8px;
+    margin: 0 auto;
+    max-width: 1190px;
+    min-width: 625px;
+    padding: 15px;
+}
+.advs12 {
+  /*max-width: 40%;*/
+  float: right;
+  
+}
+
+.advs12 img {
+  max-width: 575px;
+  max-height: 80px;
+  width: 100%;
+  height: auto;
+  margin: 10px;
+}
+.admngr img, .admngrfr img, .admngrfrh img, .admngr8 img, .admngrft img {
+  width: 100%;
+  height: auto;
+}
+
+/* ---- Ad zones --------------------------------------------------------
+   Each zone is a flex row. Every banner reserves its own height via
+   aspect-ratio (matching its image's ratio), so the space is held both
+   before the async-loaded ad arrives AND shrinks with the image at every
+   width -- no page jump, and no fixed-height gap below shrunken banners.
+   (Replaces the old float layout + fixed min-height pre-sizing.) ------- */
+.advs_belowh,
+.adsm_block {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  direction: ltr; /* keep banner order L->R as the old float layout did (page is RTL) */
+}
+.advs_belowh {
+  max-width: 1190px;
+  padding-bottom: 5px;
+}
+
+/* 575x80 banners: two per row, stack at <=767 (see media query) */
+.advs_belowh > .ad575,
+.adsm_block > .ad575 {
+  flex: 1 1 calc(50% - 10px); /* subtract the full gap so two never hit the wrap boundary; grow fills the slack */
+  min-width: 0;
+  max-width: 575px;
+  aspect-ratio: 575 / 80;
+  margin: 0;
+}
+/* 1050x80 long banner: always its own full-width row */
+.advs_belowh > .ad1050,
+.adsm_block > .ad1050 {
+  flex: 1 1 100%;
+  min-width: 0;
+  max-width: 1050px;
+  aspect-ratio: 1050 / 80;
+  margin: 0 auto;
+}
+/* 275x100 banners: four per row, 2x2 at <=480 (see media query) */
+.adsm_block > .adv275 {
+  flex: 1 1 calc(25% - 12px); /* extra slack vs. the 3 gaps so four never wrap early; grow fills */
+  min-width: 0;
+  max-width: 275px;
+  aspect-ratio: 275 / 100;
+  margin: 0;
+}
+
+/* banner image fills its ratio box exactly; block removes the inline
+   baseline gap, and the OIO list wrappers are reset so nothing adds
+   stray height that would push past the reserved aspect-ratio box */
+.advs_belowh img,
+.adsm_block img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.advs_belowh .oio-banner-zone,
+.adsm_block .oio-banner-zone,
+.advs_belowh .oio-slot,
+.adsm_block .oio-slot {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.admngrfr.advs19, .admngrfrh.advs24, .admngr8.advs21, .admngrft.advs26 {
+  margin-right: 0px;
+}
+
+.advs29 {
+  max-height: 100px;
+}
+
+#post_advs .postbody, #post_advs2 .postbody {
+  width: 100%;
+}
+
+/* hide elonw icon */
+.adsm_block .elonw:after {
+  display: none;
+}
+
+#footer_advs {
+  padding: 10px;
+}
+
+/* The pinned post's .post-buttons carries transform: scale(0.9) (pinnedpost ext),
+   which makes it a stacking context and traps the action-menu dropdown (z-index:2)
+   inside it. The trapped menu then paints below the ad post (#post_advs) that follows
+   the pinned post in the DOM, hiding it. post-buttons is already position:absolute
+   (.has-profile), so a positive z-index lifts the whole menu above that later ad post.
+   Use z-index:1 (not higher): it clears the unpositioned ad post (level 0) but stays
+   BELOW phpBB's header dropdowns (.dropdown, z-index:2 — notifications/PM/etc.), which
+   share the root stacking context. A value of 10 made this menu paint over those
+   dropdowns. Also stays below phpBB's modal overlays (44+). */
+.pinned .post-buttons {
+  z-index: 1;
+}
+
+.hide_me {
+  display: none;
+}
+
+/* fix scrolling to post */
+/* html {
+  scroll-behavior: smooth;
+} */
+
+/*add margin on the right of quotes*/
+.rtl blockquote {
+	margin: 1em 25px 1em 1px;
+}
+.rtl blockquote cite > span {
+	float: left;
+	font-weight: normal;
+}
+/*fix topic overview on posting page*/
+.rtl .topicreview .postbody, .rtl .postbody h3{
+    float: none;
+}
+.rtl .topicreview .postbody h3 {
+    float: right;
+}
+
+/* replace heart icon with thumbs up for "postlove" extension */
+
+.button .liked:before, .button .like:before {
+  content: "\f087";
+}
+
+/* button like icon */
+.button .liked:before, .button .like:before {
+  color: #8f8f8f;
+  padding-right: 1px;
+  font-style: normal;
+}
+
+.button .liked:before {
+  color: #D31141;
+}
+
+.tr_likedposts th {
+  text-align: right;
+}
+
+.post-buttons li {
+  list-style: none;
+}
+
+.button .postlove-count {
+  font-family: "Open Sans", "Droid Sans", Verdana, Arial, Helvetica;
+  font-size: 13px;
+  font-weight: 600;
+  color: #8f8f8f !important;
+}
+
+.button:hover .postlove-count {
+  color: #0A8ED0 !important;
+}
+
+/* make like count normel*/
+.postprofile .profile-custom-field a {
+    font-weight: normal;
+}
+
+/* user like activities page */
+[class*="section-app/postlove/"] li.row {
+  padding: 3px;
+  font-size: 1.1em;
+  border-bottom-color: transparent;
+}
+/* end replace heart icon with thumbs up for "postlove" extension */
+
+/* Begin Responsive Changes */
+/* Smaller screens (portrait and landscape) ----------- */
+
+@media screen and (max-width: 1221px) {
+/* Place your styles for tablets and tiny laptops here */
+
+  .advs12 {
+    max-width: 43%;
+  }
+  .advs12 img {
+    width: 95%;
+  }
+  /* 575/275/1050 widths now come from flex-basis + aspect-ratio, no overrides needed here */
+
+  #site-description {
+    width: 33%;
+  }
+}
+
+/* Tablets (portrait and landscape) ----------- */
+@media screen and (max-width: 980px) {
+/* Place your styles for tablets and tiny laptops here */
+  #site-description {
+    width: 32%;
+  }
+  #site-description p, #site-description h1 {
+    float: right;
+  }
+  .advs12 {
+    max-width: 67%;
+  }
+  .hide_me {
+    display: none;
+  }
+  .my_other_name {
+    display: inline;
+  }
+
+}
+
+@media screen and (min-width: 1000px) {
+  .tr_likedposts td {
+    max-width: unset !important;
+  }
+}
+
+
+@media screen and (max-width: 700px) {
+	.advs12 {
+		max-width: 100%;
+		margin: 0 auto;
+	}
+	#site-description {
+		width: 100%;
+	}
+
+	#wrap {
+		border: none;
+		border-radius: 0;
+		margin: 0;
+		min-width: 290px;
+		padding: 0 5px;
+	}
+
+  .advs_belowh, .adsm_block {
+    margin: 0 -5px;
+  }
+
+}
+/* Smartphones (portrait and landscape) ----------- */
+@media screen and (max-width: 767px) {
+/* Place your styles for phones and small tablets here */
+
+  /* 575 banners stack one-per-row on phones */
+  .advs_belowh > .ad575,
+  .adsm_block > .ad575 {
+    flex-basis: 100%;
+  }
+
+  .rtl #portal-body ul.topiclist dt, .rtl #portal-body ul.topiclist dt .list-inner {
+    margin-left: 0 !important;
+  }
+
+}
+
+/* Smartphones (portrait and landscape) ----------- */
+@media screen and (max-width: 480px) {
+/* Place your styles for phones and small tablets here */
+
+  /* 275 banners go 2x2 on small phones */
+  .adsm_block > .adv275 {
+    flex-basis: calc(50% - 10px);
+  }
+  p.time.rightside + p {
+  float: left !important;
+  }
+
+}
+
+
+h1 a {
+  color: #FFFFFF;
+  text-decoration: none;
+}
+
+h1 a:hover {
+  color: #CCCCCC;
+  text-decoration: none;
+}
+
+
+li.icon-contact, li.icon-team {
+  display: none;
+}
+
+.icon-deals {
+  background-image: url(./images/icon_deals.gif);
+}
+
+a.unwc {
+  font-size: 25%;
+}
+
+::-webkit-scrollbar {
+  -webkit-appearance: none;
+  width: 7px;
+}
+::-webkit-scrollbar-thumb {
+  border-radius: 4px;
+  background-color: rgba(0,0,0,.5);
+  -webkit-box-shadow: 0 0 1px rgba(255,255,255,.5);
+}

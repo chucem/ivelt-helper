@@ -20,6 +20,7 @@
 
 (function () {
     'use strict';
+    if (!document.getElementById('page-body')) return; // not the forum, e.g. Cloudflare's check page
 
     const RESIZE_KEY = 'imageResizer';
     const PASTE_KEY = 'pasteImages';
@@ -199,7 +200,7 @@
             cleanups.push(() => target.removeEventListener(type, handler, capture));
         }
 
-        const fullMessage = `עס מעג זיין מאקסימום ${MAX_ATTACHMENTS} עטעטשמענטס. מעקט אויס איינס איידער איר לייגט צו נאך.`;
+        const fullMessage = `עס מעג זיין מאקסימום ${MAX_ATTACHMENTS} עטעטשמענטס. מעק אויס איינס איידער דו לייגסט צו נאך.`;
 
         // Opens the attachments tab when the uploader isn't there yet, and waits for it
         async function ensureAttachmentInput() {
@@ -253,9 +254,9 @@
             // has to start with Yiddish - a line starting with "OK" comes out scrambled.
             if (resize && files.length > slots) {
                 const zip = confirm(
-                    `איר האט אויסגעקליבן ${files.length} פיילס, אבער עס איז נאר דא פלאץ פאר ${plural(slots, 'עטעטשמענט', 'עטעטשמענטס')}.\n\n` +
-                    `• דרוקט OK צו לייגן זיי אלע אריין אין איין ZIP פייל (די בילדער ווערן פארקלענערט אז עס זאל אריינפאסן)\n` +
-                    `• דרוקט Cancel צו צולייגן נאר די ערשטע ${slots}`
+                    `דו האסט אויסגעקליבן ${files.length} פיילס, אבער עס איז נאר דא פלאץ פאר ${plural(slots, 'עטעטשמענט', 'עטעטשמענטס')}.\n\n` +
+                    `• דרוק OK צו לייגן זיי אלע אריין אין איין ZIP פייל (די בילדער ווערן פארקלענערט אז עס זאל אריינפאסן)\n` +
+                    `• דרוק Cancel צו צולייגן נאר די ערשטע ${slots}`
                 );
                 if (zip) {
                     await zipAndAttach(files.map(f => ({ path: f.name, file: f })), 'files-' + new Date().toLocaleDateString('sv'));
@@ -277,8 +278,8 @@
             }
             if (animated.length) {
                 const ok = confirm(
-                    `${plural(animated.length, 'באוועגלעכער בילד איז', 'באוועגלעכע בילדער זענען')} צו גרויס, אדער אין א פארמאט וואס דער פארום נעמט נישט.\n\n` +
-                    `פארקלענערן מאכט עס א שטילע בילד, און די באוועגונג גייט פארלוירן.\n\n` +
+                    `${plural(animated.length, 'רוקעדיגע בילד (GIF) איז', 'רוקעדיגע בילדער (GIF) זענען')} צו גרויס, אדער אין א פארמאט וואס דער פארום נעמט נישט.\n\n` +
+                    `נאכן פארקלענערן רוקט עס זיך מער נישט.\n\n` +
                     `פארקלענערן סיי ווי? (Cancel לאזט עס אויס)`
                 );
                 if (!ok) files = files.filter(f => !animated.includes(f));
@@ -509,7 +510,7 @@
         zipButton.type = 'button';
         // The page is right-to-left, so the arrow has to point left to read "folder to ZIP"
         zipButton.value = '🗂️ פאלדער ← ZIP';
-        zipButton.title = 'קלייבט אויס א פאלדער, און ער ווערט צוגעלייגט אלס איין ZIP פייל';
+        zipButton.title = 'קלייב אויס א פאלדער, און ער ווערט צוגעלייגט אלס איין ZIP פייל';
 
         // Without the old floating button nothing shows that big images are fine to add,
         // so say so right after the forum's own "...ביז: 400 KiB." line. The limit itself
@@ -578,14 +579,14 @@
             const collected = [];
 
             busy = true;
-            showStatus('⏳ לייענט דעם פאלדער…');
+            showStatus('⏳ ליינט דעם פאלדער…');
             try {
                 for (const entry of fsEntries) {
                     await readEntryRecursive(entry, '', collected);
                 }
             } catch (err) {
                 console.error(err);
-                showStatus('❌ קען נישט לייענען דעם פאלדער: ' + err.message, 'error', HOLD_STATUS_MS * 2);
+                showStatus('❌ קען נישט ליינען דעם פאלדער: ' + err.message, 'error', HOLD_STATUS_MS * 2);
                 return;
             } finally {
                 busy = false;
@@ -635,7 +636,7 @@
                     showStatus('');
                     const ok = confirm(
                         `דער ZIP איז ${formatSize(zipFile.size)} (${plural(list.length, 'פייל', 'פיילס')}).\n\n` +
-                        `אייוועלט נעמט געווענליך נישט אן ZIP פיילס גרעסער פון ${formatSize(256 * 1024)}, איז עס קען נישט ארויפגיין.\n\n` +
+                        `אייוועלט נעמט געווענליך נישט אן ZIP פיילס גרעסער פון ${formatSize(256 * 1024)}, און עס קען זיין אז עס וועט נישט ארויפגיין.\n\n` +
                         `צולייגן סיי ווי?`
                     );
                     if (!ok) return;

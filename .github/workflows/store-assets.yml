@@ -1,0 +1,54 @@
+# Re-renders the store screenshots and promo tile (store-assets/*.png) from the current code on
+# every push to dev that changes the extension or the assets' sources, and commits the images
+# that changed. See store-assets/source/README.md.
+#
+# The commit only touches store-assets/*.png, which isn't in the paths below, so it doesn't run
+# this again.
+
+name: Store assets
+
+on:
+  push:
+    branches:
+      - dev
+    paths:
+      - extension/**
+      - store-assets/source/**
+      - .github/workflows/store-assets.yml
+  workflow_dispatch:
+
+concurrency:
+  group: store-assets
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install Playwright and fonts
+        run: |
+          pip install -r store-assets/source/requirements.txt
+          python -m playwright install --with-deps chromium
+          # Hebrew in the forum's Arial (Liberation Sans is metric-compatible), and emoji
+          sudo apt-get install -y fonts-liberation2 fonts-noto-color-emoji
+
+      - name: Render
+        run: python store-assets/source/render.py
+
+      - name: Commit the images that changed
+        run: |
+          git add store-assets/*.png
+          if git diff --cached --quiet; then
+            echo "No image changed"
+            exit 0
+          fi
+          git diff --cached --stat
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898299+github-actions[bot]@users.noreply.github.com'
+          git commit -m "Store assets: re-rendered from ${GITHUB_SHA::7}"
+          git push

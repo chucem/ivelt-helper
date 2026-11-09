@@ -58,11 +58,53 @@ body {
   padding-bottom: 3px;
   border-top: 1px solid var(--ui-border);
 }
-.popup_themes_title {
-  margin: 8px 12px 6px;
+.popup_version {
+  margin: 2px 8px 4px;
+  font-size: 10px;
+  color: var(--ui-muted);
+  text-align: left;
+  direction: ltr;
+}
+/* a small line icon in front of each link, in the text's color */
+.popup_icon {
+  width: 16px;
+  height: 16px;
+  margin-left: 8px;
+  vertical-align: -3px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.8;
+}
+.popup_options {
+  direction: rtl;
+  /* one line each, the popup grows to fit: with the colors hidden it's narrow, and a wrapped line went under the icon */
+  white-space: nowrap;
+}
+/* the color themes and the accounts are cards of their own, so they don't look like more links */
+.popup_card {
+  margin: 6px 8px 4px;
+  padding: 2px 0 2px;
+  border: 1px solid var(--ui-border);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--ui-text) 5%, var(--ui-surface));
+}
+.popup_themes .theme-swatches {
+  padding: 0 8px;
+}
+.popup_card .popup_options {
+  margin: 8px 10px 4px;
+  font-size: 14px;
+}
+.popup_card_title {
+  margin: 8px 10px 6px;
   font-size: 13px;
+  font-weight: 600;
   color: var(--ui-muted);
   text-align: right;
+  direction: rtl;
 }
 /* theme swatches, colors come from js/themes.data.js */
 .theme-swatches {
@@ -107,4 +149,124 @@ body {
   color: var(--t-text);
   white-space: nowrap;
   text-overflow: ellipsis;
+}
+/* the saved accounts (background.accounts.js), a click switches to one */
+.accounts_list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 0 6px;
+  direction: rtl;
+  /* five and a half accounts, more scroll; the half one shows there's more */
+  max-height: 188px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+.account_row {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 6px;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-size: 14px;
+  text-align: right;
+  cursor: pointer;
+}
+.account_row:hover {
+  background: color-mix(in srgb, var(--ui-text) 8%, transparent);
+}
+.account_row.current {
+  cursor: default;
+  font-weight: 600;
+}
+/* the signed-in account is tinted, so it stands out from the others */
+.account_row.current,
+.account_row.current:hover {
+  background: color-mix(in srgb, var(--ui-accent) 14%, transparent);
+}
+.account_avatar {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: color-mix(in srgb, var(--ui-accent) 20%, var(--ui-surface));
+  color: var(--ui-accent);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 24px;
+  text-align: center;
+}
+/* the whole name, the popup gets wider for a long one */
+.account_name {
+  flex: 1 0 auto;
+  white-space: nowrap;
+}
+.account_status {
+  font-size: 11px;
+  font-weight: normal;
+  color: var(--ui-muted);
+  white-space: nowrap;
+}
+.account_row.expired .account_status {
+  color: var(--ui-error);
+}
+.account_forget {
+  flex: none;
+  padding: 0 4px;
+  border: 0;
+  background: none;
+  color: var(--ui-muted);
+  font: inherit;
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+  visibility: hidden;
+}
+.account_row:hover .account_forget,
+.account_forget:focus {
+  visibility: visible;
+}
+.account_forget:hover {
+  color: var(--ui-error);
+}
+/* the second click removes it */
+.account_forget.asking {
+  visibility: visible;
+  color: var(--ui-error);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.accounts_message {
+  margin: 6px 10px 2px;
+  font-size: 12px;
+  color: var(--ui-error);
+  text-align: right;
+  direction: rtl;
+  white-space: normal;
+  /* the popup is as wide as its longest line: the message doesn't widen it, it wraps to what's there
+     (a long one, like the tabs that weren't reloaded, takes two lines instead) */
+  width: 0;
+  min-width: calc(100% - 20px);
+}
+.accounts_hint {
+  /* wraps to the popup's width, like the message above */
+  width: 0;
+  min-width: calc(100% - 20px);
+  margin: 6px 10px 2px;
+  font-size: 12px;
+  color: var(--ui-muted);
+  text-align: right;
+  direction: rtl;
+  white-space: normal;
+  cursor: pointer;
+}
+.accounts_hint a {
+  color: var(--ui-link);
 }

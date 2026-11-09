@@ -1,0 +1,214 @@
+[
+  {
+    "name": "overview",
+    "file": "screenshot-1-overview.png",
+    "title": "אייוועלט, *גיכער* און בעסער",
+    "subtitle": "Shortcuts, smarter notifications and handy post tools for אייוועלט",
+    "features": [
+      { "icon": "keyboard-o", "yi": "קיבאורד שארטקאטס", "en": "Keyboard shortcuts" },
+      { "icon": "bell", "yi": "נאטיפיקאציעס לויט סארט", "en": "Notifications, sorted by type" },
+      { "icon": "quote-left", "yi": "מער קנעפלעך ביי יעדע תגובה", "en": "Extra buttons on every post" },
+      { "icon": "picture-o", "yi": "בילדער, Google Drive און Dropbox", "en": "Images and file uploads" },
+      { "icon": "paint-brush", "yi": "קאליר טעמעס", "en": "Color themes" }
+    ],
+    "url": "ivelt.com/forum/viewtopic.php?t=46302",
+    "window": { "x": 56, "y": 100, "w": 744, "h": 600 },
+    "stage": { "page": "viewtopic.php?t=46302" },
+    "callouts": [
+      { "selector": ".notif-group", "pad": 6, "zoom": 1.45, "x": 30, "y": 632 }
+    ]
+  },
+  {
+    "name": "post-buttons",
+    "file": "screenshot-2-post-buttons.png",
+    "title": "מער קנעפלעך ביי *יעדע תגובה*",
+    "subtitle": "Extra buttons on every post",
+    "features": [
+      { "icon": "quote-left", "yi": "ציטיר נאר די לעצטע תגובה", "en": "Quote just the last reply" },
+      { "icon": "at", "yi": "דערמאן דעם שרייבער", "en": "Mention the poster" },
+      { "icon": "files-o", "yi": "ציטיר אין אנדערע אשכול", "en": "Quote in another topic" },
+      { "icon": "envelope", "yi": "פריוואטע מעסעדזש מיט א ציטאט", "en": "A private message with the quote in it" },
+      { "icon": "link", "yi": "קאפיר דעם לינק מיט איין קליק", "en": "Copy the post link in one click" },
+      { "icon": "caret-down", "yi": "זע ווער עס האט באדאנקט", "en": "See who liked a post" }
+    ],
+    "url": "ivelt.com/forum/viewtopic.php?t=46302",
+    "window": { "x": 56, "y": 290, "w": 744, "h": 360 },
+    "stage": {
+      "page": "viewtopic.php?t=46302",
+      "steps": [
+        { "scroll": "#p7012001", "offset": -12 },
+        { "click": "#post_content7012001 > p.author > a[href*='#p']" },
+        { "wait": 300 }
+      ],
+      "outline": ["#p7012001 .custom-btn", "#p7012001 .ih-likes-arrow", "#post_content7012001 > p.author > a[href*='#p']"]
+    },
+    "callouts": [
+      { "selector": "#p7012001 .post-buttons", "pad": 16, "zoom": 1.5, "x": 56, "y": 96 },
+      { "selector": ["#post_content7012001 > p.author > a[href*='#p']", "#post_content7012001 > p.author .responsive-hide", ".ext-copied-tip"], "pad": 14, "zoom": 1.6, "right": 820, "y": 214 }
+    ]
+  },
+  {
+    "name": "notifications",
+    "file": "screenshot-3-notifications.png",
+    "title": "נאטיפיקאציעס, *צוטיילט*",
+    "subtitle": "Notifications sorted by type, with an unread count on the toolbar icon",
+    "features": [
+      { "icon": "quote-left", "yi": "ציטירט, באדאנקט, דערמאנט – יעדעס באזונדער", "en": "Separate bells for quotes, likes and mentions" },
+      { "icon": "plus-circle", "yi": "גרויע +N פאר עלטערע אומגעליינטע", "en": "A grey +N for older unread ones" },
+      { "icon": "refresh", "yi": "א מעלדונג ווען נייע תגובות קומען צו", "en": "Alert when new replies arrive" },
+      { "icon": "desktop", "yi": "בראוזער נאטיפיקאציעס פון אינבאקס", "en": "Browser notifications for your inbox" }
+    ],
+    "url": "ivelt.com/forum/viewtopic.php?t=46302",
+    "window": { "x": 56, "y": 126, "w": 744, "h": 480 },
+    "stage": {
+      "page": "viewtopic.php?t=46302",
+      "viewport": [1100, 700],
+      "steps": [{ "click": "#citirt_notification_list_button" }, { "wait": 400 }],
+      "outline": [".notif-group"]
+    },
+    "callouts": []
+  },
+  {
+    "name": "image-resizer",
+    "file": "screenshot-4-image-resizer.png",
+    "title": "בילדער *און פיילס*",
+    "subtitle": "Attach big photos, paste images, or share large files via Google Drive and Dropbox",
+    "features": [
+      { "icon": "compress", "yi": "בילדער ווערן אויטאמאטיש פארקלענערט", "en": "Big photos shrink to fit the limit" },
+      { "icon": "clipboard", "yi": "פעיסט א בילד גלייך אין די תגובה", "en": "Paste images right into your post" },
+      { "icon": "file-archive-o", "yi": "א גאנצער פאלדער אין איין ZIP", "en": "Pack a whole folder into one ZIP" },
+      { "icon": "cloud-upload", "yi": "Google Drive און Dropbox", "en": "Upload larger files, drag and drop, the link goes in the post" }
+    ],
+    "url": "ivelt.com/forum/posting.php?mode=reply&t=46302",
+    "window": { "x": 56, "y": 180, "w": 744 },
+    "stage": {
+      "page": "posting.php?mode=reply&t=46302",
+      "viewport": [1200, 660],
+      "settings": { "driveAccount": { "name": "בערל", "email": "berel.demo@gmail.com" } },
+      "steps": [
+        { "click": "#attach-panel-tab a" },
+        { "scroll": "#tabs", "offset": -30 },
+        { "click": "#ivd-button" },
+        { "wait": 500 }
+      ],
+      "outline": ["#ivd-wrap"]
+    },
+    "callouts": []
+  },
+  {
+    "name": "settings",
+    "file": "screenshot-5-settings.png",
+    "title": "אלעס לויט *דיין געשמאק*",
+    "subtitle": "Turn any feature on or off from a simple settings page",
+    "features": [
+      { "icon": "sliders", "yi": "צינדט אן אדער לעשט אויס יעדע זאך", "en": "Every feature has its own switch" },
+      { "icon": "language", "yi": "אינגאנצן אויף אידיש", "en": "Fully in Yiddish" },
+      { "icon": "refresh", "yi": "די זעלבע אויף אלע קאמפיוטערס", "en": "The same on all your computers" },
+      { "icon": "heart", "yi": "געמאכט דורך אייוועלטער", "en": "Made by members of אייוועלט" }
+    ],
+    "url": "iVelt Helper – אנשטעלונגען",
+    "window": { "x": 56, "y": 70, "w": 744, "h": 660 },
+    "stage": { "page": "ext:settings.html", "viewport": [940, 800] },
+    "callouts": []
+  },
+  {
+    "name": "shortcuts",
+    "file": "screenshot-6-shortcuts.png",
+    "title": "אלעס מיט *איין קנעפל*",
+    "subtitle": "Keyboard shortcuts for everything you do on iVelt",
+    "features": [
+      { "icon": "bolt", "yi": "שנעלער בלעטערן, שרייבן און ליינען", "en": "Browse, write and read faster" },
+      { "icon": "toggle-on", "yi": "מען קען אויסלעשן וואס מען דארף נישט", "en": "Turn off what you don't need" }
+    ],
+    "keys": [
+      { "alt": ["→", "←"], "yi": "פריערדיגער / קומענדיגער בלאט", "en": "Previous / next page" },
+      { "alt": ["↓", "↑"], "yi": "צום אנהייב / סוף פונעם בלאט", "en": "Jump to top / bottom" },
+      { "combo": ["Ctrl", "Enter"], "yi": "שיק די תגובה", "en": "Submit your post" },
+      { "combo": ["Alt", "V"], "yi": "פריוויאו", "en": "Preview your post" },
+      { "combo": ["Alt", "A"], "yi": "אקטיווע אשכולות", "en": "Active topics" },
+      { "combo": ["Alt", "N"], "yi": "עפן די נאטיפיקאציעס", "en": "Open notifications" },
+      { "combo": ["Ctrl", "Z"], "yi": "צוריקדרייען ביים שרייבן", "en": "Undo while writing" },
+      { "combo": ["Ctrl", "Y"], "yi": "ווידער טון", "en": "Redo" },
+      { "combo": ["Alt", "M"], "yi": "די קומענדיגע אומגעליינטע נאטיפיקאציע", "en": "Next unread notification", "wide": true }
+    ]
+  },
+  {
+    "name": "themes",
+    "file": "screenshot-7-themes.png",
+    "title": "אייוועלט אין *דיינע קאלירן*",
+    "subtitle": "Color themes for the forum, dark modes included",
+    "features": [
+      { "icon": "paint-brush", "yi": "15 פארטיגע טעמעס", "en": "15 ready-made themes" },
+      { "icon": "moon-o", "yi": "טונקעלע טעמעס פאר די אויגן", "en": "Easy-on-the-eyes dark themes" },
+      { "icon": "eyedropper", "yi": "מאך דיין אייגענע", "en": "Build your own theme" }
+    ],
+    "url": "ivelt.com/forum/viewtopic.php?t=46302",
+    "window": { "x": 56, "y": 100, "w": 744, "h": 600 },
+    "stage": { "page": "viewtopic.php?t=46302", "settings": { "themesEnabled": true, "theme": "dark" } },
+    "callouts": [
+      {
+        "page": "ext:settings.html", "viewport": [1000, 900],
+        "settings": { "themesEnabled": true, "theme": "dark" },
+        "steps": [{ "click": "a[data-tab='colors']" }, { "wait": 300 }],
+        "selector": "#themePicker", "pad": 8, "zoom": 0.62, "x": 30, "y": 470, "plain": true
+      }
+    ]
+  },
+  {
+    "name": "writing",
+    "file": "screenshot-8-writing.png",
+    "title": "ליינען און שרייבן, *גרינגער*",
+    "subtitle": "Quote just the words you need, see who liked a post, and never lose a draft",
+    "features": [
+      { "icon": "i-cursor", "yi": "ציטיר נאר די אנגעצייכנטע ווערטער", "en": "Select words, quote only them" },
+      { "icon": "thumbs-o-up", "yi": "זע ווער עס האט באדאנקט", "en": "See who liked a post" },
+      { "icon": "floppy-o", "yi": "דראפטס ווערן אפגעהיט", "en": "Drafts are kept, even after a crash" },
+      { "icon": "undo", "yi": "צוריקדרייען און ווידער טון", "en": "Undo and redo while writing" },
+      { "icon": "eye-slash", "yi": "שענערע ספוילערס", "en": "Nicer spoilers" }
+    ],
+    "url": "ivelt.com/forum/viewtopic.php?t=46302",
+    "window": { "x": 56, "y": 230, "w": 744, "h": 470 },
+    "stage": {
+      "page": "viewtopic.php?t=46302",
+      "steps": [
+        { "scroll": "#p7012001", "offset": -12 },
+        { "click": "#p7012014 .ih-likes-arrow", "wait": 300 },
+        { "eval": "(() => { const c = document.querySelector('#p7012001 .content'); const t = [...c.childNodes].filter(n => n.nodeType === 3 && n.textContent.includes('שארטקאטס'))[0]; const i = t.textContent.indexOf('שארטקאטס'); const r = document.createRange(); r.setStart(t, i); r.setEnd(t, t.textContent.indexOf('און', i) - 2); getSelection().removeAllRanges(); getSelection().addRange(r); document.dispatchEvent(new MouseEvent('mouseup', { bubbles: true })); })()", "wait": 400 }
+      ],
+      "outline": ["#p7012001 .ih-quote-marked", "#p7012014 .ih-likes"]
+    },
+    "callouts": [
+      { "selector": "#p7012001 .post-buttons", "pad": 16, "zoom": 1.5, "x": 56, "y": 88 },
+      { "selector": "#p7012014 .ih-likes", "pad": 6, "zoom": 1.4, "right": 820, "y": 110 }
+    ]
+  },
+  {
+    "name": "promo-tile",
+    "file": "promo-tile-440x280.png",
+    "kind": "tile",
+    "size": [440, 280],
+    "title": "אייוועלט *העלפער*",
+    "subtitle": "iVelt Helper",
+    "chips": ["שארטקאטס", "נאטיפיקאציעס", "ציטיר קנעפלעך"]
+  },
+  {
+    "name": "marquee",
+    "file": "promo-marquee-1400x560.png",
+    "size": [1400, 560],
+    "title": "אייוועלט, *גיכער* און בעסער",
+    "subtitle": "Shortcuts, smarter notifications and handy post tools for אייוועלט",
+    "features": [
+      { "icon": "bell", "yi": "נאטיפיקאציעס לויט סארט", "en": "Notifications, sorted by type" },
+      { "icon": "quote-left", "yi": "מער קנעפלעך ביי יעדע תגובה", "en": "Extra buttons on every post" },
+      { "icon": "paint-brush", "yi": "קאליר טעמעס", "en": "Color themes" }
+    ],
+    "url": "ivelt.com/forum/viewtopic.php?t=46302",
+    "window": { "x": 64, "y": 48, "w": 800, "h": 464 },
+    "stage": {
+      "page": "viewtopic.php?t=46302"
+    },
+    "callouts": [
+      { "selector": ".notif-group", "pad": 6, "zoom": 1.45, "x": 36, "y": 440 }
+    ]
+  }
+]

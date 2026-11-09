@@ -1,0 +1,35 @@
+# Checks the extension's code on every pull request, and on every push to dev or master that
+# changes it: every script parses, the manifest is valid and every file it, the extension's pages
+# and stylesheets name exists (.github/scripts/check-extension.mjs), and ESLint finds no real
+# mistakes (eslint.config.mjs). Node is already on the runner, so nothing is installed but ESLint.
+
+name: Check
+
+on:
+  push:
+    branches:
+      - dev
+      - master
+    paths:
+      - extension/**
+      - eslint.config.mjs
+      - .github/scripts/check-extension.mjs
+      - .github/workflows/check.yml
+  # every pull request, whatever it changes, so the result is always there to look at before merging
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Scripts parse, and every file the manifest and pages name exists
+        run: node .github/scripts/check-extension.mjs
+
+      - name: ESLint
+        run: npx --yes eslint@10.13.0 extension

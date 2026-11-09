@@ -1,8 +1,8 @@
-const TOPIC_MAPPING_EXPIRE = document.getElementById("iveltHelperSettings").getAttribute("data-cached-topic-mapping-expire");
-const COPY_ATTACHMENTS = document.getElementById("iveltHelperSettings").getAttribute("data-copy-attachments");
-const CACHE_EXPIRY_MS = (TOPIC_MAPPING_EXPIRE || 3600) * 1000;
+// set once the settings are on the page, see the end of this file
+let TOPIC_MAPPING_EXPIRE, COPY_ATTACHMENTS, CACHE_EXPIRY_MS;
 const CACHE_KEY = "topicMappingCache";
 const CACHE_TIME_KEY = "topicMappingLastFetchTime";
+const CACHE_STARTED_KEY = "topicMappingDownloadStartedAt";
 
 function createButton(reference, customClass, title, text, onclick, itext="") {
     let li = document.createElement('li');
@@ -14,7 +14,11 @@ function createButton(reference, customClass, title, text, onclick, itext="") {
     if (reference){
         a.setAttribute('href', reference);
     }
-    if (onclick){
+    // A function, so nothing from a post (an image address, a file name) is ever turned into code.
+    // A string only for the forum's own onclick code, see addQuoteLastButton
+    if (typeof onclick === 'function'){
+        a.addEventListener('click', onclick)
+    } else if (onclick){
         a.setAttribute('onClick', onclick)
     }
     a.setAttribute('class', 'button button-icon-only custom-btn ');
@@ -42,39 +46,48 @@ function getPMHref(id) {
     return null;
 }
 
-function extractImageUrlsAndNames(contentElement) {
-    const images = contentElement.querySelectorAll("img.postimage");
+// The post's attached pictures: their alt is the file name. The ones placed in the text sit in
+// .inline-attachment and the quoted text has them between [attachment] tags; the ones attached at
+// the bottom sit in the .attachbox after .content, and the quoted text doesn't have them at all.
+// Not [img] pictures, whose alt is just the word "בילד".
+function extractImageUrlsAndNames(postElement) {
+    const images = postElement.querySelectorAll(".inline-attachment img.postimage, .attachbox img.postimage");
     const imageUrls = [];
 
     images.forEach(function(image) {
-        imageUrls.push({url:image.src, name:image.alt});
+        // a thumbnail (&t=1) links to the full picture
+        const link = image.closest('a[href*="download/file.php"]');
+        const url = /[?&]t=1\b/.test(image.src) && link ? link.href : image.src;
+        imageUrls.push({url, name:image.alt, inline: !!image.closest('.inline-attachment')});
     });
 
     return imageUrls;
 }
 
 function replaceAttachmentsWithImgBBCode(text, imageData) {
-    if (COPY_ATTACHMENTS !== "true") {
+    if (COPY_ATTACHMENTS !== true) {
         return text;
     }
 
-    imageData = JSON.parse(imageData);
-
-    // Loop through each image in the imageData array
-    imageData.forEach(image => {
-        // Create a regex that matches the exact filename anywhere in the text
-        const regex = new RegExp(image.name, "g"); // Matches the filename exactly, even if there's no space
-        text = text.replace(regex, `[img]${image.url}[/img]`);
+    // In the text's order, each [attachment=N]name[/attachment] becomes the next picture with that
+    // name, in the post's order. By name alone two pasted pictures, both "clipboard-image.jpg", would
+    // both come out as the first one. A file that isn't a picture keeps just its name.
+    const unused = imageData.filter(image => image.inline);
+    text = text.replace(/\[attachment=\d+\]([\s\S]*?)\[\/attachment\]/g, (tag, inner) => {
+        const name = inner.replace(/<!--.*?-->/g, '').trim();
+        const i = unused.findIndex(image => image.name === name);
+        return i === -1 ? name : `[img]${unused.splice(i, 1)[0].url}[/img]`;
     });
 
-    // Remove all [attachment=X] and [/attachment] tags in one go.
-    // This regex matches either:
-    // 1. '[attachment=' followed by one or more digits and then ']'
-    // 2. '[/attachment]'
-    const allAttachmentBBCodeRegex = /\[attachment=\d+\]|\[\/attachment\]/g;
-    text = text.replace(allAttachmentBBCodeRegex, "");
-
-    return text;
+    // The pictures attached at the bottom go at the end of the quote, the way the post shows them
+    const bottom = imageData.filter(image => !image.inline).map(image => `[img]${image.url}[/img]`).join('\n');
+    if (!bottom) {
+        return text;
+    }
+    const end = text.lastIndexOf('[/quote]');
+    return end === -1
+        ? `${text.trimEnd()}\n${bottom}`
+        : `${text.slice(0, end).trimEnd()}\n${bottom}\n${text.slice(end)}`;
 }
 async function addBtn() {
     let onlyLastQuote = window.location.href.includes("last=true");
@@ -93,9 +106,8 @@ async function addBtn() {
     var needUpdating = false;
     let topicMapping;
 
-    if (TOPIC_MAPPING_EXPIRE !== "") {
-         topicMapping = await fetchTopicMapping();
-    }
+    // with updates off the list is still loaded: from the saved copy, or fetched once when there's none
+    topicMapping = await fetchTopicMapping();
 
 
     btns.forEach(btn => {
@@ -114,7 +126,8 @@ async function addBtn() {
 
         let contentElement = btn.parentElement.getElementsByClassName("content").item(0)
 
-        const imageData = extractImageUrlsAndNames(contentElement);
+        // the whole post, since the pictures attached at the bottom are outside .content
+        const imageData = extractImageUrlsAndNames(btn.parentElement);
 
         let id = btn.parentElement.getAttribute("id") || ""
 
@@ -123,13 +136,13 @@ async function addBtn() {
         if (!isPosting) {
             addCopyQuoteButton(btn, id.replace("post_content", ""), imageData)
         }
-        let pingOnClick = `ping_user(${strippedId})`
-        addSimpleButton(btn, null, 'fa-at', 'דערמאן תגובה', 'דערמאן תגובה', pingOnClick)
+        addSimpleButton(btn, null, 'fa-at', 'דערמאן תגובה', 'דערמאן תגובה', () => ping_user(strippedId))
+        addPMQuoteButton(btn, id)
         if (contentElement.innerHTML.includes("blockquote")) {
             addQuoteLastButton(btn, isPosting);
         }
 
-        if (TOPIC_MAPPING_EXPIRE !== "" && !isPosting && !isPM) {
+        if (!isPosting && !isPM) {
             if (topicMapping) {
                 addQuoteInOtherTopicButton(btn, strippedId, topicMapping, imageData);
             }
@@ -142,8 +155,7 @@ async function addBtn() {
 
         }
     });
-    let navUpdate = addDefaultPage();
-    if (needUpdating || navUpdate) {
+    if (needUpdating) {
         let navBar = document.querySelector('#nav-footer');
         navBar.querySelectorAll('li.hidden:not(.responsive-menu)').forEach(si => {
             si.setAttribute('class', si.getAttribute('class').replace('hidden', ''))
@@ -179,18 +191,39 @@ function getQuoteElm(btn){
 }
 
 function addUnderlineForQuoteBtn(btn) {
+    // posts the user can't quote (a locked topic) have no quote button
     let sourceURL = getQuoteElm(btn);
-    sourceURL.style.background = '#ebeadd';
+    if (sourceURL) {
+        sourceURL.style.background = '#ebeadd';
+    }
 }
 
 function addCopyQuoteButton(btn, postID, imageData){
+    // the post's text comes from its quote (or PM reply) page, so a post without one gets no button
     let sourceURL = getPMHref(postID) || getQuoteElm(btn)
+    if (!sourceURL) {
+        return;
+    }
+    const href = sourceURL.getAttribute("href");
     addSimpleButton(btn, null, 'fa-copy', 'ציטיר אין אנדערע אשכול', 'ציטיר אין אנדערע אשכול',
-        sourceURL?
-            `copyQuote("${sourceURL.getAttribute("href")}", "${postID}", 
-            '${JSON.stringify(imageData)}')`:
-            `copyQuoteParse("${postID}")`
-    )
+        () => copyQuote(href, postID, imageData))
+}
+
+// A private message to the writer with the post quoted: the link from the profile's contact menu
+// (פארבינד זיך), which a phone doesn't show. Only on a phone, see css/appcss.css
+function addPMQuoteButton(btn, postID) {
+    let pmLink = getPMHref(postID);
+    if (!pmLink) {
+        return;
+    }
+
+    let button = createButton(pmLink.getAttribute('href'), 'fa-envelope', 'שיק א פריוואטע מעסעדזש מיט א ציטאט פון דער תגובה', 'פריוואטע מעסעדזש מיט א ציטאט');
+    button.li.classList.add('ih-pm-quote');
+
+    let quoteLi = getQuoteElm(btn)?.parentElement;
+    if (quoteLi) {
+        quoteLi.parentNode.insertBefore(button.li, quoteLi.nextSibling)
+    }
 }
 
 function addQuoteLastButton(btn, isPosting) {
@@ -200,41 +233,15 @@ function addQuoteLastButton(btn, isPosting) {
         return;
     }
 
+    // on the reply page this reuses the forum's own addquote(...) onclick as lastaddquote(...)
     addSimpleButton(btn, `${quoteElm.getAttribute('href')}&last=true`, 'fa-quote-left last', 'ציטיר בלויז די לעצטע תגובה', 'ציטיר לעצטע',
         isPosting? `last${quoteElm.getAttribute('onclick')}`: null, '1');
 }
 
 
-function addDefaultPage(){
-    if (document.querySelector(`#kf-app-default-page`)){
-        return false
-    }
-    let li = document.createElement("li")
-    let a = document.createElement('a');
-    li.appendChild(a)
-    li.setAttribute("class", "rightside")
-    li.setAttribute("id", "kf-app-default-page")
-    a.setAttribute('onClick', "saveDefaultPage()")
-    a.innerText = "מאך דאס פאר מיין דיפאולט בלאט"
-    let pagination = document.querySelectorAll("#nav-footer").item(0)
-    if (pagination){
-        pagination.insertBefore(li, pagination.firstChild);
-        return true;
-    }
-    return false;
-}
-
 function getPostLink(postID){
-    return `https://www.ivelt.com/forum/viewtopic.php?p=${postID}#p${postID}`;
-}
-
-function copyQuoteParse(post_id){
-    var html = document.querySelector(`#post_content${post_id} .content`).innerHTML
-    let post_url = getPostLink(post_id)
-    var username = getUsername(post_id)
-    let converter = new HTML2BBCode();
-    html = html.replaceAll("./download", "www.ivelt.com/forum/download")
-    navigator.clipboard.writeText(`[quote="${username}"]${converter.feed(html)} [/quote] [url=${post_url}]מקור[/url]`)
+    // the address the user is on (ivelt.com or www.ivelt.com), where they're signed in
+    return `${location.origin}/forum/viewtopic.php?p=${postID}#p${postID}`;
 }
 
 function getPostDetails(post_id, prefix = 'p'){
@@ -250,9 +257,10 @@ function getPostDetails(post_id, prefix = 'p'){
     let postTime;
 
     if (!postTimestampElm){
-        const tsExtractor = document.querySelector(`#${prefix}${post_id} [href='#postingbox']`).getAttribute('onclick');
-        if (postTimestampElm){
-            postTime = tsExtractor ? tsExtractor.match('(?<=time:)(.*)(?=,user)')[0] : undefined;        }
+        // the reply page's topic review has no <time>, the forum's addquote(... {time:N,user_id:N}) onclick has it
+        const tsLink = document.querySelector(`#${prefix}${post_id} [href='#postingbox']`);
+        const tsMatch = tsLink && (tsLink.getAttribute('onclick') || '').match('(?<=time:)(.*)(?=,user)');
+        postTime = tsMatch ? tsMatch[0] : undefined;
     } else {
         postTime = Date.parse(postTimestampElm.dateTime) / 1000
     }
@@ -274,7 +282,7 @@ function ping_user(post_id){
         let PostDetails = getPostDetails(post_id)
         let text = `[quote="${PostDetails.username}" user_id=${PostDetails.id} time=${PostDetails.time} post_id=${post_id}]\n[/quote]`
 
-        if (document.getElementById("iveltHelperSettings").getAttribute("data-always-copy-topic") == "true"){
+        if (iveltSetting("alwaysCopyTopic") === true){
             navigator.clipboard.writeText(text)
             iveltNotify("קאפירט צום קליפבאורד")
         } else {
@@ -374,21 +382,39 @@ function lastaddquote(post_id, username) {
 }
 
 function copyQuote(url, post_id, imageData){
-    let post_url = getPostLink(post_id)
     fetchMsgText(url).then( res => {
-        res = replaceAttachmentsWithImgBBCode(res, imageData);
-
-            if (url.toString().includes("posting.php")){
-                res = `${res} [url=${post_url}]מקור[/url]`
-            }
-            navigator.clipboard.writeText(res).then(r =>
-                iveltNotify("קאפירט צום קליפבאורד")
+        res = withTopicLink(replaceAttachmentsWithImgBBCode(res, imageData), post_id);
+            return navigator.clipboard.writeText(res).then(
+                () => iveltNotify("קאפירט צום קליפבאורד"),
+                () => iveltNotify("קען נישט קאפירן צום קליפבאורד, פרוביר נאכאמאל", 5000)
             )
         }
-    )
+    ).catch(e => iveltNotify(fetchFailedMessage(e), 5000))
 }
 
-function iveltNotify(message){
+// The link to the quoted post, as chosen in the settings (quoteSourceLink): a "קעפל: <topic>" line
+// above the quote, the way the forum's own private-message quote page writes it (where most quotes
+// come from, so it's the line people know), a "מקור" link below it, both, or none.
+// Not on a private message, which has no topic.
+function withTopicLink(text, postID) {
+    const choice = iveltSetting("quoteSourceLink");
+    const topicLine = /^\s*\[url=[^\]]*\]קעפל:[^\n]*?\[\/url\]\s*/;
+    const forumLine = text.match(topicLine);
+    text = text.replace(topicLine, '');
+
+    const title = document.querySelector('.topic-title a')?.textContent.trim();
+    if (!title) {
+        // nothing to build our own links from: keep what the forum wrote
+        return (forumLine ? forumLine[0] : '') + text;
+    }
+    const link = getPostLink(postID);
+    const above = choice === 'source' || choice === 'none' ? '' :
+        (forumLine ? forumLine[0].trim() : `[url=${link}]קעפל: ${title}[/url]`) + '\n\n';
+    const below = choice === 'source' || choice === 'both' ? ` [url=${link}]מקור[/url]` : '';
+    return above + (below ? text.trimEnd() + below + '\n' : text);
+}
+
+function iveltNotify(message, ms = 1500){
 
     let fadeTarget = document.querySelector('#ivelt-notify');
     if (!fadeTarget) {
@@ -400,10 +426,11 @@ function iveltNotify(message){
     }
 
     fadeTarget.style.opacity = "1";
-    fadeTarget.innerHTML = message ;
-    setTimeout(function() {
+    fadeTarget.textContent = message;
+    clearTimeout(fadeTarget.hideTimer);
+    fadeTarget.hideTimer = setTimeout(function() {
         fadeTarget.style.opacity = "0";
-    }, 1500);
+    }, ms);
 }
 
 
@@ -411,51 +438,76 @@ function iveltNotify(message){
 //https://docs.google.com/spreadsheets/d/1bziJ_h6bIRBXFSBJHT3aBsb13-QrEnrSjjy_-IS3FFw/edit?gid=1771705226#gid=1771705226
 
 
+// the forum's CSP blocks this page from reaching Google Sheets, so the extension fetches the sheet (see js/topicMappingRelay.js)
+function requestTopicMappingCsv() {
+    return new Promise((resolve, reject) => {
+        window.addEventListener('message', function onResult(e) {
+            if (e.source !== window || !e.data || e.data.type !== 'ivelt-helper-topic-mapping-result') return;
+            window.removeEventListener('message', onResult);
+            e.data.error ? reject(new Error(e.data.error)) : resolve(e.data.text);
+        });
+        window.postMessage({ type: 'ivelt-helper-topic-mapping' }, location.origin);
+    });
+}
+
+// the saved list, or null when there's none or it's damaged (so a bad copy can't stop the post buttons)
+function parseSavedTopicMapping(saved) {
+    try {
+        const mappings = saved ? JSON.parse(saved) : null;
+        return mappings && typeof mappings === 'object' ? mappings : null;
+    } catch (e) {
+        return null;
+    }
+}
+
 async function fetchTopicMapping() {
     const now = Date.now();
 
 // Check if we have cached data and if it's still valid
-const cachedData = localStorage.getItem(CACHE_KEY);
+const cachedData = parseSavedTopicMapping(localStorage.getItem(CACHE_KEY));
 const lastFetchTime = localStorage.getItem(CACHE_TIME_KEY);
 
-const forceRefresh = document.getElementById("iveltHelperSettings").getAttribute("data-force-update-topic-map-cache") === "true";
+const forceRefresh = iveltSetting("forceUpdateTopicMapCache") === true;
 
-if (!forceRefresh && cachedData && lastFetchTime && now - lastFetchTime < CACHE_EXPIRY_MS) {
-    // Use cached data if available and valid
-    console.log("Using cached topic mapping.");
-    return JSON.parse(cachedData);
+// With a saved list the post buttons don't wait for Google: an old one is used on this page and
+// downloaded again for the next one. (The button can't simply be added later: the forum's phone
+// menu takes the post buttons once, when parseDocument runs at the end of addBtn.) Only with no
+// saved list, or "update the list now", does this page wait for the download
+if (!forceRefresh && cachedData) {
+    // one tab downloads it: another page opened while that download is under way doesn't start its own
+    const startedAt = Number(localStorage.getItem(CACHE_STARTED_KEY)) || 0;
+    if (!(lastFetchTime && now - lastFetchTime < CACHE_EXPIRY_MS) && now - startedAt > 60 * 1000) {
+        localStorage.setItem(CACHE_STARTED_KEY, now.toString());
+        downloadTopicMapping(now).catch(error => console.error("Error fetching topic mappings:", error));
     }
+    return cachedData;
+}
 
-// Otherwise, fetch new data from Google Sheets
     try {
-        console.log('fetching topic mappings form google sheet');
-        const url = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS8-2oWC0g995y_fNyR4scrXBEimeYpI5Hm0TPqt1IyvVqEdVUDKYw2n7Z6A2d1DDj3Ef6ofpwe2s3T/pub?gid=986512672&single=true&output=csv";
-        const response = await fetch(url);
-        if (!response.ok) {
-            throw new Error(`Failed to fetch CSV data: ${response.statusText}`);
-        }
-
-        const csvText = await response.text();
-        const mappings = {};
-
-        const rows = csvText.split("\n");
-        rows.forEach(row => {
-            const [sourceTopic, targetTopic] = row.split(",").map(cell => cell.trim());
-            if (sourceTopic && targetTopic) {
-                mappings[sourceTopic] = targetTopic;
-            }
-        });
-
-        // Save the fetched mappings and current time to localStorage
-        localStorage.setItem(CACHE_KEY, JSON.stringify(mappings));
-        localStorage.setItem(CACHE_TIME_KEY, now.toString());
-
-        console.log("Fetched and cached new topic mapping.");
-        return mappings;
+        return await downloadTopicMapping(now);
     } catch (error) {
         console.error("Error fetching topic mappings:", error);
-        return null;
+        // keep using the list from last time, and try again on the next page
+        return cachedData;
     }
+}
+
+// fetch the list from Google Sheets and save it, with the time
+async function downloadTopicMapping(now) {
+    const csvText = await requestTopicMappingCsv();
+    const mappings = {};
+
+    const rows = csvText.split("\n");
+    rows.forEach(row => {
+        const [sourceTopic, targetTopic] = row.split(",").map(cell => cell.trim());
+        if (sourceTopic && targetTopic) {
+            mappings[sourceTopic] = targetTopic;
+        }
+    });
+
+    localStorage.setItem(CACHE_KEY, JSON.stringify(mappings));
+    localStorage.setItem(CACHE_TIME_KEY, now.toString());
+    return mappings;
 }
 
 function getCurrentTopicIdFromDOM() {
@@ -483,65 +535,84 @@ function addQuoteInOtherTopicButton(btn, postID, topicMapping, imageData) {
         'fa-comment',
         'ציטיר אינעם קאמענטארן אשכול',
         'ציטיר אינעם קאמענטארן אשכול',
-        `quoteInOtherTopic("${sourceURL.getAttribute("href")}", "${postID}", "${targetTopicId}" ,'${JSON.stringify(imageData)}')`)
+        () => quoteInOtherTopic(sourceURL.getAttribute("href"), postID, targetTopicId, imageData))
 
 }
 
+// The post's text from its quote (or PM reply) page. Fails with "cloudflare" when Cloudflare
+// sent its check page instead, which it sometimes does for a page fetched in the background.
 function fetchMsgText(url) {
     return fetch(url)
-        .then(response => response.text())
-        .then(data => {
+        .then(response => response.text().then(data => {
             const parser = new DOMParser();
             const doc = parser.parseFromString(data, "text/html");
-            return doc.querySelector("#message-box #message").innerText;
-        });
+            const message = doc.querySelector("#message-box #message");
+            if (message) return message.innerText;
+            const cloudflare = response.headers.get("cf-mitigated") === "challenge" || /Just a moment/i.test(doc.title);
+            throw new Error(cloudflare ? "cloudflare" : "no message");
+        }));
+}
+
+function fetchFailedMessage(error) {
+    // Cloudflare lets it through once its check is passed in a normal tab
+    return error && error.message === "cloudflare"
+        ? "Cloudflare האט אפגעשטעלט. עפן איינמאל דעם ציטיר בלאט פון דער תגובה, און פרוביר נאכאמאל"
+        : "קען נישט ברענגען די תגובה, פרוביר נאכאמאל";
 }
 
 async function quoteInOtherTopic(url, postID, targetTopicId, imageData) {
     if (!targetTopicId) {
-        alert("No target topic found for this topic in the mapping.");
+        iveltNotify("דער אשכול האט נישט קיין קאמענטארן אשכול", 5000);
         return;
     }
 
     try {
         // Fetch the message text
         let res = await fetchMsgText(url);
-        if (!res) {
-            console.error("Failed to fetch message text.");
-            return;
-        }
 
         // Process the message text
-        res = replaceAttachmentsWithImgBBCode(res, imageData);
+        res = withTopicLink(replaceAttachmentsWithImgBBCode(res, imageData), postID);
 
         // Open the reply window
-        const replyURL = `https://www.ivelt.com/forum/posting.php?mode=reply&t=${targetTopicId}`;
+        // on the same address as this page: on another one the quote can't be put into its text box
+        const replyURL = `${location.origin}/forum/posting.php?mode=reply&t=${targetTopicId}`;
         const replyWindow = window.open(replyURL, '_blank');
 
         if (!replyWindow) {
-            alert("Popup blocked. Please allow popups for this site.");
+            iveltNotify("דער בראוזער האט נישט געלאזט עפענען א נייעם טעב. ערלויב פאפ-אפס פאר אייוועלט, און פרוביר נאכאמאל", 5000);
             return;
         }
 
-        // Wait for the textarea to load
+        // Wait for the textarea to load. Give up after 30 seconds, or if the tab is closed: a reply
+        // page that never gets one (signed out, an error page, the forum down) would keep this going
         replyWindow.onload = () => {
+            const giveUpAt = Date.now() + 30000;
             const interval = setInterval(() => {
                 try {
+                    if (replyWindow.closed || Date.now() > giveUpAt) {
+                        clearInterval(interval);
+                        return;
+                    }
                     const textarea = replyWindow.document.querySelector("#message-box textarea");
                     if (textarea) {
                         textarea.value = res;
                         clearInterval(interval);
                     }
                 } catch (e) {
-                    console.error("Error accessing textarea:", e);
                     clearInterval(interval);
                 }
             }, 100); // Retry every 100ms
         };
     } catch (error) {
-        console.error("Error in quoteInOtherTopic:", error);
+        iveltNotify(fetchFailedMessage(error), 5000);
     }
 }
 
 
-addBtn();
+whenIveltSettingsReady(() => {
+    TOPIC_MAPPING_EXPIRE = iveltSetting("cachedTopicMappingExpire");
+    COPY_ATTACHMENTS = iveltSetting("copyAttachments");
+    // empty is never: the list is only fetched when there's none yet, or with "update the list now"
+    CACHE_EXPIRY_MS = TOPIC_MAPPING_EXPIRE === '' ? Infinity : (TOPIC_MAPPING_EXPIRE || 3600) * 1000;
+    addBtn();
+});

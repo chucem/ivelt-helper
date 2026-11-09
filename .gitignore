@@ -1,3 +1,15 @@
 extension/_metadata/generated_indexed_rulesets/_ruleset1
 *.zip
 dist/*
+
+# What's-new videos are hosted elsewhere, too big for the repo
+store-assets/*.mp4
+
+# Local Claude Code files (the release skill in .claude/skills is shared)
+.claude/launch.json
+.claude/settings.local.json
+.claude/worktrees/
+.claude/screenshots-*/
+
+# Raw page captures and test files from store-assets/source/render.py
+store-assets/source/out/

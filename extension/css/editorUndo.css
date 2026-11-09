@@ -1,0 +1,17 @@
+/* Undo / redo buttons in the post editor toolbar (editorUndo.js) */
+.ivu-buttons {
+    display: inline-flex;
+    vertical-align: middle;
+    margin-inline-end: 6px;
+}
+.ivu-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+.ivu-button svg { display: block; }
+/* Right-to-left, so undo points back to the right like in Hebrew/Yiddish apps */
+.ivu-button:dir(rtl) svg { transform: scaleX(-1); }
+/* Same grey as the forum's own ABBC3 icons */
+.ivu-in-abbc3 .ivu-button { color: #626262; }
+.ivu-button:disabled { opacity: 0.35; cursor: default; }

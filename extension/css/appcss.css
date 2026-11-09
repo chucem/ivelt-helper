@@ -1,4 +1,61 @@
+/* Google search above the forum's search box (js/addGoogleSearch.js): the input stretches
+   so the row is as wide as the forum's box, which has two buttons to our one. With the id,
+   as the forum's own styles load after this file */
+#search-box .ih-google-search {
+    margin-bottom: 5px;
+}
+#search-box .ih-google-search fieldset {
+    display: flex;
+}
+#search-box .ih-google-search .inputbox {
+    flex: 1;
+}
 
+/* The phone layout's search bar under the navbar (js/addGoogleSearch.js), opened by the navbar's
+   search icon: one row as wide as the navbar, built of the forum's own input and button classes so
+   the themes color it too. Never on the desktop layout, which has no search icon to close it */
+#ih-mobile-search {
+    clear: both;
+    padding: 6px 0 2px;
+}
+#ih-mobile-search[hidden] {
+    display: none;
+}
+#ih-mobile-search fieldset {
+    display: flex;
+}
+#ih-mobile-search .inputbox {
+    flex: 1;
+    min-width: 0;
+    max-width: none; /* the forum's phone layout caps every .inputbox at 260px */
+    width: auto;
+    font-size: 16px; /* under 16px a phone zooms the page in on focus */
+}
+#ih-mobile-search .button {
+    display: flex;
+    align-items: center;
+}
+@media (min-width: 701px) {
+    #ih-mobile-search {
+        display: none;
+    }
+}
+
+/* "private message with a quote" post button (js/addTopicButtons.js): only where the forum's phone
+   layout hides the profile's contact menu, which has the same link */
+@media (min-width: 701px) {
+    .post-buttons li.ih-pm-quote {
+        display: none;
+    }
+}
+
+/* The extra post buttons (and the marked quote button) have an inline beige background in
+   js/addTopicButtons.js, which marks them on the bar. In the ⋯ menu (on a phone, or zoomed in)
+   they're plain rows like the forum's own, on the menu's color (phpBB's copies there have no
+   .button class, so the theme's rule for them in css/themes.css doesn't reach them either) */
+.post-buttons .dropdown-contents a[style*="background"] {
+    background: transparent !important;
+}
 
 .clone-first .app-hidden {
     display: none;
@@ -40,6 +97,16 @@
 
 .ext-copied-tip.ext-copied-tip-hide {
     opacity: 0;
+}
+
+/* mentions that link to the profile (js/mentionLinks.js): they keep the mention's own color,
+   and on hover the mention is underlined in that color */
+.ih-mention-link,
+.ih-mention-link:hover {
+    text-decoration: none;
+}
+.ih-mention-link:hover .mention {
+    text-decoration: underline;
 }
 
 /* "new replies" bar under the last post (js/newResponseNotification.js) */
@@ -85,4 +152,47 @@
 :root:not([data-ivh-theme]) .post-buttons .button:hover {
     border-color: #3477db !important;
     box-shadow: 0 1px 3px rgba(52, 119, 219, 0.25);
+}
+
+/* The split notification bells (and the PM icon and the "+N" next to them) in one item of the
+   header, on one light background apart from the forum's other menus, and kept on one line so they
+   don't wrap apart on a phone (js/splitNotifications.js) */
+.nav-main > li.notif-group {
+    margin: 0 7px !important;
+    padding: 0 !important;
+}
+.nav-main .notif-group > ul {
+    display: flex;
+    /* in the order they had when each one floated left on its own (the header is right-to-left) */
+    flex-direction: row-reverse;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-radius: 6px;
+    background: color-mix(in srgb, currentColor 8%, transparent);
+}
+.nav-main .notif-group > ul > li {
+    float: none !important;
+    flex-shrink: 0;
+    margin: 0 !important;
+    padding: 1px 6px 0;
+    white-space: nowrap;
+    list-style: none;
+}
+/* the grey "+N": as tall as the other bells, its badge on the same line as their red ones */
+#more_unread_notifications { padding: 1px 6px 0 4px; }
+#more_unread_notifications > a { display: block; height: 21px; padding-top: 3px; }
+#more_unread_notifications .badge { top: 0; margin: 0; }
+
+/* On a phone, quotes without the space at the sides: each quote inside a quote took 25px of margin
+   and 5px of padding on each side, so a few levels deep the text was a narrow column, a letter or two
+   wide. The borders stay, so it still shows which quote is inside which. The "compactQuotesMobile"
+   setting (js/pageEnhancements.js puts the class on) */
+@media (max-width: 700px) {
+    html.ih-compact-quotes .postbody .content blockquote {
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        padding-left: 4px !important;
+        padding-right: 4px !important;
+    }
 }

@@ -3,12 +3,13 @@
 # builds the zip and attaches it to the release.
 # If a release for that version already exists, it does nothing.
 #
-# The notes start with a summary written by AI (Google Gemini, free tier) from the
-# commits since the previous release, when the GEMINI_API_KEY secret is set - see
-# .github/scripts/ai-release-notes.sh. If the AI notes can't be written, the run fails
-# and nothing is published: re-run the failed job, or skip them with "Run workflow ->
-# Skip AI release notes" (or the SKIP_AI_NOTES=true repository variable), which
-# publishes with GitHub's usual notes.
+# The notes start with the ask to star and rate (.github/release-header.md), then a summary
+# written by AI (Google Gemini, free tier) from the commits since the previous release, when
+# the GEMINI_API_KEY secret is set - see .github/scripts/ai-release-notes.sh. GitHub's usual
+# list of pull requests comes last, folded away under the summary. If the AI notes can't be
+# written, the run fails and nothing is published: re-run the failed job, or skip them with
+# "Run workflow -> Skip AI release notes" (or the SKIP_AI_NOTES=true repository variable),
+# which publishes with GitHub's usual notes, not folded.
 #
 # Store uploads are a separate, manual step: see store-upload.yml.
 
@@ -81,11 +82,29 @@ jobs:
       - name: Create GitHub release
         if: steps.version.outputs.exists == 'false'
         run: |
-          # The AI summary (if there is one) goes before GitHub's list of changes
-          notes=()
-          if [ -s ai-notes.md ]; then notes=(--notes-file ai-notes.md); fi
-          gh release create "${{ steps.version.outputs.tag }}" "${{ steps.version.outputs.zip }}" \
+          tag="${{ steps.version.outputs.tag }}"
+          # GitHub's usual notes: the pull requests and who made them, new contributors, full changelog
+          gh api "repos/$GITHUB_REPOSITORY/releases/generate-notes" \
+            -f tag_name="$tag" -f target_commitish="$GITHUB_SHA" --jq .body > changes.md
+
+          # On top the ask to star and rate (.github/release-header.md), then the AI summary.
+          # GitHub's list says the same for developers, so under a summary it's folded away (it
+          # keeps the credit for each change); without a summary it's the notes themselves
+          cp .github/release-header.md notes.md
+          if [ -s ai-notes.md ]; then
+            prs=$(grep -c ' by @.* in https://github.com/.*/pull/' changes.md || true)
+            {
+              printf '\n'
+              cat ai-notes.md
+              printf '\n<details>\n<summary>All changes (%s pull requests)</summary>\n\n' "$prs"
+              cat changes.md
+              printf '\n</details>\n'
+            } >> notes.md
+          else
+            { printf '\n'; cat changes.md; } >> notes.md
+          fi
+
+          gh release create "$tag" "${{ steps.version.outputs.zip }}" \
             --target "$GITHUB_SHA" \
-            --title "${{ steps.version.outputs.tag }}" \
-            "${notes[@]}" \
-            --generate-notes
+            --title "$tag" \
+            --notes-file notes.md

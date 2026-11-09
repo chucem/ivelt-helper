@@ -1,0 +1,15 @@
+/*add margin on the right of quotes*/
+.rtl blockquote {
+	margin: 1em 25px 1em 1px!important;
+}
+.rtl blockquote cite > span {
+	float: left;
+	font-weight: normal;
+}
+/*fix topic overview on posting page*/
+.rtl .topicreview .postbody, .rtl .postbody h3{
+    float: none!important;
+}
+.rtl .topicreview .postbody h3 {
+    float: right!important;
+}

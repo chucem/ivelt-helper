@@ -4,12 +4,13 @@
 // runs in the page context, so it uses the forum's own jQuery
 
 (function () {
+    if (!document.getElementById('page-body')) return; // not the forum, e.g. Cloudflare's check page
 
     const PRINT_VERSION = 'v2.9';
     const QUOTE_MAX_PX = 250; // long quotes are cut to this height (site uses 550 on screen)
     const REQUEST_DELAY_MS = 400; // small pause between pages, to be gentle on the server
 
-    let showLikes, printTag, totalPages, on_page, lastPage, baseUrl;
+    let showLikes, likeNames, printTag, totalPages, on_page, lastPage, baseUrl;
     let running = false;
 
     function ltr(t) { return '⁦' + t + '⁩'; } // keep number ranges like 4–6 in order in RTL text
@@ -33,19 +34,16 @@
         $('.post').removeClass('online'); // remove online-status indicator
         $('.postbody').width('100%');
         if (showLikes) {
-            // keep only the Like count from the post buttons
-            $('.post-buttons > li:not(.postlove-li)').remove();
-            $('.postlove-button, .postlove-button i').removeAttr('href data-ajax');
-            $('.postlove-button').css('pointer-events', 'none');
-        } else {
-            $('.post-buttons').remove();
+            addLikedBy();
         }
+        $('.post-buttons').remove();
         // expand all spoilers
         $('.spoilcontent').css('display', 'block');
         $('.spoilbtn').text('▼ ספוילער');
-        // like symbol for print + attachment/print layout fixes
+        // attachment/print layout fixes
         $('<style>').text(
-            '.postlove-button .like::before,.postlove-button .liked::before{font-family:FontAwesome;content:"\\f087";font-style:normal;font-size:1em;color:#555;padding-right:3px}' +
+            '.print-liked-by{clear:both;margin-top:6px;padding-top:4px;border-top:1px dotted #ccc;font-size:11px;color:#555}' +
+            '.print-liked-by .icon{padding-left:3px}' +
             '.postbody .content{overflow:visible!important;max-height:none!important}' +
             // long quotes: cut cleanly at QUOTE_MAX_PX, hide the "ווייז מער..." button/fade
             '.imcger-quote-text{height:auto!important}' +
@@ -84,11 +82,28 @@
         addPrintInfo();
     }
 
+    // a "באדאנקט דורך: name, name" line under each liked post, from the like count's tooltip
+    // (postlove puts the names in its title, e.g. "תגובה באדאנקט דורך: name1, name2"), or just "באדאנקט: N"
+    function addLikedBy() {
+        $('.post').each(function () {
+            let likes = $(this).find('.postlove-count:first');
+            let count = Number(likes.text()) || 0;
+            if (!count) return;
+            let title = likes.attr('title') || '';
+            let names = title.indexOf(':') >= 0 ? title.slice(title.indexOf(':') + 1).trim() : '';
+            let text = likeNames ? 'באדאנקט דורך (' + count + '): ' + (names || '—') : 'באדאנקט: ' + count;
+            $('<div>').addClass('print-liked-by')
+                .append($('<i>').addClass('icon fa-thumbs-o-up fa-fw').attr('aria-hidden', 'true'))
+                .append(document.createTextNode(text))
+                .appendTo($(this).find('.postbody:first'));
+        });
+    }
+
     function addPrintInfo() {
         let full = on_page === 1 && lastPage === totalPages;
         let pages = on_page === lastPage
-            ? 'זייט ' + on_page + ' פון ' + totalPages
-            : 'זייטן ' + ltr(on_page + '–' + lastPage) + ' פון ' + totalPages;
+            ? 'בלאט ' + on_page + ' פון ' + totalPages
+            : 'בלעטער ' + ltr(on_page + '–' + lastPage) + ' פון ' + totalPages;
         let scope = full ? 'דער גאנצער אשכול' : 'נישט דער גאנצער אשכול';
         let posts = $('.post').length + ' תגובות';
         let d = new Date();
@@ -129,7 +144,7 @@
                     showBlockedPanel(page, pageNum, 'challenge');
                     return;
                 }
-                $('.post:last').after($('<h3>').addClass('page-number').text('זייט ' + pageNum));
+                $('.post:last').after($('<h3>').addClass('page-number').text('בלאט ' + pageNum));
                 $('.page-number:last').after(posts);
                 setTimeout(function () { loadPage(pageNum); }, REQUEST_DELAY_MS);
             },
@@ -145,8 +160,8 @@
         let why = status === 429
             ? 'דער סערווער זאגט "Too Many Requests" (429) – מ\'האט געשיקט צופיל ריקוועסטס נאכאנאנד.'
             : (status === 'challenge'
-                ? 'זייט ' + pageNum + ' איז נישט געקומען ווי עס דארף צו זיין (ווארשיינליך א Cloudflare וועריפיקעישן).'
-                : 'זייט ' + pageNum + ' האט זיך נישט געלאודט (ערראר ' + (status || 'נעטווארק') + ').');
+                ? 'בלאט ' + pageNum + ' איז נישט געקומען ווי עס דארף צו זיין (מסתם א Cloudflare וועריפיקעישאן).'
+                : 'בלאט ' + pageNum + ' האט זיך נישט געלאודט (ערראר ' + (status || 'נעטווארק') + ').');
         let btn = 'padding:6px 14px;margin:4px;border:1px solid #999;border-radius:4px;cursor:pointer;font-size:13px;';
         let panel = $('<div id="pq-blocked">').css({
             position: 'fixed', top: '20%', left: '50%', transform: 'translateX(-50%)', 'z-index': 100000,
@@ -154,18 +169,18 @@
             'max-width': '460px', width: '90%', 'box-shadow': '0 4px 20px rgba(0,0,0,.3)',
             direction: 'rtl', 'text-align': 'right', 'font-size': '14px', 'line-height': '1.5'
         }).append(
-            $('<div>').css({'font-weight': 'bold', 'font-size': '16px', 'margin-bottom': '6px'}).text('⚠ דאס לאודן האט זיך אפגעשטעלט ביי זייט ' + pageNum),
+            $('<div>').css({'font-weight': 'bold', 'font-size': '16px', 'margin-bottom': '6px'}).text('⚠ דאס לאודן האט זיך אפגעשטעלט ביי בלאט ' + pageNum),
             $('<div>').text(why),
             $('<div>').css('margin-top', '8px').text(
-                'געלאודט ביז יעצט: זייטן ' + ltr(on_page + '–' + page) + '. ' +
-                'עפנט אן אייוועלט זייט אין א נייעם טעב, אויב עס ווייזט זיך ארויס א Cloudflare וועריפיקעישן – מאכט עס, ' +
-                'ווארט א מינוט, און דערנאך קומט צוריק אהער און קליקט "טרייט נאכאמאל".'),
+                'געלאודט ביז יעצט: בלעטער ' + ltr(on_page + '–' + page) + '. ' +
+                'עפן אן אייוועלט בלאט אין א נייעם טעב, אויב עס ווייזט זיך ארויס א Cloudflare וועריפיקעישאן – מאך עס, ' +
+                'ווארט א מינוט, און דערנאך קום צוריק אהער און קליק "טריי נאכאמאל".'),
             $('<div>').css('margin', '8px 0').append(
                 $('<a>').attr({href: pageUrl(page), target: '_blank', rel: 'noopener'})
-                    .css({'font-weight': 'bold'}).text('↗ עפנט זייט ' + pageNum + ' אין א נייעם טעב')),
+                    .css({'font-weight': 'bold'}).text('↗ עפן בלאט ' + pageNum + ' אין א נייעם טעב')),
             $('<div>').css({'text-align': 'center', 'margin-top': '10px'}).append(
                 $('<button type="button">').attr('style', btn + 'background:#105289;color:#fff;border-color:#105289;')
-                    .text('טרייט נאכאמאל').on('click', function () {
+                    .text('טריי נאכאמאל').on('click', function () {
                         panel.remove();
                         $('#loading-page').text(page);
                         loadNextPage(page); // retry the same page
@@ -197,8 +212,8 @@
             return;
         }
 
-        let settings = document.getElementById('iveltHelperSettings');
-        showLikes = !!settings && settings.getAttribute('data-print-show-likes') === 'true';
+        showLikes = iveltSetting('printShowLikes') === true;
+        likeNames = iveltSetting('printLikesStyle') !== 'count';
         printTag = 'פרינט אשכול ' + PRINT_VERSION + (showLikes ? '-L · מיט לייקס' : '');
 
         totalPages = Number($('.pagination li:not(.next):last').text()) || 1;
@@ -208,7 +223,7 @@
         baseUrl = ($('.topic-title a:first').prop('href') || document.URL).replace(/&start=\d*/, '').replace(/#.*$/, '');
 
         if (on_page < totalPages) {
-            let answer = prompt(printTag + '\r\n\r\nYou are on page ' + on_page + ' of ' + totalPages + ' pages.\r\nTill which page do you want to print?', totalPages);
+            let answer = prompt(printTag + '\r\n\r\nדו ביסט אויף בלאט ' + on_page + ' פון ' + totalPages + '.\r\nביז וועלכן בלאט ווילסטו פרינטן?', totalPages);
             if (answer === null) { // Cancel = do nothing
                 return;
             }

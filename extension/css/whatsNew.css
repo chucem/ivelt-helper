@@ -1,0 +1,159 @@
+/* the "what's new" pop-up after an update (js/whatsNew.js). The colors follow the color theme
+   when one is picked (the --t-* variables, also in dark themes), and fall back to the forum's
+   own look. One main button (filled), the others quieter, "all settings" a plain link */
+
+.ih-whats-new {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+    background: rgba(10, 20, 35, 0.5);
+}
+.ih-whats-new-dialog {
+    box-sizing: border-box;
+    width: 100%;
+    max-width: 560px;
+    max-height: calc(100vh - 32px);
+    overflow-y: auto;
+    padding: 22px 26px;
+    border: 1px solid var(--t-border, #B9C2C9);
+    border-top: 4px solid var(--t-accent, #12A3EB);
+    border-radius: 8px;
+    background: var(--t-surface, #fff);
+    color: var(--t-text, #333);
+    font-size: 14px;
+    line-height: 1.6;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+}
+.ih-whats-new-title {
+    margin: 0;
+    color: var(--t-strong, #105289);
+    font-size: 20px;
+    line-height: 1.3;
+}
+.ih-whats-new-version {
+    margin: 2px 0 14px;
+    color: var(--t-muted, #6A7A90);
+    font-size: 12px;
+}
+.ih-whats-new-dialog h3 {
+    margin: 16px 0 6px;
+    padding: 0;
+    border: 0;
+    color: var(--t-strong, #105289);
+    font-size: 15px;
+}
+/* when versions were skipped, each one's section starts with its number, set apart by a line */
+.ih-whats-new-dialog h3.ih-whats-new-release {
+    margin-top: 20px;
+    padding-top: 12px;
+    border-top: 1px solid color-mix(in srgb, var(--t-muted, #6A7A90) 30%, transparent);
+    font-size: 17px;
+}
+.ih-whats-new-dialog h3.ih-whats-new-release:first-of-type {
+    margin-top: 6px;
+    padding-top: 0;
+    border-top: 0;
+}
+
+/* the notice that the checks were turned off: warm, so it's read first */
+.ih-whats-new-notice {
+    padding: 12px 14px;
+    border: 1px solid color-mix(in srgb, var(--t-warn, #D99B0F) 45%, var(--t-surface, #fff));
+    border-right: 4px solid var(--t-warn, #D99B0F);
+    border-radius: 6px;
+    background: color-mix(in srgb, var(--t-warn, #D99B0F) 13%, var(--t-surface, #fff));
+    color: var(--t-text, #333);
+}
+.ih-whats-new-notice strong {
+    color: var(--t-strong, #28313F);
+    font-size: 15px;
+}
+.ih-whats-new-notice p {
+    margin: 4px 0 10px;
+}
+
+.ih-whats-new-list {
+    margin: 0;
+    padding-right: 20px;
+}
+.ih-whats-new-list li {
+    margin: 4px 0;
+}
+
+.ih-whats-new-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-top: 20px;
+    padding-top: 14px;
+    border-top: 1px solid var(--t-border, #DDE3EA);
+}
+
+/* the pop-up's own buttons, not the forum's .button, so the order of importance shows */
+.ih-whats-new .ih-btn {
+    padding: 7px 16px;
+    border: 1px solid transparent;
+    border-radius: 5px;
+    font: inherit;
+    font-size: 13.5px;
+    font-weight: bold;
+    line-height: 1.3;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+}
+.ih-whats-new .ih-btn:focus-visible {
+    outline: 2px solid var(--t-link, #105289);
+    outline-offset: 2px;
+}
+.ih-whats-new .ih-btn-main {
+    padding: 9px 22px;
+    background: var(--t-link, #105289);
+    color: var(--t-on-accent, #fff);
+    font-size: 15px;
+    font-weight: 800;
+    box-shadow: 0 2px 6px color-mix(in srgb, var(--t-link, #105289) 35%, transparent);
+}
+.ih-whats-new .ih-btn-main:hover {
+    background: color-mix(in srgb, var(--t-link, #105289) 82%, #000);
+}
+.ih-whats-new .ih-btn-outline {
+    border-color: var(--t-link, #105289);
+    background: var(--t-surface, #fff);
+    color: var(--t-link, #105289);
+}
+.ih-whats-new .ih-btn-outline:hover {
+    background: color-mix(in srgb, var(--t-link, #105289) 10%, var(--t-surface, #fff));
+}
+.ih-whats-new .ih-btn-second {
+    border-color: var(--t-button-border, #B9C2C9);
+    background: var(--t-button-bg, #F3F6F9);
+    color: var(--t-strong, #28313F);
+}
+.ih-whats-new .ih-btn-second:hover {
+    border-color: var(--t-link, #105289);
+    background: var(--t-button-hover, #E6EEF5);
+}
+.ih-whats-new .ih-btn-link {
+    margin-right: auto;
+    padding-inline: 4px;
+    background: none;
+    color: var(--t-link, #105289);
+    font-weight: normal;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+.ih-whats-new .ih-btn-link:hover {
+    color: var(--t-link-hover, #D31141);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ih-whats-new .ih-btn {
+        transition: none;
+    }
+}

@@ -1,0 +1,126 @@
+@property --ih-dust {
+    syntax: '<number>';
+    inherits: true;
+    initial-value: 0;
+}
+
+.ih-spoiler {
+    --ih-dust: 0;
+    margin: 0.5em 0 !important;
+    padding: 0 !important;
+    border: 0 !important;
+    background: none !important;
+    transition: --ih-dust 0.5s ease, max-height 0.4s ease;
+}
+.ih-spoiler-hidden {
+    --ih-dust: 1;
+    cursor: pointer;
+}
+.ih-spoiler-hidden:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 2px;
+}
+.ih-spoiler .spoiltitle {
+    display: none !important;
+}
+.ih-spoiler .spoilcontent {
+    display: block !important;
+    padding: 0 !important;
+    border: 0 !important;
+}
+.ih-spoiler-hidden .spoilcontent {
+    user-select: none;
+    pointer-events: none;
+}
+
+.ih-spoiler-inline,
+.ih-spoiler-inline .spoilcontent {
+    display: inline !important;
+    margin: 0 !important;
+}
+.ih-spoiler-long {
+    display: block !important;
+    margin: 0.5em 0 !important;
+}
+.ih-spoiler-long.ih-spoiler-hidden {
+    max-height: 3lh;
+    overflow: hidden;
+}
+
+.ih-spoiler-words {
+    border-radius: 4px;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+    -webkit-text-fill-color: color-mix(in srgb, currentColor calc((1 - var(--ih-dust)) * 100%), transparent);
+    --ih-dot: color-mix(in srgb, currentColor calc(var(--ih-dust) * 100%), transparent);
+    background-image:
+        radial-gradient(circle, var(--ih-dot) 0.7px, transparent 1.3px),
+        radial-gradient(circle, var(--ih-dot) 0.5px, transparent 1px),
+        radial-gradient(circle, var(--ih-dot) 1px, transparent 1.5px);
+    background-size: 6px 7px, 9px 5px, 13px 11px;
+    animation: ih-spoiler-drift 3s linear infinite paused;
+}
+.ih-spoiler-hidden .ih-spoiler-words {
+    animation-play-state: running;
+}
+.ih-spoiler-hidden .spoilcontent a {
+    border-bottom-color: transparent !important;
+    text-decoration-color: transparent;
+}
+
+.ih-spoiler-picture {
+    position: relative;
+    display: inline-block;
+    overflow: hidden;
+    vertical-align: middle;
+    border-radius: 6px;
+}
+.ih-spoiler-picture img {
+    filter: blur(calc(var(--ih-dust) * 18px)) brightness(calc(1 - var(--ih-dust) * 0.15));
+    transform: scale(calc(1 + var(--ih-dust) * 0.1));
+}
+.ih-spoiler-picture::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: var(--ih-dust);
+    background-image:
+        radial-gradient(circle, #fff 0.8px, transparent 1.4px),
+        radial-gradient(circle, rgba(255, 255, 255, 0.8) 0.6px, transparent 1.1px),
+        radial-gradient(circle, rgba(255, 255, 255, 0.9) 1.1px, transparent 1.7px);
+    background-size: 7px 8px, 11px 6px, 5px 9px;
+    animation: ih-spoiler-drift 2.4s linear infinite paused;
+}
+.ih-spoiler-hidden .ih-spoiler-picture::after {
+    animation-play-state: running;
+}
+@media screen {
+    .ih-spoiler-hidden .spoilcontent dl:has(.ih-spoiler-picture) dd {
+        display: none;
+    }
+}
+
+.ih-spoiler .spoilcontent :is(iframe, video, audio) {
+    filter: blur(calc(var(--ih-dust) * 16px));
+}
+
+@keyframes ih-spoiler-drift {
+    to { background-position: 6px -7px, -9px 5px, 13px 11px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .ih-spoiler-words,
+    .ih-spoiler-picture::after {
+        animation: none;
+    }
+}
+
+@media print {
+    .ih-spoiler-hidden {
+        --ih-dust: 0;
+    }
+    .ih-spoiler-long.ih-spoiler-hidden {
+        max-height: none;
+    }
+}

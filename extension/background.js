@@ -1,31 +1,55 @@
-const notificationUrl = "http://www.ivelt.com/forum/ucp.php?i=ucp_notifications";
+const notificationUrl = "https://www.ivelt.com/forum/ucp.php?i=ucp_notifications";
 
 const defualtPreferences = {
   hideUserName: false,
   alwaysCopyTopic: false,
   copyAttachments: true,
+  quoteSourceLink: 'topic', // the link to the quoted post: 'topic' line above, 'source' below, 'both' or 'none'
   getBrowserNotifications: false,
+  popupSameTab: false,
   warnOnLosingPost: true,
+  keepDrafts: true,
+  quoteSelection: true,
+  quoteJumpToReply: true,
   debugMode: false,
-  backgroundSync: true,
-  backgroundSyncPosts: 20000,
-  backgroundSyncNotif: 1,
+  // both checks are off until the user turns them on, which goes easy on the server
+  backgroundSync: false, // checking an open topic for new replies
+  backgroundSyncPosts: 60000, // every minute, once it's turned on
+  backgroundSyncNotifMinutes: '', // the notification check, '' is off
   cachedTopicMappingExpire: 3600,
   forceUpdateTopicMapCache: false,
   stickyPostButtons: false,
+  compactQuotesMobile: true, // on a phone, quotes inside quotes without the space at the sides
+  titleOpensUnread: true,
+  doubleClickLike: false,
   ShowMultiNotifs: true,
+  olderNotifsPlus: true, // with split bells: older unread notifications in a grey +N; off, they're counted in the general bell
+  // with split bells, which kinds get a bell of their own; one turned off stays in the general bell
+  splitQuotedNotifs: true,
+  splitLikedNotifs: true,
+  splitMentionedNotifs: true,
+  splitPmNotifs: true,
   upDownArrowKeys: true,
+  spoilerPolish: false,
   imageResizer: true,
   pasteImages: true,
   driveUpload: true,
   driveButtonPlace: 'attachments',
   dropboxUpload: true,
+  cloudUploadInPms: true,
+  cloudDropVideos: true,
   driveFolderName: 'iVelt Helper',
   openAttachmentsTab: true,
   copyPostLink: true,
+  whoLiked: true,
+  profileCards: true,
   printShowLikes: false,
+  printLikesStyle: 'names',
+  editorUndo: true,
   themesEnabled: false,
-  theme: 'default'
+  theme: 'default',
+  multiAccounts: false, // keeps the session cookies of more than one account, so it's off until turned on
+  switchReloadsOneTab: false // a switch reloads only the tab it's done in, the others get a bar
 };
 
 let debugQueue = {};
@@ -33,8 +57,11 @@ let debugQueueTimeout;
 const debugLogPrefix = 'debug-';
 
 let checkNewNotification = function () {
-    fetch(notificationUrl)
-      .then((response) => response.text())
+    fetch(notificationUrl, { headers: { 'X-Requested-With': chrome.runtime.id } })
+      .then((response) => {
+        if (!response.ok) throw new Error(response.status);
+        return response.text();
+      })
       .then((data) => {
 
       let matches =
@@ -56,17 +83,50 @@ let checkNewNotification = function () {
 
       const debugDate = new Date();
       debugLog('backgroundSync', `checkNewNotification: newCount(${newCount}), ${debugDate.getUTCMinutes()}:${debugDate.getUTCSeconds()})`);
-    });
+    })
+    .catch((e) => debugLog('backgroundSync', `checkNewNotification failed: ${e.message}`));
 };
 
 chrome.alarms.onAlarm.addListener(() => {
   checkNewNotification();
 });
 
+// The Yiddish-letters domain goes to the forum. A dynamic rule and not a static ruleset in the
+// manifest: Chrome writes a static ruleset's index into the extension's folder (_metadata), and
+// mobile browsers loading it unpacked then refuse to load the folder again
+async function addDomainRedirect() {
+  await chrome.declarativeNetRequest.updateDynamicRules({
+    removeRuleIds: [1],
+    addRules: [{
+      id: 1,
+      priority: 1,
+      action: { type: 'redirect', redirect: { url: 'https://www.ivelt.com/forum/' } },
+      condition: { urlFilter: '*://www.xn--4dbhss5b.com/*', resourceTypes: ['main_frame'] }
+    }]
+  }).catch((e) => console.error('Domain redirect rule failed:', e));
+}
+
+// The settings page's "update now" link restarts the extension to put in an update the browser
+// already downloaded, which closes that page. The new version opens it again, so it shows the new
+// version. Only within a minute of the click: a restart that didn't update leaves it for nothing
+async function reopenSettingsAfterUpdate(reason) {
+  const { reopenSettingsUntil } = await chrome.storage.local.get('reopenSettingsUntil');
+  if (!reopenSettingsUntil) return;
+  await chrome.storage.local.remove('reopenSettingsUntil');
+  if (reason === 'update' && Date.now() < reopenSettingsUntil)
+    chrome.runtime.openOptionsPage();
+}
+
 chrome.runtime.onInstalled.addListener(async (details) => {
+
+  await addDomainRedirect();
 
   // before the defaults, so a new computer starts with the user's synced settings
   await settingsSyncOnInstall(details.reason);
+
+  await moveToNewCheckTiming(details.reason);
+  markWhatsNew(details);
+  reopenSettingsAfterUpdate(details.reason);
 
   if (details.reason === "update" || details.reason === "install") {
     // Get current settings in local storage
@@ -96,16 +156,114 @@ chrome.runtime.onInstalled.addListener(async (details) => {
   // Set default settings to storage if not already present (fresh install or otherwise)
   chrome.storage.local.get({
     ...defualtPreferences,
-    isFreshInstall: true // needed for initial notifications
+    isFreshInstall: true, // needed for initial notifications
+    backgroundSyncNotif: null // the old name of backgroundSyncNotifMinutes
   }, function(items){
+    // move the old setting to the new name, and users off the old 1 minute default, to go easy on the server
+    if(items.backgroundSyncNotif !== null){
+      items.backgroundSyncNotifMinutes = parseInt(items.backgroundSyncNotif) === 1 ? defualtPreferences.backgroundSyncNotifMinutes : items.backgroundSyncNotif;
+      chrome.storage.local.remove('backgroundSyncNotif');
+    }
+    delete items.backgroundSyncNotif;
+
     if(items && Object.keys(items).length)
       chrome.storage.local.set(items);
 
-    alarmToFetch(items.backgroundSync, parseInt(items.backgroundSyncNotif));
+    alarmToFetch(parseInt(items.backgroundSyncNotifMinutes));
   });
 });
 
-chrome.runtime.onMessage.addListener(function (request) {
+// The settings for the checks were reorganized: each check (an open topic's new replies, and
+// the notifications) now has its own on/off and its own choices of how often. Many users had
+// the old checks running without meaning to, which loaded the site for nothing, so once, on the
+// update, both are turned off. Whoever had one of them on is told so in the "what's new" pop-up
+// (js/whatsNew.js), with a button to the settings to turn them back on
+const CHECK_TIMING_MIGRATED = 'checkTimingMigrated';
+
+async function moveToNewCheckTiming(reason){
+  if(reason !== 'install' && reason !== 'update')
+    return;
+
+  const items = await chrome.storage.local.get([CHECK_TIMING_MIGRATED, 'backgroundSync', 'backgroundSyncPosts', 'backgroundSyncNotifMinutes', 'backgroundSyncNotif']);
+  if(items[CHECK_TIMING_MIGRATED])
+    return;
+
+  if(reason === 'update'){
+    const minutes = items.backgroundSyncNotifMinutes !== undefined ? items.backgroundSyncNotifMinutes : items.backgroundSyncNotif;
+    const wasChecking = items.backgroundSync !== false && (parseInt(minutes) > 0 || items.backgroundSyncPosts !== '');
+
+    await chrome.storage.local.set({
+      backgroundSync: false,
+      backgroundSyncPosts: defualtPreferences.backgroundSyncPosts,
+      backgroundSyncNotifMinutes: '',
+      whatsNewCheckTiming: wasChecking
+    });
+    // the old name would be moved over the new setting further down
+    await chrome.storage.local.remove('backgroundSyncNotif');
+  }
+
+  await chrome.storage.local.set({ [CHECK_TIMING_MIGRATED]: true });
+}
+
+// After an update, the next forum page shows what's new since the version the user had
+// (js/whatsNew.js), so skipping a version (say 2.6.0 straight to 2.7.1) still shows 2.7.0's.
+// Only when the version changed: reloading the same version (while developing) doesn't count
+async function markWhatsNew(details){
+  const version = chrome.runtime.getManifest().version;
+  if(details.reason === 'update' && details.previousVersion !== version){
+    // a pop-up not closed yet keeps the version it started from, so nothing in between is lost
+    const { whatsNewVersion, whatsNewFrom } = await chrome.storage.local.get(['whatsNewVersion', 'whatsNewFrom']);
+    const from = whatsNewVersion ? whatsNewFrom : details.previousVersion;
+    await chrome.storage.local.set({ whatsNewVersion: version, ...(from ? { whatsNewFrom: from } : {}) });
+    // a "remind me later" from the last version's pop-up doesn't hold back this one
+    chrome.storage.local.remove('whatsNewLaterUntil');
+  }
+}
+
+// topic mapping via google sheet by טעכניש גערעדט, used by js/addTopicButtons.js
+const topicMappingUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vS8-2oWC0g995y_fNyR4scrXBEimeYpI5Hm0TPqt1IyvVqEdVUDKYw2n7Z6A2d1DDj3Ef6ofpwe2s3T/pub?gid=986512672&single=true&output=csv";
+
+// when the list was last downloaded (and when the last try failed), for the settings page.
+// Local only: it's about this computer
+async function recordTopicMappingFetch(change){
+  const { topicMappingFetch } = await chrome.storage.local.get('topicMappingFetch');
+  await chrome.storage.local.set({ topicMappingFetch: { ...topicMappingFetch, ...change } });
+}
+
+chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+  if(request.type === 'resetSettings'){
+    chrome.storage.local.set(defualtPreferences, () => {
+      alarmToFetch(parseInt(defualtPreferences.backgroundSyncNotifMinutes));
+      sendResponse();
+    });
+    return true;
+  }
+
+  // the forum's CSP blocks the page from reaching Google Sheets, so the topic mapping is fetched here.
+  // Without cookies: the sheet is public, and with someone's Google cookies Google sometimes sends
+  // the request to its sign-in page first, which blocks extensions (CORS)
+  if(request.type === 'topicMappingCsv'){
+    fetch(topicMappingUrl, { credentials: 'omit' })
+      .then(response => {
+        if(!response.ok)
+          throw new Error(`Failed to fetch CSV data: ${response.status} ${response.statusText}`);
+        return response.text();
+      })
+      .then(text => {
+        sendResponse({ text });
+        recordTopicMappingFetch({ updatedAt: Date.now() });
+      })
+      .catch(e => {
+        sendResponse({ error: e.message });
+        recordTopicMappingFetch({ failedAt: Date.now() });
+      });
+    return true;
+  }
+
+  if(request.type === 'openSettings'){
+    chrome.tabs.create({ url: chrome.runtime.getURL('settings.html' + (request.hash ? '#' + request.hash : '')) });
+  }
+
   if(request.type === 'badgeText'){
     chrome.action.setBadgeText({ text: request.text });
   }
@@ -117,6 +275,7 @@ chrome.runtime.onMessage.addListener(function (request) {
 });
 
 chrome.storage.onChanged.addListener((changes, area) => {
+  // settings live in local storage since the migration from sync
   if(area !== 'local')
     return;
 
@@ -130,16 +289,16 @@ chrome.storage.onChanged.addListener((changes, area) => {
     })
   }
 
-  if(changes.backgroundSync || changes.backgroundSyncNotif){
-    chrome.storage.local.get(['backgroundSync', 'backgroundSyncNotif'], items => {
-      alarmToFetch(items.backgroundSync, parseInt(items.backgroundSyncNotif));
-    });
+  if(changes.backgroundSyncNotifMinutes){
+    alarmToFetch(parseInt(changes.backgroundSyncNotifMinutes.newValue));
   }
 });
 
-function alarmToFetch(create, frequency){
-  debugLog('backgroundSync', `alarmToFetch(${create}, ${frequency})`);
-  if(create){
+// The notification check has its own on/off (an empty frequency is off); backgroundSync is
+// only for checking an open topic for new replies (js/newResponseNotification.js)
+function alarmToFetch(frequency){
+  debugLog('backgroundSync', `alarmToFetch(${frequency})`);
+  if(frequency > 0){
     chrome.alarms.create("alarm", { periodInMinutes: frequency });
   }
   else {
@@ -155,14 +314,12 @@ function debugLog(name, valueToPush){
     clearTimeout(debugQueueTimeout);
 
   debugQueueTimeout = setTimeout(() => {
+    // the queue empties either way: with debug mode off (the default) nothing is kept
+    const entries = debugQueue;
+    debugQueue = {};
     chrome.storage.local.get('debugMode', items => {
-      if(items.debugMode){
-        // log all from the queue
-        Object.keys(debugQueue).forEach(key => {
-          commitDebugLog(key, debugQueue[key]);
-          delete debugQueue[key];
-        });
-      }
+      if(items.debugMode)
+        Object.keys(entries).forEach(key => commitDebugLog(key, entries[key]));
     });
   }, 1000);
 }
@@ -177,4 +334,4 @@ function commitDebugLog(name, values){
   })
 }
 
-importScripts('./background.notifications.js', './background.drive.js', './background.dropbox.js', './background.settingsSync.js')
+importScripts('./background.notifications.js', './background.drive.js', './background.dropbox.js', './background.settingsSync.js', './background.accounts.js')

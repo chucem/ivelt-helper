@@ -1,0 +1,18 @@
+/* Hide the forums of a hidden category */
+.hidden-category,
+.hidden-category + .forabg .collapsible,
+.hidden-category + .forabg .topiclist.forums {
+	display: none;
+}
+
+/* Collapse button */
+.collapse-btn {
+	font-size: 1rem !important; /* Adjust to change the button size */
+	position: relative;
+	float: right;
+	margin: -20px 0 0; /* Adjust to tweak position: top right/left bottom */
+}
+
+.rtl .collapse-btn {
+	float: left;
+}

@@ -46,7 +46,7 @@ jobs:
             exit 1
           fi
           # Keep this workflow's own (current) script: the release's commit may have an older one
-          cp .github/scripts/ai-release-notes.sh "$RUNNER_TEMP/ai-release-notes.sh"
+          cp .github/scripts/ai-release-notes.sh .github/scripts/previous-tag.sh "$RUNNER_TEMP/"
           git checkout -q "$tag"
           case "$tag" in *-*) kind=test ;; *) kind=release ;; esac
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
@@ -66,8 +66,15 @@ jobs:
           fi
           tag="${{ steps.release.outputs.tag }}"
           gh release view "$tag" --json body -q .body > old.md
-          # Drop the previous AI part (between the markers), keep the rest
-          sed '/<!-- ai-notes -->/,/<!-- \/ai-notes -->/d' old.md > rest.md
-          { cat ai-notes.md; printf '\n---\n\n'; cat rest.md; } > notes.md
+          if grep -q '<!-- ai-notes -->' old.md; then
+            # Put the new AI part where the previous one was (between the markers), so what's above
+            # it, like the ask to star and rate, stays on top
+            awk 'FNR==NR { ai = ai $0 "\n"; next }
+                 /<!-- ai-notes -->/ { printf "%s", ai; skip = 1 }
+                 !skip { print }
+                 /<!-- \/ai-notes -->/ { skip = 0 }' ai-notes.md old.md > notes.md
+          else
+            { cat ai-notes.md; printf '\n---\n\n'; cat old.md; } > notes.md
+          fi
           gh release edit "$tag" --notes-file notes.md
           echo "Updated the notes of $tag"

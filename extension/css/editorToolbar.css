@@ -1,0 +1,50 @@
+/* The reply box's toolbar (ABBC3's #abbc3_buttons) on a phone. ABBC3 has two rows, each narrower
+   than the screen and wrapping on its own, so the buttons come out in uneven lines with one left
+   alone at the end, and 24px is small for a finger. Here the two rows are one panel (the rows give
+   up their own box, display:contents), the buttons flow in even lines, and they're bigger.
+   ABBC3's stylesheet comes after this one, so the sizes need !important */
+@media (max-width: 700px) {
+    html body #abbc3_buttons {
+        display: flex !important;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 3px;
+        padding: 3px;
+        margin-bottom: 4px;
+        /* the rows' own colors, which they no longer show */
+        background: #dfd1b1;
+        border: 1px solid #d6c7a6;
+        border-radius: 6px;
+        box-sizing: border-box;
+    }
+    /* with a color theme, its colors for the rows (css/themes.css) */
+    html[data-ivh-theme] body #abbc3_buttons {
+        background: var(--t-row3);
+        border-color: var(--t-border);
+    }
+    /* the undo and redo buttons (css/editorUndo.css) flow with the rest */
+    html body #abbc3_buttons .abbc3_buttons_row,
+    html body #abbc3_buttons .ivu-buttons {
+        display: contents !important;
+    }
+    html body #abbc3_buttons .abbc3_button {
+        display: inline-flex !important;
+        align-items: center;
+        justify-content: center;
+        width: 34px !important;
+        height: 34px !important;
+        margin: 0 !important;
+        border-radius: 6px;
+    }
+    /* the ones with words (center, left, image) */
+    html body #abbc3_buttons .button-secondary {
+        display: inline-flex !important;
+        align-items: center;
+        height: 34px !important;
+        margin: 0 !important;
+    }
+    html body #abbc3_buttons .abbc3_select {
+        height: 34px !important;
+        margin: 0 !important;
+    }
+}

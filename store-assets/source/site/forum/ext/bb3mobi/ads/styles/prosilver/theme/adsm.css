@@ -1,0 +1,29 @@
+.adsm_block {
+	padding: 5px 5px 2px 5px;
+	font-size: 1.1em;
+	background-color: #ECF1F3;
+	margin: 0px auto;
+	text-align: center;
+}
+
+#sidebar-left { margin-right: 5px; }
+#sidebar-right { margin-left: 5px; }
+
+@media only screen and (min-width: 700px) and (max-width: 1300px) {
+	#sidebar-block ul.topiclist dt {
+		margin-right: -320px;
+	}
+	#sidebar-block ul.topiclist dt .list-inner {
+		margin-right: 320px;
+	}
+	#sidebar-block ul.topiclist dd.topics {
+		width: 60px;
+	}
+	#sidebar-block ul.topiclist dd.posts,
+	#sidebar-block ul.topiclist dd.views {
+		width: 70px;
+	}
+	#sidebar-block ul.topiclist .lastpost {
+		width: 160px;
+	}
+}

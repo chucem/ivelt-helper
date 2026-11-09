@@ -11,9 +11,13 @@
 # Skip AI release notes" (or the SKIP_AI_NOTES=true repository variable), which
 # publishes with the usual notes.
 #
-# Unlike release.yml, the zip keeps the manifest "key", so a copy installed from this
-# zip gets the same extension ID as the store version. Google and Dropbox sign-in
-# only accept that ID (their redirect URIs are tied to it).
+# The test build is its own extension, "iVelt Helper v2 (Beta)": the manifest's "key" (the
+# same one used when running the code unpacked) pins its own fixed ID,
+# mkhocmhicodbokdhfjgamkhebdelcdaa, so it installs next to the store version with its own
+# settings. Store releases drop the key (release.yml), and the store sets their ID.
+# Google and Dropbox sign-in only accept registered redirect URIs, so
+# https://mkhocmhicodbokdhfjgamkhebdelcdaa.chromiumapp.org/ has to be added to the
+# Google OAuth client and the Dropbox app next to the store's.
 
 name: Pre-release
 
@@ -73,6 +77,8 @@ jobs:
         run: |
           mkdir -p dist
           cd extension
+          # its own name next to the store version (the manifest's key already gives it its own ID)
+          jq '.name = .name + " (Beta)"' manifest.json > manifest.tmp && mv manifest.tmp manifest.json
           zip -r -X "../${{ steps.version.outputs.zip }}" . -x '_metadata/*'
 
       - name: Write release notes with AI
@@ -89,24 +95,46 @@ jobs:
           **Test version** - for trying out new features before they go to the Chrome Web Store.
 
           ### How to install
-          1. If you have iVelt Helper from the Chrome Web Store, **remove it first** (`chrome://extensions` → Remove). This test version uses the same extension ID, so both can't be installed at once. Removing it resets the extension's settings, so you'll need to set them again.
-          2. Download the **ivelt-helper-…zip** below and extract it to a folder you'll keep (Chrome runs the extension from there).
-          3. Open `chrome://extensions`, turn on **Developer mode** (top right), click **Load unpacked** and pick that folder.
-          4. To go back to the normal version later: remove this one and install again from the [Chrome Web Store](https://chromewebstore.google.com/detail/ivelt-helper-v2/ahidenbhdkloaingggdcijofobjboopi).
+          This test version is a separate extension, **iVelt Helper v2 (Beta)**, so you can keep the normal one installed. It has its own settings: the normal version's settings stay as they are.
+          1. Download the **ivelt-helper-…zip** below and extract it to a folder you'll keep (Chrome runs the extension from there).
+          2. Open `chrome://extensions`, turn on **Developer mode** (top right), click **Load unpacked** and pick that folder.
+          3. **Turn off the normal iVelt Helper** with its switch in `chrome://extensions` (no need to remove it). With both on, everything shows twice on the forum.
+          4. To go back: turn the beta off (or remove it) and turn the normal version on again.
+          5. Google Drive / Dropbox ask you to sign in once more in the beta.
 
-          Please report problems in [Issues](https://github.com/chucem/IveltChromeExtension/issues) or in the iVelt extension topic.
+          Please report problems in [Issues](https://github.com/chucem/ivelt-helper/issues) or in the iVelt extension topic.
 
           ---
           EOF
-          # The AI summary (if there is one) goes first, then the install steps
+          # GitHub's usual notes (the pull requests and who made them, new contributors, full
+          # changelog), from the tag before this version by number: left to itself GitHub looks
+          # back through dev, which never gets master's release commits, so it skipped every
+          # release (2.8.0-beta.1 compared to v2.6.0, not v2.7.1)
+          tag="${{ steps.version.outputs.tag }}"
+          prev=$(bash .github/scripts/previous-tag.sh "$tag" test)
+          gh api "repos/$GITHUB_REPOSITORY/releases/generate-notes" \
+            -f tag_name="$tag" -f target_commitish="$GITHUB_SHA" \
+            ${prev:+-f previous_tag_name="$prev"} --jq .body > changes.md
+
+          # The AI summary (if there is one) goes first, then the install steps, then GitHub's
+          # list. Under a summary the list says the same for developers, so it's folded away (it
+          # keeps the credit for each change), like in release.yml; without one it's shown
           if [ -s ai-notes.md ]; then
-            { cat ai-notes.md; printf '\n---\n\n'; cat install.md; } > notes.md
+            prs=$(grep -c ' by @.* in https://github.com/.*/pull/' changes.md || true)
+            {
+              cat ai-notes.md
+              printf '\n---\n\n'
+              cat install.md
+              printf '\n<details>\n<summary>All changes (%s pull requests)</summary>\n\n' "$prs"
+              cat changes.md
+              printf '\n</details>\n'
+            } > notes.md
           else
-            cp install.md notes.md
+            { cat install.md; printf '\n'; cat changes.md; } > notes.md
           fi
-          gh release create "${{ steps.version.outputs.tag }}" "${{ steps.version.outputs.zip }}" \
+
+          gh release create "$tag" "${{ steps.version.outputs.zip }}" \
             --prerelease \
             --target "$GITHUB_SHA" \
-            --title "${{ steps.version.outputs.tag }} (test version)" \
-            --notes-file notes.md \
-            --generate-notes
+            --title "$tag (test version)" \
+            --notes-file notes.md

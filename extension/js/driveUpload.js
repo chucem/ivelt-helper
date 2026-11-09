@@ -9,18 +9,26 @@
 // each one is inserted into the post. When a regular attachment is rejected for
 // being too big, it offers to upload that file instead.
 //
+// Files can also be dragged onto the button or the open popup. A video dropped on
+// the post itself never reaches the forum's attachments (it could never fit): the
+// popup opens with it waiting, so the service and account can be checked first.
+// In a private message, where there are no attachments, dropped images go there too.
+//
 // Sign-in happens in the background (background.drive.js, background.dropbox.js);
 // the upload itself runs here so the file never has to pass through messaging.
 //
 // Runs as a content script (isolated world) and is controlled by the
-// "driveUpload", "dropboxUpload" and "driveButtonPlace" settings, which apply
-// without a reload. The last service used is remembered in "cloudProvider".
+// "driveUpload", "dropboxUpload", "driveButtonPlace" and "cloudDropVideos"
+// settings, which apply without a reload. The last service used is remembered in "cloudProvider".
 
 (function () {
     'use strict';
+    if (!document.getElementById('page-body')) return; // not the forum, e.g. Cloudflare's check page
 
     const PLACE_KEY = 'driveButtonPlace'; // 'attachments' (default) or 'toolbar'
     const PROVIDER_KEY = 'cloudProvider';  // the service picked last time
+    const PMS_KEY = 'cloudUploadInPms';    // also when writing a private message
+    const VIDEO_DROP_KEY = 'cloudDropVideos'; // videos dropped on the post go to the cloud
     const DRIVE_API = 'https://www.googleapis.com/drive/v3';
     const UPLOAD_API = 'https://www.googleapis.com/upload/drive/v3';
     const DROPBOX_API = 'https://api.dropboxapi.com/2';
@@ -29,6 +37,9 @@
     const DROPBOX_CHUNK = 8 * 1024 * 1024;
     const HOLD_STATUS_MS = 4000;
     const TOO_BIG_WINDOW_MS = 30000; // how long after picking a file a failure is blamed on its size
+    const VIDEO_EXTENSION = /\.(mp4|m4v|mov|webm|mkv|avi|wmv|3gp|flv|mpe?g)$/i;
+    const IMAGE_EXTENSION = /\.(jpe?g|png|gif|webp|bmp|avif|heic)$/i;
+    const IN_PMS = /\/ucp\.php$/.test(location.pathname);
 
     // Single color, so it sits quietly next to the forum's own grey icons
     const DRIVE_ICON = '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">'
@@ -47,6 +58,7 @@
     let widget = null;
     let enabledProviders = [];
     let place = 'attachments';
+    let dropVideos = true;
 
     // ---------------------------------------------------------------------
     // Setting handling: on unless the user explicitly turned it off
@@ -55,10 +67,13 @@
     function init() {
         if (!chrome.storage || !chrome.storage.local) return;
 
-        const settingKeys = PROVIDER_ORDER.map(key => PROVIDERS[key].settingKey);
+        // On the private messages page (ucp.php) it also needs its own setting
+        const settingKeys = [...PROVIDER_ORDER.map(key => PROVIDERS[key].settingKey), PMS_KEY, VIDEO_DROP_KEY];
         const apply = (items) => {
-            enabledProviders = PROVIDER_ORDER.filter(key => items[PROVIDERS[key].settingKey] !== false);
+            enabledProviders = IN_PMS && items[PMS_KEY] === false ? []
+                : PROVIDER_ORDER.filter(key => items[PROVIDERS[key].settingKey] !== false);
             place = items[PLACE_KEY] === 'toolbar' ? 'toolbar' : 'attachments';
+            dropVideos = items[VIDEO_DROP_KEY] !== false;
             unmount();
             if (enabledProviders.length) mount();
         };
@@ -93,7 +108,9 @@
     // The forum uses the ABBC3 toolbar and hides phpBB's own #format-buttons,
     // so prefer the last visible ABBC3 row and only fall back to the stock toolbar
     function findToolbar() {
-        const isVisible = (node) => node && node.getClientRects().length > 0;
+        // a row on a phone has no box of its own (display:contents, css/editorToolbar.css): its buttons do
+        const isVisible = (node) => node && (node.getClientRects().length > 0 ||
+            Array.from(node.children).some((child) => child.getClientRects().length > 0));
         const rows = Array.from(document.querySelectorAll('#abbc3_buttons .abbc3_buttons_row')).filter(isVisible);
         if (rows.length) return rows[rows.length - 1];
         const stock = document.getElementById('format-buttons');
@@ -125,6 +142,25 @@
         if (bytes < 1024 * 1024) return Math.max(1, Math.round(bytes / 1024)) + ' KB';
         if (bytes < 1024 * 1024 * 1024) return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
         return (bytes / (1024 * 1024 * 1024)).toFixed(1) + ' GB';
+    }
+
+    // Some systems leave a dragged file's type empty, so fall back to the name
+    function isVideoFile(file) {
+        return (file.type || '').startsWith('video/') || VIDEO_EXTENSION.test(file.name);
+    }
+
+    function isImageFile(file) {
+        return (file.type || '').startsWith('image/') || IMAGE_EXTENSION.test(file.name);
+    }
+
+    // What a drop on the post sends to the cloud: videos, and in a private message
+    // (no attachments there) images as well
+    function isCloudFile(file) {
+        return isVideoFile(file) || (IN_PMS && isImageFile(file));
+    }
+
+    function hasFiles(event) {
+        return !!event.dataTransfer && Array.from(event.dataTransfer.types || []).includes('Files');
     }
 
     function sendToBackground(type, extra) {
@@ -409,7 +445,7 @@
         const quotaText = el('div', 'ivd-quota-text');
         quotaBox.append(quotaBar, quotaText);
 
-        const pickBtn = el('button', 'ivd-btn ivd-primary', '⬆ קלייבט אויס פיילס');
+        const pickBtn = el('button', 'ivd-btn ivd-primary');
         pickBtn.type = 'button';
         const connectBtn = el('button', 'ivd-btn ivd-primary');
         connectBtn.type = 'button';
@@ -420,6 +456,7 @@
 
         const actions = el('div', 'ivd-actions');
         actions.append(pickBtn, connectBtn, switchBtn);
+
 
         const status = el('div', 'ivd-status');
         status.setAttribute('role', 'status');
@@ -464,7 +501,7 @@
         let quota = null;
         let busy = false;
         let statusTimer = null;
-        let pending = null; // too-big attachments waiting to be uploaded instead
+        let pending = null; // files waiting for a click: too big for an attachment, or dropped
         const message = (action) => providerKey + action; // e.g. "dropboxAccount"
 
         function showStatus(text, kind, holdMs) {
@@ -477,6 +514,7 @@
         // Single place that decides what the popup shows
         function render() {
             const connected = !!account;
+            const pendingName = pending && (pending.length > 1 ? `${pending.length} פיילס` : pending[0].name);
             heading.textContent = connected ? `די פיילס וועלן ארויפגיין צו ${provider.name}:` : `ארויפלייגן פיילס אויף ${provider.name}`;
             connectBtn.textContent = `פארבינד א ${provider.accountWord} אקאונט`;
             Object.keys(switchTabs).forEach(key => {
@@ -489,9 +527,15 @@
             switchBtn.hidden = !connected;
             disconnectBtn.hidden = !connected;
             connectBtn.hidden = connected;
-            pickBtn.textContent = pending
-                ? '⬆ לייגט ארויף: ' + (pending.length > 1 ? `${pending.length} פיילס` : pending[0].name)
-                : '⬆ קלייבט אויס פיילס';
+            // Files already waiting: the button names them and the service they go to,
+            // so a switch above changes it before anything is sent
+            pickBtn.classList.toggle('ivd-pending', !!pending);
+            if (pending) {
+                pickBtn.innerHTML = provider.icon;
+                pickBtn.append(el('span', '', `לייג ארויף ${pendingName} אויף ${provider.name}`));
+            } else {
+                pickBtn.textContent = '⬆ קלייב אויס פיילס, אדער שלעפ זיי אהער';
+            }
 
             if (connected) {
                 accountName.textContent = account.name || account.email;
@@ -574,16 +618,48 @@
             if (saved && saved !== providerKey && enabledProviders.includes(saved)) selectProvider(saved, false);
         });
 
+        // Below the button when it fits, otherwise above it, so the popup doesn't run
+        // off the bottom of the screen. Checked again whenever its content changes size.
+        function placePopup() {
+            if (popup.hidden) return;
+            popup.classList.remove('ivd-up');
+            const anchor = button.getBoundingClientRect();
+            const below = window.innerHeight - anchor.bottom;
+            if (below < popup.offsetHeight + 12 && anchor.top > below) popup.classList.add('ivd-up');
+        }
+
+        const popupSize = new ResizeObserver(placePopup);
+        popupSize.observe(popup);
+        cleanups.push(() => popupSize.disconnect());
+
         function setOpen(open) {
             popup.hidden = !open;
             button.setAttribute('aria-expanded', String(open));
             if (open) {
                 refreshAccount();
+                placePopup();
                 popup.scrollIntoView({ block: 'nearest' });
             } else if (pending) {
                 pending = null;
                 render();
             }
+        }
+
+        // Opens the popup with files waiting for a click
+        function openWith(files) {
+            if (busy) {
+                showStatus('⏳ ווארט ביז די פריערדיגע פיילס זענען ארויף…', 'warn', HOLD_STATUS_MS);
+                return;
+            }
+            pending = files;
+            showStatus('');
+            // The button lives in the attachments tab - bring it into view first
+            if (!isVisible(button)) {
+                const tab = document.querySelector('#attach-panel-tab a, a[data-subpanel="attach-panel"]');
+                if (tab) tab.click();
+            }
+            if (popup.hidden) setOpen(true);
+            render();
         }
 
         button.addEventListener('click', () => setOpen(popup.hidden));
@@ -712,22 +788,96 @@
         function showOffer(files) {
             offerFiles = files;
             const what = files.length > 1 ? `${files.length} פיילס זענען` : `"${files[0].name}" איז`;
-            offerText.textContent = `⚠️ ${what} צו גרויס פאר אן אטעטשמענט (ביז ${formatSize(attachLimit)}).`;
-            offerBtnText.textContent = (files.length > 1 ? 'לייגט זיי ארויף אויף ' : 'לייגט עס ארויף אויף ') + buttonLabel;
+            offerText.textContent = `⚠️ ${what} צו גרויס פאר אן עטעטשמענט (ביז ${formatSize(attachLimit)}).`;
+            offerBtnText.textContent = (files.length > 1 ? 'לייג זיי ארויף אויף ' : 'לייג עס ארויף אויף ') + buttonLabel;
             offer.hidden = false;
         }
 
         offerBtn.addEventListener('click', () => {
             if (busy || !offerFiles) return;
-            pending = offerFiles;
             offer.hidden = true;
-            // The button lives in the attachments tab - bring it into view first
-            if (!isVisible(button)) {
-                const tab = document.querySelector('#attach-panel-tab a, a[data-subpanel="attach-panel"]');
-                if (tab) tab.click();
+            openWith(offerFiles);
+        });
+
+        // --- Drag and drop ---
+        // On the button or the open popup: the popup already shows where the files go,
+        // so they go up right away (or wait there until an account is connected).
+        // A video dropped on the post (or an image, in a private message) waits in the popup.
+        // Listening on window, in the capture phase, runs before the image resizer and
+        // the forum's own uploader, so these files never become regular attachments.
+        const setDragOver = (on) => wrap.classList.toggle('ivd-dragover', on);
+
+        const onWindowDragOver = (e) => {
+            if (!hasFiles(e)) return;
+            const inWrap = e.target instanceof Node && wrap.contains(e.target);
+            setDragOver(inWrap);
+            if (inWrap) {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'copy';
             }
-            setOpen(true);
-            render();
+        };
+        const onWindowDragLeave = (e) => {
+            if (!e.relatedTarget) setDragOver(false); // left the page
+        };
+
+        function dropOnPopup(files) {
+            if (busy) {
+                showStatus('⏳ ווארט ביז די פריערדיגע פיילס זענען ארויף…', 'warn', HOLD_STATUS_MS);
+            } else if (popup.hidden) {
+                openWith(files);
+            } else if (account) {
+                pending = null;
+                uploadAll(files);
+            } else {
+                pending = files;
+                render();
+            }
+        }
+
+        const onWindowDrop = (e) => {
+            setDragOver(false);
+            if (!hasFiles(e)) return;
+            const target = e.target instanceof Element ? e.target : null;
+            if (!target) return;
+            const files = Array.from(e.dataTransfer.files || []);
+
+            if (wrap.contains(target)) {
+                e.preventDefault();
+                e.stopImmediatePropagation();
+                if (files.length) dropOnPopup(files);
+                return;
+            }
+
+            if (!dropVideos || !target.closest('#message, textarea[name="message"]')) return;
+            // A dropped folder is the image resizer's (it zips it) - leave the whole drop to it
+            const entries = Array.from(e.dataTransfer.items || []).map(item => item.webkitGetAsEntry && item.webkitGetAsEntry());
+            if (entries.some(entry => entry && entry.isDirectory)) return;
+            const cloudFiles = files.filter(isCloudFile);
+            if (!cloudFiles.length) return;
+
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            for (const node of document.querySelectorAll('.drag-n-drop-highlight')) {
+                node.classList.remove('drag-n-drop-highlight');
+            }
+            openWith(cloudFiles);
+
+            // Whatever else came along is attached as usual: hand it on as a drop of its own
+            const others = files.filter(f => !isCloudFile(f));
+            if (others.length) {
+                const rest = new DataTransfer();
+                others.forEach(f => rest.items.add(f));
+                target.dispatchEvent(new DragEvent('drop', { bubbles: true, cancelable: true, dataTransfer: rest }));
+            }
+        };
+
+        window.addEventListener('dragover', onWindowDragOver, true);
+        window.addEventListener('dragleave', onWindowDragLeave, true);
+        window.addEventListener('drop', onWindowDrop, true);
+        cleanups.push(() => {
+            window.removeEventListener('dragover', onWindowDragOver, true);
+            window.removeEventListener('dragleave', onWindowDragLeave, true);
+            window.removeEventListener('drop', onWindowDrop, true);
         });
 
         offerClose.addEventListener('click', () => {
@@ -786,7 +936,7 @@
                 if (err.code === 'not_connected' || err.code === 'account_mismatch') await refreshAccount();
                 if (/missing_scope/.test(err.message)) {
                     // Connected before a permission was added - only a fresh connect picks it up
-                    showStatus(`❌ די ${provider.accountWord} פארבינדונג פעלט א ערלויבעניש. דרוקט "ארויסלאגן" און פארבינדט נאכאמאל.`, 'error', HOLD_STATUS_MS * 4);
+                    showStatus(`❌ די ${provider.accountWord} פארבינדונג האט נישט קיין פערמישן. דרוק "ארויסלאגן" און פארבינד נאכאמאל.`, 'error', HOLD_STATUS_MS * 4);
                 } else {
                     showStatus('❌ ' + err.message, 'error', HOLD_STATUS_MS * 3);
                 }

@@ -1,0 +1,44 @@
+.ih-double-click-like {
+    position: fixed;
+    z-index: 10000;
+    font-size: 48px;
+    line-height: 1;
+    pointer-events: none;
+    animation: ih-double-click-like 0.8s ease-out forwards;
+}
+
+/* taking a like back: the thumb shows grey and shrinks away */
+.ih-double-click-unlike {
+    filter: grayscale(1);
+    animation-name: ih-double-click-unlike;
+}
+
+@keyframes ih-double-click-unlike {
+    0% {
+        opacity: 0.9;
+        transform: translate(-50%, -50%) scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.4);
+    }
+}
+
+@keyframes ih-double-click-like {
+    0% {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.4);
+    }
+    25% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1.15);
+    }
+    60% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: translate(-50%, -110%) scale(1);
+    }
+}

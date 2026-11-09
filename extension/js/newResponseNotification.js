@@ -1,20 +1,23 @@
-(function () {
+// Runs in the extension's own world: the settings come straight from its storage
+if (document.getElementById('page-body')) chrome.storage.local.get(['backgroundSync', 'backgroundSyncPosts'], function (items) {
     if (window.location.pathname !== '/forum/viewtopic.php') return ;
 
-    let currentCount = document
-    .querySelector("div.pagination")
-    .innerHTML.match(/(\d+) תגובות/)[1];
-  let currentPostCount =
-    document.getElementsByClassName("post has-profile").length;
-  let lastPost =
-    document.getElementsByClassName("post has-profile")[currentPostCount - 1];
+  // not every viewtopic page is a topic, e.g. Cloudflare's challenge page or an error
+  let pagination = document.querySelector("div.pagination");
+  let countMatch = pagination && pagination.innerHTML.match(/(\d+) תגובות/);
+  let topicLink = document.querySelector("h2.topic-title > a");
+  let forumLink = document.getElementsByClassName("left-box arrow-right")[0];
+  let posts = document.getElementsByClassName("post has-profile");
+  if (!countMatch || !topicLink || !forumLink || !posts.length) return;
 
-  var topicURL = document.querySelector("h2.topic-title > a").href;
+  let currentCount = countMatch[1];
+  let lastPost = posts[posts.length - 1];
+
+  var topicURL = topicLink.href;
   var topicURLSearch = topicURL.substr(topicURL.indexOf("?"));
   var urlParams = new URLSearchParams(topicURLSearch);
   var topicId = urlParams.get("t");
-  var forumURL = document.getElementsByClassName("left-box arrow-right")[0]
-    .href;
+  var forumURL = forumLink.href;
 
   function isLastPage() {
     return document.getElementsByClassName("next").length == 0;
@@ -23,16 +26,15 @@
   let title = document.title;
   // setting was unchecked by the user
 
-  let backgroundSync =
-    document
-      .getElementById("iveltHelperSettings")
-      .getAttribute("data-background-sync") === "true";
-  let backgroundSyncPosts = document
-    .getElementById("iveltHelperSettings")
-    .getAttribute("data-background-sync-posts");
+  let backgroundSync = items.backgroundSync === true;
+  let backgroundSyncPosts = items.backgroundSyncPosts;
   if (!backgroundSync || !backgroundSyncPosts) return;
 
-  let interval = parseInt(backgroundSyncPosts);
+  // the chosen time between checks; after a failed check (e.g. Cloudflare's check page, or the forum
+  // down) the wait grows, up to 30 minutes, and the next check that works brings it back
+  const baseInterval = parseInt(backgroundSyncPosts);
+  const MAX_INTERVAL = 30 * 60 * 1000;
+  let interval = baseInterval;
   let notificationElement = null;
   let titleFlashInterval = null;
   let checkNewResponse = function () {
@@ -50,6 +52,7 @@
               .getElementsByClassName("topics")[0]
                 .querySelectorAll('li.row:has(dl[class*="_unread"])')
           );
+          interval = baseInterval;
           let topic = topics.find((t) => {
             let tHref = t.children[0]?.children[0].children[0].href;
             if (!tHref) return false;
@@ -106,10 +109,10 @@
           }
         })
         .catch(function (error) {
-          interval *= 3;
+          interval = Math.min(interval * 3, Math.max(MAX_INTERVAL, baseInterval));
           setTimeout(checkNewResponse, interval);
         });
     }
   };
   setTimeout(checkNewResponse, interval);
-})();
+});

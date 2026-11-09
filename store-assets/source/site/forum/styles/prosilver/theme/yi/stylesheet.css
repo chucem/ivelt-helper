@@ -1,0 +1,13 @@
+/*custom stylesheet */
+@import url("custom_styles.css");
+
+/* Online image */
+.online { background-image: url("./icon_user_online.png"); }
+
+.imageset.icon_user_online {
+	background-image: url("./icon_user_online.png");
+	padding-left: 58px;
+	padding-top: 58px;
+}
+
+

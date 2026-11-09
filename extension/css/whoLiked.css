@@ -1,0 +1,69 @@
+@media screen {
+    /* On a phone phpBB moves the post buttons into the ⋯ menu (.hidden on the bar), but the forum
+       hides the like button there, so a phone had no like button at all: it stays on the bar */
+    .post-buttons > .postlove-li.hidden {
+        display: inline-block;
+    }
+    /* one class more than the forum's own .post-buttons rules, which load after this file */
+    .post-buttons .postlove-li.ih-likes-joined {
+        position: relative;
+        display: flex;
+    }
+    /* and its copy in the ⋯ menu stays hidden, as the forum has it (there it lost its button look) */
+    .post-buttons .dropdown-contents .postlove-li.ih-likes-joined {
+        display: none;
+    }
+    .ih-likes-joined .postlove-button {
+        border-top-left-radius: 0;
+        border-bottom-left-radius: 0;
+    }
+    .post-buttons .button.ih-likes-arrow {
+        margin-right: -1px;
+        padding-left: 4px;
+        padding-right: 4px;
+        border-top-right-radius: 0;
+        border-bottom-right-radius: 0;
+    }
+}
+@media print {
+    .ih-likes-arrow,
+    .ih-likes {
+        display: none !important;
+    }
+}
+.ih-likes {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: 10;
+    width: 260px;
+    margin-top: 4px;
+    padding: 8px 10px;
+    border: 1px solid var(--t-border, #B9C2C9);
+    border-radius: 6px;
+    background: var(--t-surface, #fff);
+    color: var(--t-text, #333);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.15);
+    direction: rtl;
+    text-align: right;
+    font-size: 12px;
+    line-height: 1.4;
+    white-space: normal;
+}
+.ih-likes-heading {
+    margin-bottom: 6px;
+    font-weight: bold;
+}
+.ih-likes-names {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    max-height: 200px;
+    overflow-y: auto;
+}
+.ih-likes-names a {
+    padding: 1px 7px;
+    border-radius: 10px;
+    background: var(--t-row2, #ECF3F7);
+    color: var(--t-link, #105289);
+}
