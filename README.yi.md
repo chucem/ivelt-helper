@@ -22,6 +22,7 @@
 | <kbd>Ctrl</kbd>+<kbd>Enter</kbd> | שיק די תגובה |
 | <kbd>Alt</kbd>+<kbd>v</kbd> | פריוויאו פון די תגובה |
 | <kbd>Alt</kbd>+<kbd>a</kbd> | גיי צו אקטיווע אשכולות |
+| <kbd>Alt</kbd>+<kbd>h</kbd> | גיי צום הויפט בלאט |
 | <kbd>Alt</kbd>+<kbd>n</kbd> | עפן די נאטיפיקאציעס |
 | <kbd>Alt</kbd>+<kbd>m</kbd> | עפן די קומענדיגע אומגעליינטע נאטיפיקאציע |
 
