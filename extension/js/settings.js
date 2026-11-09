@@ -329,6 +329,11 @@ function compareVersions(a, b){
 	return aPre.localeCompare(bPre, undefined, { numeric: true });
 }
 
+// The ID the manifest's "key" gives: a copy of the code (dev) and test build zips keep the key,
+// release zips drop it (release.yml). So a dev copy checks for test builds even right after a
+// release, when its version has no "-beta" yet
+const BETA_EXTENSION_ID = 'mkhocmhicodbokdhfjgamkhebdelcdaa';
+
 // The stores check through the browser, which also downloads the update.
 // GitHub: the newest release, test builds (prereleases) only for someone already on one.
 // Gives { update, checkedAt }: checkedAt only when the answer is from an earlier check
@@ -337,7 +342,7 @@ async function checkForUpdate(source, installed){
 		const response = await fetch('https://api.github.com/repos/chucem/ivelt-helper/releases?per_page=20');
 		if(!response.ok)
 			throw new Error(response.status);
-		const onPrerelease = installed.includes('-');
+		const onPrerelease = installed.includes('-') || chrome.runtime.id === BETA_EXTENSION_ID;
 		const newest = (await response.json())
 			.filter(release => !release.draft && (onPrerelease || !release.prerelease))
 			.sort((a, b) => compareVersions(b.tag_name, a.tag_name))[0];
