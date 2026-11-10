@@ -20,6 +20,7 @@ Most features can be turned on or off on the extension's settings page (right-cl
 | <kbd>Ctrl</kbd>+<kbd>Enter</kbd> | Submit the post |
 | <kbd>Alt</kbd>+<kbd>v</kbd> | Preview the post (quick reply and full editor) |
 | <kbd>Alt</kbd>+<kbd>a</kbd> | Go to אקטיווע אשכולות (active topics) |
+| <kbd>Alt</kbd>+<kbd>h</kbd> | Go to the home page (board index) |
 | <kbd>Alt</kbd>+<kbd>n</kbd> | Open the notifications list |
 | <kbd>Alt</kbd>+<kbd>m</kbd> | Open the next unread notification |
 

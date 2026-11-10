@@ -62,6 +62,14 @@ function checkKey(e) {
 		window.location.href = '/forum/search.php?search_id=active_topics';
 	}
 
+    // The forum's own Alt+H is the home page link's accesskey, which goes by the letter typed. Like
+    // Alt+A, this checks the physical key, so it works with any keyboard layout. preventDefault keeps
+    // the accesskey from loading the page a second time.
+    if (e.code === "KeyH" && isAltKey) {
+		e.preventDefault();
+		window.location.href = '/forum/index.php';
+	}
+
     if (e.code === "KeyV" && isAltKey && post) {
 		previewPost();
 	}
