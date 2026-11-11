@@ -27,9 +27,9 @@ Most features can be turned on or off on the extension's settings page (right-cl
 ### Post buttons
 Extra buttons next to the regular quote button on every post:
 * **Quote last only** – for posts with nested quotes, quote just the last reply.
-* **Quote a selection** – select some words in a post and that post's ציטיר button turns into "ציטיר אנגעצייכנט" (with another icon); clicking it adds just those words as a quote, where your cursor is in the reply. Optionally it then jumps down to the reply box, ready to type after the quote.
+* **Quote a selection** – select some words in a post and that post's ציטיר button turns into "ציטיר אנגעצייכנט" (with another icon); clicking it adds just those words as a quote, where your cursor is in the reply. Optionally it then jumps down to the reply box, ready to type after the quote. On a phone (or zoomed in) it works from the post's ⋯ menu too.
 * **Mention** (דערמאן) – insert an empty quote so the poster gets a notification (optionally copies it to the clipboard instead).
-* **Quote in another topic** – copy the post as a quote (with a source link and, optionally, its images) to paste in a different topic.
+* **Quote in another topic** – copy the post as a quote to paste in a different topic. It starts with the "קעפל: <topic>" link to the quoted post; or choose a מקור link at the end, both, or none. Optionally with its images, also the ones attached at the bottom.
 * **Who liked** – a small arrow on the like button opens the list of who liked the post, each name a link to their profile.
 * **Quote in the comments topic** – for topics that have a linked קאמענטארן topic, open a reply there with the post already quoted.
 * **Copy post link** – a plain click on the small post icon next to the author's name copies the post's link instead of opening it. Right-click and long-press work as before.
@@ -40,7 +40,7 @@ Extra buttons next to the regular quote button on every post:
 ### Notifications
 * Toolbar badge with your unread notification count, and optional browser notifications, even when אייוועלט isn't open.
 * Alert when new replies arrive in the topic you're reading, with a reload button.
-* Separate notification bells for quotes, thanks and mentions (ציטירט / באדאנקט / דערמאנט), grouped together, with a grey "+N" for older unread notifications that aren't in the bells.
+* Separate notification bells for quotes, thanks, mentions and private messages (ציטירט / באדאנקט / דערמאנט), grouped together; choose which kinds get their own bell. Older unread notifications that aren't in the bells show in a grey "+N", or, if you prefer, are counted in the general bell.
 * Button to hide read notifications on the notifications page.
 * Confirmation before "mark all as read", so it isn't clicked by accident.
 * A mention (@name) in a post links to that user's profile.
@@ -52,19 +52,30 @@ Extra buttons next to the regular quote button on every post:
 * **Paste images** straight into a post (like in Gmail): the image is attached and placed inline where you pasted it. This is a separate setting, so pasting can be on with the resizer off.
 * Pack a whole folder into a single ZIP attachment (drop it on the editor, or use the **Folder → ZIP** button).
 * **Google Drive / Dropbox upload**: shows which account it will use, then uploads files to a folder in your own Google Drive (or `Apps/iVelt Helper` in your Dropbox), makes them viewable by anyone with the link, and inserts the link into the post. It works in private messages too. Files can be dragged straight onto the Google Drive / Dropbox button, and optionally a video dragged into the post goes there too (in a private message, pictures as well). Dropbox is a separate setting.
+* Quoting a post in a private message keeps its @mentions, as profile links that look like a mention.
 * **Undo and redo** while writing (<kbd>Ctrl</kbd>+<kbd>Z</kbd> / <kbd>Ctrl</kbd>+<kbd>Y</kbd>), also after the BBCode buttons, with two buttons at the top of the editor (can be turned off).
 * The editor opens on the **Attachments** tab instead of **Options**, so adding a file is one click (can be turned off).
 
 ### Reading posts
 * **Spoiler polish**: the spoiled words are covered with moving dust right where they are (so a couple of spoiled words stay in the middle of their line), and pictures are blurred with sparkling dots over them. A long spoiler shows only its first three lines. One click reveals it and opens it to its full height. Printed spoilers come out open. Off by default; turn it on in the settings.
 
+### On a phone
+* The search icon opens a search box right there, with Google search and a button to the advanced search.
+* The buttons above the reply box are bigger and in even lines, and the link button opens the window to add a link.
+* Quotes inside quotes have no space at the sides, so deep quotes aren't squeezed into a narrow column (can be turned off).
+* The Google Drive / Dropbox menu opens as a panel at the bottom of the screen.
+
 ### Color themes
 * 16 light and dark color themes for the forum, which the toolbar popup and the settings page follow too. Pick one in the **Colors** tab of the settings.
 * Make your own theme from any of them, and share it: copy its colors, or paste colors someone else shared.
 
+### More than one account
+* Stay signed in to several forum accounts and switch between them from the toolbar popup, with each account's name and picture. Tabs with a post being written aren't reloaded; optionally only the tab you switched in reloads, and the others show a bar with a reload button. Adding an account ticks "remember me" on the sign-in page, and signing in again fills in the name. Off by default; turn it on in the settings.
+
 ### Settings
 * Keep the settings and colors the same on all your computers, through the browser's sync (Google Drive / Dropbox accounts stay on each computer).
 * The settings page shows the extension's version, where it was installed from (Chrome Web Store, Edge Add-ons or GitHub), and whether a newer version is out.
+* Shows when the list of comments topics was last updated.
 * A button to reset all the settings.
 
 ### Other

@@ -3,9 +3,9 @@
 
 ★ קנעפלעך ביי א תגובה
 • ציטיר לעצטע – ביי א תגובה מיט ציטאטן אין איר, ציטיר נאר די לעצטע תגובה.
-• ציטיר אנגעצייכנטע ווערטער – צייכנט אן ווערטער אין א תגובה, און ציטירט נאר זיי.
+• ציטיר אנגעצייכנטע ווערטער – צייכנט אן ווערטער אין א תגובה, און ציטירט נאר זיי. אויף א טעלעפאן אויך פונעם ⋯ מעניו.
 • דערמאן תגובה – דער שרייבער באקומט א נאטיפיקאציע.
-• ציטיר אין אנדערע אשכול – מיט א לינק צום מקור, און אויב מען וויל, מיט די בילדער.
+• ציטיר אין אנדערע אשכול – מיט דער "קעפל: ..." לינק צו דער תגובה (אדער א מקור לינק), און אויב מען וויל, מיט די בילדער.
 • ציטיר אינעם קאמענטארן אשכול – עפנט א תגובה דארט מיט דעם ציטאט שוין אריינגעלייגט.
 • קאפיר תגובה לינק – א קליק אויפן קליינעם אייקאן נעבן דעם נאמען פונעם שרייבער.
 • ווער האט באדאנקט – א קליינע פייל אויפן דאנק קנעפל ווייזט ווער עס האט באדאנקט.
@@ -15,8 +15,11 @@
 ★ נאטיפיקאציעס
 • א נומער אויפן אייקאן מיט וויפיל אומגעליינטע נאטיפיקאציעס עס זענען דא, און בראוזער נאטיפיקאציעס, אפילו ווען אייוועלט איז נישט אפן.
 • א מעלדונג ווען נייע תגובות קומען צו אינעם אשכול וואס מען ליינט.
-• באזונדערע נאטיפיקאציע גלעקלעך פאר ציטירט, באדאנקט און דערמאנט, מיט א גרויען "+N" פאר עלטערע אומגעליינטע.
+• באזונדערע נאטיפיקאציע גלעקלעך פאר ציטירט, באדאנקט, דערמאנט און פריוואטע מעסעדזשעס (מען קלייבט וועלכע), מיט א גרויען "+N" פאר עלטערע אומגעליינטע.
 • א @דערמאנונג אין א תגובה איז א לינק צום באנוצער'ס פראפייל.
+
+★ מערערע אקאונטס
+• בלייב אריינגעלאגט אין עטליכע אקאונטס, און טויש צווישן זיי פונעם עקסטענשען מעניו.
 
 ★ שרייבן א תגובה
 • דראפטס – וואס מען שרייבט ווערט אפגעהיט, אז א פארמאכטער טעב אדער א קראך זאל עס נישט פארלירן.
@@ -30,12 +33,17 @@
 • ← / → – פריערדיגער / קומענדיגער בלאט אינעם אשכול
 • ↑ / ↓ – שפרינג צום אנהייב / סוף פונעם בלאט
 • Ctrl+Enter – שיק די תגובה  •  Alt+V – פריוויאו
-• Alt+A – אקטיווע אשכולות  •  Alt+N – נאטיפיקאציעס  •  Alt+M – קומענדיגע אומגעליינטע נאטיפיקאציע
+• Alt+A – אקטיווע אשכולות  •  Alt+H – הויפט בלאט  •  Alt+N – נאטיפיקאציעס  •  Alt+M – קומענדיגע אומגעליינטע נאטיפיקאציע
 
 ★ ליינען
 • א קליק אויף אן אשכול מיט נייע תגובות עפנט עס ביי דער ערשטער אומגעליינטער תגובה.
 • שענערע ספוילערס: די ווערטער און בילדער בלייבן צוגעדעקט אויף זייער פלאץ, און א קליק ווייזט זיי.
 • 16 קאליר טעמעס, העל און טונקל.
+
+★ אויף א טעלעפאן
+• א זוך קעסטל מיט גוגל זוך, גלייך פונעם זוך אייקאן.
+• גרעסערע קנעפלעך איבערן תגובה קעסטל, און דער לינק קנעפל ארבעט.
+• ציטאטן אין ציטאטן ווערן נישט א שמאלע זייל.
 
 ★ אנדערע
 • גוגל זוך אינעם אשכול, אדער אין גאנץ אייוועלט.
@@ -51,9 +59,9 @@ Most features can be turned on or off in the extension's settings, and they stay
 
 ★ Post buttons
 • Quote last – for a post with quotes in it, quote only the last reply.
-• Quote selected words – select words in a post and quote only them.
+• Quote selected words – select words in a post and quote only them. On a phone, from the ⋯ menu too.
 • Mention – the poster gets a notification.
-• Quote in another topic – with a link to the source, and the images if you want.
+• Quote in another topic – with the "קעפל: ..." link to the post (or a source link), and the images if you want.
 • Quote in the comments topic – opens a reply there with the quote already in it.
 • Copy post link – one click on the small icon next to the author's name.
 • Who liked – a small arrow on the like button shows who liked the post.
@@ -63,8 +71,11 @@ Most features can be turned on or off in the extension's settings, and they stay
 ★ Notifications
 • Unread count on the toolbar icon, and browser notifications, even when אייוועלט isn't open.
 • An alert when new replies arrive in the topic you're reading.
-• Separate notification bells for quotes, likes and mentions, with a grey "+N" for older unread ones.
+• Separate notification bells for quotes, likes, mentions and private messages (you choose which), with a grey "+N" for older unread ones.
 • An @mention in a post links to that user's profile.
+
+★ More than one account
+• Stay signed in to several accounts, and switch between them from the toolbar popup.
 
 ★ Writing a post
 • Drafts – what you type is kept, so a closed tab or a crash doesn't lose it.
@@ -78,12 +89,17 @@ Most features can be turned on or off in the extension's settings, and they stay
 • ← / → – previous / next page in a topic
 • ↑ / ↓ – top / bottom of the page
 • Ctrl+Enter – send the post  •  Alt+V – preview
-• Alt+A – active topics  •  Alt+N – notifications  •  Alt+M – next unread notification
+• Alt+A – active topics  •  Alt+H – home page  •  Alt+N – notifications  •  Alt+M – next unread notification
 
 ★ Reading
 • Clicking a topic with new replies opens it at the first unread post.
 • Nicer spoilers: words and pictures stay covered in place until clicked.
 • 16 color themes, light and dark.
+
+★ On a phone
+• A search box with Google search, right from the search icon.
+• Bigger buttons above the reply box, and a working link button.
+• Quotes inside quotes don't get squeezed into a narrow column.
 
 ★ More
 • Google search in the topic, or across all of אייוועלט.
