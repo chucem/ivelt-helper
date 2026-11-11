@@ -1,5 +1,6 @@
 (function () {
     'use strict';
+    if (!document.getElementById('page-body')) return; // not the forum, e.g. Cloudflare's check page
 
     const SETTING_KEY = 'profileCards';
     const SHOW_DELAY_MS = 800;
@@ -17,6 +18,9 @@
     let hoveredLink = null;
     let showTimeout;
     let hideTimeout;
+    let scrolledAt = 0;
+    // A name that slides under a still mouse while the page scrolls isn't the mouse resting on it
+    const SCROLL_QUIET_MS = 400;
 
     function init() {
         if (!chrome.storage || !chrome.storage.local) return;
@@ -34,6 +38,7 @@
             }
             const link = event.target.closest(PROFILE_LINK);
             if (!link || link.querySelector('img')) return;
+            if (Date.now() - scrolledAt < SCROLL_QUIET_MS) return;
 
             clearTimeout(hideTimeout);
             if (link === hoveredLink) return;
@@ -54,6 +59,15 @@
             clearTimeout(hideTimeout);
             hideTimeout = setTimeout(hideCard, HIDE_DELAY_MS);
         });
+
+        // The page scrolling (not the signature inside the card, its scroll doesn't reach the
+        // window): a card about to open doesn't, and an open one closes. Otherwise a card opened
+        // under the mouse as names slid by, and over its signature the page stopped scrolling
+        window.addEventListener('scroll', () => {
+            scrolledAt = Date.now();
+            clearTimeout(showTimeout);
+            if (card || hoveredLink) hideCard();
+        }, { passive: true });
     }
 
     function hideCard() {

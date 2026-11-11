@@ -14,10 +14,12 @@ function scrollBottom() {
 	window.scrollTo({ top: document.body.scrollHeight, behavior: 'instant' } );
 }
 
+// Runs in the extension's own world, so the setting comes straight from its storage, and a change
+// in the settings applies right away. On unless the user turned it off.
+let upDownArrowKeys = true;
+
 function upDownArrowKeysEnabled() {
-	const settings = document.getElementById("iveltHelperSettings");
-	// Enabled unless the user explicitly turned it off in the extension settings
-	return !settings || settings.getAttribute("data-up-down-arrow-keys") !== "false";
+	return upDownArrowKeys;
 }
 
 function sendPost(post) {
@@ -50,11 +52,22 @@ function nextNotification() {
 }
 
 function checkKey(e) {
+    // the browser's autofill (the sign-in page's saved password) sends a keydown that's no real key
+    // press, without getModifierState
+    if (!(e instanceof KeyboardEvent)) return;
     const post = document.getElementsByName("post")[0] || document.getElementsByName("submit")[0] || false;
     const isAltKey = e.altKey || e.getModifierState('AltGraph');
 
     if (e.code === "KeyA" && isAltKey) {
-		window.location.href = 'https://www.ivelt.com/forum/search.php?search_id=active_topics';
+		window.location.href = '/forum/search.php?search_id=active_topics';
+	}
+
+    // The forum's own Alt+H is the home page link's accesskey, which goes by the letter typed. Like
+    // Alt+A, this checks the physical key, so it works with any keyboard layout. preventDefault keeps
+    // the accesskey from loading the page a second time.
+    if (e.code === "KeyH" && isAltKey) {
+		e.preventDefault();
+		window.location.href = '/forum/index.php';
 	}
 
     if (e.code === "KeyV" && isAltKey && post) {
@@ -79,13 +92,13 @@ function checkKey(e) {
 		try {
 			nextPage();
 		} catch {
-			console.log("attempted to go after last page");
+			// already on the last page
 		}
     } else if (e.key === "ArrowRight") {
 		try {
 			previousPage();
 		} catch {
-			console.log("attempted to go before first page");
+			// already on the first page
 		}
     } else if (e.key === "ArrowUp" && upDownArrowKeysEnabled()) {
 		scrollTop();
@@ -94,28 +107,34 @@ function checkKey(e) {
 	}
 }
 
-let post = document.getElementsByName("post")[0] || document.getElementsByName("submit")[0] || false;
-if (post) {
-	post.setAttribute("title", "שיק (Ctrl+Enter)");
+// not the forum, e.g. Cloudflare's check page: no shortcuts there
+if (document.getElementById("page-body")) {
+	let post = document.getElementsByName("post")[0] || document.getElementsByName("submit")[0] || false;
+	if (post) {
+		post.setAttribute("title", "שיק (Ctrl+Enter)");
+	}
+	chrome.storage.local.get('upDownArrowKeys', items => { upDownArrowKeys = items.upDownArrowKeys !== false; });
+	chrome.storage.onChanged.addListener((changes, area) => {
+		if (area === 'local' && changes.upDownArrowKeys) upDownArrowKeys = changes.upDownArrowKeys.newValue !== false;
+	});
+	document.addEventListener("keydown", checkKey);
+
+	// Ctrl+Enter sends the post. phpBB's editor.js also binds Ctrl+Enter in textareas and
+	// clicks every submit button in the form (preview, post, ...), so together with ours the
+	// form was submitted several times at once, which broke edits (attachments lost, error page).
+	// Catch it in the capture phase before phpBB sees it, and submit once via the post button.
+	window.addEventListener("keydown", function (e) {
+		if (e.key !== "Enter" || !(e.ctrlKey || e.metaKey)) {
+			return;
+		}
+		const post = document.getElementsByName("post")[0] || document.getElementsByName("submit")[0];
+		if (!post) {
+			return;
+		}
+		e.preventDefault();
+		e.stopImmediatePropagation();
+		if (!e.repeat) {
+			sendPost(post);
+		}
+	}, true);
 }
-document.onkeydown = checkKey;
-
-// Ctrl+Enter sends the post. phpBB's editor.js also binds Ctrl+Enter in textareas and
-// clicks every submit button in the form (preview, post, ...), so together with ours the
-// form was submitted several times at once, which broke edits (attachments lost, error page).
-// Catch it in the capture phase before phpBB sees it, and submit once via the post button.
-window.addEventListener("keydown", function (e) {
-	if (e.key !== "Enter" || !(e.ctrlKey || e.metaKey)) {
-		return;
-	}
-	const post = document.getElementsByName("post")[0] || document.getElementsByName("submit")[0];
-	if (!post) {
-		return;
-	}
-	e.preventDefault();
-	e.stopImmediatePropagation();
-	if (!e.repeat) {
-		sendPost(post);
-	}
-}, true);
-

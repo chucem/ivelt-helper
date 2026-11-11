@@ -106,15 +106,35 @@ jobs:
 
           ---
           EOF
-          # The AI summary (if there is one) goes first, then the install steps
+          # GitHub's usual notes (the pull requests and who made them, new contributors, full
+          # changelog), from the tag before this version by number: left to itself GitHub looks
+          # back through dev, which never gets master's release commits, so it skipped every
+          # release (2.8.0-beta.1 compared to v2.6.0, not v2.7.1)
+          tag="${{ steps.version.outputs.tag }}"
+          prev=$(bash .github/scripts/previous-tag.sh "$tag" test)
+          gh api "repos/$GITHUB_REPOSITORY/releases/generate-notes" \
+            -f tag_name="$tag" -f target_commitish="$GITHUB_SHA" \
+            ${prev:+-f previous_tag_name="$prev"} --jq .body > changes.md
+
+          # The AI summary (if there is one) goes first, then the install steps, then GitHub's
+          # list. Under a summary the list says the same for developers, so it's folded away (it
+          # keeps the credit for each change), like in release.yml; without one it's shown
           if [ -s ai-notes.md ]; then
-            { cat ai-notes.md; printf '\n---\n\n'; cat install.md; } > notes.md
+            prs=$(grep -c ' by @.* in https://github.com/.*/pull/' changes.md || true)
+            {
+              cat ai-notes.md
+              printf '\n---\n\n'
+              cat install.md
+              printf '\n<details>\n<summary>All changes (%s pull requests)</summary>\n\n' "$prs"
+              cat changes.md
+              printf '\n</details>\n'
+            } > notes.md
           else
-            cp install.md notes.md
+            { cat install.md; printf '\n'; cat changes.md; } > notes.md
           fi
-          gh release create "${{ steps.version.outputs.tag }}" "${{ steps.version.outputs.zip }}" \
+
+          gh release create "$tag" "${{ steps.version.outputs.zip }}" \
             --prerelease \
             --target "$GITHUB_SHA" \
-            --title "${{ steps.version.outputs.tag }} (test version)" \
-            --notes-file notes.md \
-            --generate-notes
+            --title "$tag (test version)" \
+            --notes-file notes.md

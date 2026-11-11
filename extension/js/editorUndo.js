@@ -7,7 +7,7 @@
 // is its own step, and Ctrl+Z / Ctrl+Y (also Ctrl+Shift+Z, and the right-click
 // menu) plus two toolbar buttons walk through it.
 //
-// Runs in the page (injected by contentScript.js) so it can see the forum's own
+// Runs in the page (a MAIN world content script) so it can see the forum's own
 // writes to the textarea.
 
 (function () {
@@ -24,14 +24,15 @@
     const valueProp = Object.getOwnPropertyDescriptor(HTMLTextAreaElement.prototype, 'value');
 
     function isEnabled() {
-        const settings = document.getElementById('iveltHelperSettings');
         // On unless the user turned it off in the extension settings
-        return !settings || settings.getAttribute('data-editor-undo') !== 'false';
+        return iveltSetting('editorUndo') !== false;
     }
 
     // The forum uses the ABBC3 toolbar and hides phpBB's own #format-buttons
     function findToolbar(scope) {
-        const isVisible = (node) => node && node.getClientRects().length > 0;
+        // a row on a phone has no box of its own (display:contents, css/editorToolbar.css): its buttons do
+        const isVisible = (node) => node && (node.getClientRects().length > 0 ||
+            Array.from(node.children).some((child) => child.getClientRects().length > 0));
         const rows = Array.from(scope.querySelectorAll('#abbc3_buttons .abbc3_buttons_row')).filter(isVisible);
         if (rows.length) return { row: rows[0], abbc3: true };
         const stock = scope.querySelector('#format-buttons');
@@ -234,11 +235,5 @@
         document.querySelectorAll('textarea[name="message"]').forEach(attach);
     }
 
-    // The settings element is added by settingsHandler.js once storage answers,
-    // which may be a moment after this script runs
-    let tries = 0;
-    (function waitForSettings() {
-        if (document.getElementById('iveltHelperSettings') || ++tries > 20) start();
-        else setTimeout(waitForSettings, 100);
-    })();
+    whenIveltSettingsReady(start);
 }());

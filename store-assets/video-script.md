@@ -1,57 +1,78 @@
-# Video script: what's new in 2.7.0
+# Video script: what's new in 2.8.0
 
-About 2½ minutes, nine scenes. The captions are in Yiddish (they can also be read as narration),
-and "On screen" says what to record. Record on your own account, in a long topic with a few
-posts and likes. **Never show a private message**: don't open the PM dropdown or the inbox. Close
-other tabs and hide the bookmarks bar.
-
-Before recording, turn on in the settings: double-click to like, the nicer spoilers, and
-"open at the first unread post".
+About a minute, fifteen scenes. Made like the store images: the real extension on the demo forum
+pages (`store-assets/source/`), with the made-up users from `demo.json` (בערל, זלמן, שמערל, מאטל),
+so no real account, post or private message is in it. The captions are in Yiddish, worded like
+the what's-new entry. The changes for a computer come first, the mobile ones after them.
+`store-assets/source/video.py` renders the scenes and builds the MP4.
 
 ---
 
-### 1. Opening (5 s)
-**On screen:** the forum's home page with the extension's icon in the toolbar.
-**Caption:** אייוועלט העלפער 2.7.0 – אט זענען די נייע זאכן
+### 1. Opening (4 s)
+**On screen:** a title card.
+**Caption:** אייוועלט העלפער 2.8.0 / די נייע זאכן
 
-### 2. Quote selected words (25 s)
-**On screen:** select a few words in the middle of a post. The post's "ציטיר" button changes to
-"ציטיר אנגעצייכנט". Click it: the page goes down to the reply box with only those words quoted,
-and the cursor after the quote. Type a word.
-**Caption:** צייכנט אן ווערטער אין א תגובה, און דער ציטיר קנעפל ציטירט נאר זיי
+### 2. More than one account (6 s)
+**On screen:** the extension menu with two saved accounts, בערל (signed in) and זלמן, each with
+their picture. The accounts card is framed in orange.
+**Caption:** בלייב אריינגעלאגט אין עטליכע אקאונטס, און טויש צווישן זיי פונעם עקסטענשען מעניו
 
-### 3. Drafts (25 s)
-**On screen:** type two lines in the reply box. Close the tab, then open the same topic again.
-The bar at the top of the reply box shows when it was kept and the first line. Click to bring it
-back.
-**Caption:** וואס איר שרייבט ווערט אפגעהיט – אפילו אויב דער טאב ווערט פארמאכט
+### 3. Where to turn it on (5 s)
+**On screen:** the settings page, the "more than one account" setting framed.
+**Caption:** מען צינדט עס אן אין די אנשטעלונגען
 
-### 4. Undo and redo (15 s)
-**On screen:** in the same reply, click the bold button around a word, then press Ctrl+Z (the bold
-goes away), then Ctrl+Y (it's back). Point at the two buttons at the top of the editor.
-**Caption:** Ctrl+Z / Ctrl+Y – צוריקדרייען און ווידער טון, אויך נאך די BBCode קנעפלעך
+### 4. The link to the quoted post (5 s)
+**On screen:** the settings page, the "link to the quoted post" choice framed.
+**Caption:** ציטירן אין אן אנדער אשכול: קעפל אויבן, מקור אונטן, ביידע, אדער גארנישט
 
-### 5. Who liked (15 s)
-**On screen:** a post with several likes. Click the small arrow on the like button: the list of
-names opens. Move over one name.
-**Caption:** זעט ווער עס האט באדאנקט א תגובה
+### 5. The notification bells (6 s)
+**On screen:** the settings page, the bell kinds and the grey "+N" setting framed.
+**Caption:** קלייב וועלכע נאטיפיקאציעס באקומען אן אייגן גלעקל
 
-### 6. Profile card (15 s)
-**On screen:** rest the mouse on a poster's name. The card opens with the avatar, rank and
-statistics. Move into the card.
-**Caption:** האלט די מויז אויף א נאמען צו זען דעם פראפייל
+### 6. Alt+H (4 s)
+**On screen:** the topic on a computer, the home page link framed.
+**Caption:** Alt+H טראגט צום הויפט בלאט, אפילו מיט אידישע קיבאורד
 
-### 7. Double-click to like (15 s)
-**On screen:** double-click the empty space at the end of a post (not on its words). A small 👍
-shows where you clicked, and the like count goes up.
-**Caption:** א דאבל-קליק אויף א ליידיגן פלאץ באדאנקט די תגובה (אנצינדן אין די אנשטעלונגען)
+### 7. A PM with a quoted mention (6 s)
+**On screen:** a new private message quoting זלמן's post that mentions בערל: above the reply box, the
+preview shows the quote with **@בערל** as a blue, bold link to the profile (the mention is turned into
+a link the forum lets a PM send). Both are framed.
+**Caption:** א פריוואטע מעסעדזש מיט א ציטאט פון א תגובה וואו עס איז דא אן @ דערמאנונג לאזט זיך שיקן
 
-### 8. Spoilers and the first unread post (20 s)
-**On screen:** in a topic list, click a topic with new replies: it opens at the first unread
-post. Then a post with a spoiler: the words are covered with moving dust. Click to reveal it.
-**Caption:** אשכולות עפענען זיך ביי דער ערשטער אומגעליינטער תגובה, און שענערע ספוילערס
+### 8. Mobile: cover (3 s)
+**On screen:** a title card, like the opening, before the mobile scenes.
+**Caption:** אויף מאבייל
 
-### 9. The settings, and closing (15 s)
-**On screen:** right-click the toolbar icon → Options. Show the version line at the top
-(version, where it's installed from, up to date), then scroll past the new options.
-**Caption:** אלעס קען מען אנצינדן אדער אויסלעשן אין די אנשטעלונגען. הנאה האבן!
+### 9. Mobile: search (5 s)
+**On screen:** the topic on mobile, the search icon tapped: the search box under the breadcrumbs,
+with the Google and advanced-search buttons framed.
+**Caption:** אויף מאבייל: דער זוך קנעפל עפנט א זוך קעסטל, מיט גוגל זוך
+
+### 10. Mobile: the reply box's buttons (5 s)
+**On screen:** the reply page on mobile, the toolbar as one panel with the Google Drive / Dropbox
+button in it, framed.
+**Caption:** אויף מאבייל: די קנעפלעך איבערן תגובה קעסטל זענען גרעסער, אין גלייכע שורות
+
+### 11. Mobile: the Google Drive / Dropbox menu (5 s)
+**On screen:** the same page, the Google Drive / Dropbox button tapped: its menu opens as a panel
+at the bottom of the screen. The button and the panel are framed.
+**Caption:** אויף מאבייל: דער Google Drive / Dropbox מעניו עפנט זיך אונטן אויפן סקרין
+
+### 12. Mobile: the link button (5 s)
+**On screen:** the reply page on mobile, "קוק דא" selected in the reply, the link button tapped: the
+window to add a link opens, with "קוק דא" in its words box. The window is framed.
+**Caption:** אויף מאבייל: דער לינק קנעפל עפנט דאס פענצטערל צו לייגן א לינק
+
+### 13. Mobile: quote selected words from the ⋯ menu (6 s)
+**On screen:** a few words selected in זלמן's post, the post's ⋯ menu open with
+"ציטיר אנגעצייכנט" framed.
+**Caption:** אויף מאבייל: ציטירן נאר די אנגעצייכנטע ווערטער ארבעט אויך פונעם ⋯ מעניו
+
+### 14. Mobile: quotes inside quotes (5 s)
+**On screen:** a post with quotes three levels deep, full width, framed.
+**Caption:** אויף מאבייל: ציטאטן אין ציטאטן ווערן נישט מער א שמאלע זייל
+
+### 15. Closing (5 s)
+**On screen:** a title card.
+**Caption:** אייוועלט העלפער 2.8.0 / עס קומט אליין אין א טאג ארום, אדער גלייך פון chrome://extensions /
+א יישר כח: קנאפער ידען

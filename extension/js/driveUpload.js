@@ -23,6 +23,7 @@
 
 (function () {
     'use strict';
+    if (!document.getElementById('page-body')) return; // not the forum, e.g. Cloudflare's check page
 
     const PLACE_KEY = 'driveButtonPlace'; // 'attachments' (default) or 'toolbar'
     const PROVIDER_KEY = 'cloudProvider';  // the service picked last time
@@ -107,7 +108,9 @@
     // The forum uses the ABBC3 toolbar and hides phpBB's own #format-buttons,
     // so prefer the last visible ABBC3 row and only fall back to the stock toolbar
     function findToolbar() {
-        const isVisible = (node) => node && node.getClientRects().length > 0;
+        // a row on a phone has no box of its own (display:contents, css/editorToolbar.css): its buttons do
+        const isVisible = (node) => node && (node.getClientRects().length > 0 ||
+            Array.from(node.children).some((child) => child.getClientRects().length > 0));
         const rows = Array.from(document.querySelectorAll('#abbc3_buttons .abbc3_buttons_row')).filter(isVisible);
         if (rows.length) return rows[rows.length - 1];
         const stock = document.getElementById('format-buttons');
@@ -529,9 +532,9 @@
             pickBtn.classList.toggle('ivd-pending', !!pending);
             if (pending) {
                 pickBtn.innerHTML = provider.icon;
-                pickBtn.append(el('span', '', `לייגט ארויף ${pendingName} אויף ${provider.name}`));
+                pickBtn.append(el('span', '', `לייג ארויף ${pendingName} אויף ${provider.name}`));
             } else {
-                pickBtn.textContent = '⬆ קלייבט אויס פיילס, אדער שלעפט זיי אהער';
+                pickBtn.textContent = '⬆ קלייב אויס פיילס, אדער שלעפ זיי אהער';
             }
 
             if (connected) {
@@ -785,8 +788,8 @@
         function showOffer(files) {
             offerFiles = files;
             const what = files.length > 1 ? `${files.length} פיילס זענען` : `"${files[0].name}" איז`;
-            offerText.textContent = `⚠️ ${what} צו גרויס פאר אן אטעטשמענט (ביז ${formatSize(attachLimit)}).`;
-            offerBtnText.textContent = (files.length > 1 ? 'לייגט זיי ארויף אויף ' : 'לייגט עס ארויף אויף ') + buttonLabel;
+            offerText.textContent = `⚠️ ${what} צו גרויס פאר אן עטעטשמענט (ביז ${formatSize(attachLimit)}).`;
+            offerBtnText.textContent = (files.length > 1 ? 'לייג זיי ארויף אויף ' : 'לייג עס ארויף אויף ') + buttonLabel;
             offer.hidden = false;
         }
 
@@ -933,7 +936,7 @@
                 if (err.code === 'not_connected' || err.code === 'account_mismatch') await refreshAccount();
                 if (/missing_scope/.test(err.message)) {
                     // Connected before a permission was added - only a fresh connect picks it up
-                    showStatus(`❌ די ${provider.accountWord} פארבינדונג פעלט אן ערלויבעניש. דרוקט "ארויסלאגן" און פארבינדט נאכאמאל.`, 'error', HOLD_STATUS_MS * 4);
+                    showStatus(`❌ די ${provider.accountWord} פארבינדונג האט נישט קיין פערמישן. דרוק "ארויסלאגן" און פארבינד נאכאמאל.`, 'error', HOLD_STATUS_MS * 4);
                 } else {
                     showStatus('❌ ' + err.message, 'error', HOLD_STATUS_MS * 3);
                 }

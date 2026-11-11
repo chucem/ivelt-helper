@@ -143,12 +143,13 @@
     margin: 0;
     overflow-wrap: anywhere;
 }
-/* a long signature scrolls inside the card: the scrollbar shows, and the bottom fades while there's more below */
+/* a long signature scrolls inside the card: the scrollbar shows, and the bottom fades while there's more below.
+   At its end the scroll goes on to the page (no overscroll-behavior: contain, which left the page stuck while
+   the mouse was over it); the page scrolling closes the card (js/profileCards.js) */
 .ih-profile-signature {
     max-height: 80px;
     overflow-y: auto;
     overflow-wrap: anywhere;
-    overscroll-behavior: contain;
     scrollbar-width: thin;
     scrollbar-color: color-mix(in srgb, var(--t-text, #333) 35%, transparent) transparent;
 }

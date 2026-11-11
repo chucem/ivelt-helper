@@ -1,37 +1,24 @@
-let logout_url;
+// Signed in or not, from the forum's user cookie: a guest's is 1, and a browser that never visited
+// the forum (or cleared its cookies) has none, which is signed out too
+let logoutSid = null; // the session's number, which the forum's sign-out link needs
 
-function getUserId(domain, name) {
-    chrome.cookies.get({"url": domain, "name": name}, function (cookie) {
-        if (cookie !== null) {
-            id = cookie.value;
-            checkLoginState();
+// once the page is there: this script loads in the <head>, and the cookie can come back before the
+// buttons exist
+document.addEventListener('DOMContentLoaded', function () {
+    chrome.cookies.get({ url: 'https://www.ivelt.com', name: 'phpbb3_sw7kk_u' }, function (cookie) {
+        const userId = cookie ? cookie.value : '';
+        if (userId.length > 1) {
+            chrome.cookies.get({ url: 'https://www.ivelt.com', name: 'phpbb3_sw7kk_sid' }, function (sid) {
+                logoutSid = sid ? sid.value : null;
+            });
+            document.getElementById('emergency_sign_out').style.display = 'block';
+        } else {
+            document.getElementById('quick_sign_in').style.display = 'block';
         }
     });
-}
+});
 
-function checkLoginState() {
-    if (id.length > 1) {
-
-        function getLogOutCookie(domain, name) {
-            chrome.cookies.get({'url': domain, 'name': name}, function (cookie) {
-                logout_url = cookie.value;
-                setLogOutState();
-            });
-        }
-
-        function setLogOutState() {
-        }
-
-        getLogOutCookie('https://www.ivelt.com', 'phpbb3_sw7kk_sid');
-        document.getElementById('emergency_sign_out').style.display = 'block';
-    } else {
-        document.getElementById('quick_sign_in').style.display = 'block';
-    }
-}
-
-getUserId('https://www.ivelt.com', 'phpbb3_sw7kk_u');
-
-const FORUM_HOSTS = /(^|\.)(ivelt\.com|yiddishworld\.com|198\.153\.76\.147)$/;
+const FORUM_HOSTS = /(^|\.)ivelt\.com$/;
 
 function isForumUrl(url) {
     try {
@@ -68,13 +55,15 @@ function open_active_topics() {
 
 function quick_sign_in() {
     chrome.tabs.create({url: 'https://www.ivelt.com/forum/ucp.php?mode=login', active: true});
-    chrome.storage.local.set({'logged_in': '0'});
     window.close();
 }
 
 function emergency_sign_out() {
-    chrome.tabs.create({url: 'https://www.ivelt.com/forum/ucp.php?mode=logout&sid=' + logout_url, active: false});
-    chrome.storage.local.set({'logged_in': '0'});
+    // without the session's number the forum would only ask to confirm, so then open its sign-out page
+    const url = logoutSid
+        ? 'https://www.ivelt.com/forum/ucp.php?mode=logout&sid=' + encodeURIComponent(logoutSid)
+        : 'https://www.ivelt.com/forum/ucp.php?mode=logout';
+    chrome.tabs.create({url: url, active: !logoutSid});
     window.close();
 }
 
@@ -121,7 +110,252 @@ function initThemeSwatches() {
 
             container.appendChild(swatch);
         });
+        makeRoomForScrollbar();
     });
+}
+
+// The browser sizes the popup to its content, and only then a scrollbar comes (a tall popup, with
+// the accounts and the colors), which takes its width from the content: the colors stuck out of
+// their card. So then the popup asks for the scrollbar's width more. Measured again whenever the
+// popup or its content changes size (the browser growing it, pictures coming in), once a frame
+let roomForScrollbarAsked = false;
+function makeRoomForScrollbar() {
+    if (roomForScrollbarAsked)
+        return;
+    roomForScrollbarAsked = true;
+    requestAnimationFrame(function () {
+        roomForScrollbarAsked = false;
+        fitInPopupHeight();
+        const body = document.body;
+        const scrollbar = window.innerWidth - document.documentElement.clientWidth;
+        body.style.minWidth = '';
+        body.style.width = 'max-content';
+        const content = body.getBoundingClientRect().width;
+        body.style.width = '';
+        body.style.minWidth = scrollbar > 0 ? Math.ceil(content + scrollbar) + 'px' : '';
+    });
+}
+
+function showCurrentAccount() {
+    const list = document.getElementById('accountsList');
+    const current = list.querySelector('.account_row.current');
+    if (!current)
+        return;
+    const row = current.getBoundingClientRect();
+    const box = list.getBoundingClientRect();
+    if (row.bottom > box.bottom)
+        list.scrollTop += row.bottom - box.bottom;
+    else if (row.top < box.top)
+        list.scrollTop -= box.top - row.top;
+}
+
+// The browser makes a popup at most 600px high (and 800px wide), more scrolls. With the accounts
+// and the colors it can be more (two accounts were 630px). Then the colors take more columns, as
+// few as make it fit (16 colors: 6 columns are a row less than 4), the popup gets wider instead.
+// Only if eight columns aren't enough, the accounts list shows fewer accounts and scrolls by itself
+const POPUP_MAX_HEIGHT = 600;
+const ACCOUNTS_MIN_HEIGHT = 52; // one and a half accounts: the half one shows there are more
+function fitInPopupHeight() {
+    const swatches = document.getElementById('themeSwatches');
+    const list = document.getElementById('accountsList');
+    swatches.style.gridTemplateColumns = '';
+    list.style.maxHeight = '';
+    // the page's scroll height is never less than the popup, which is never more than 600px
+    const tooTall = () => document.documentElement.scrollHeight - POPUP_MAX_HEIGHT;
+    if (tooTall() <= 0)
+        return;
+    const colors = swatches.children.length;
+    if (!document.getElementById('themesSection').hidden && colors > 4) {
+        for (let columns = 5; columns <= 8; columns++) {
+            // a count that's no row less than the one before is skipped (16 colors in 5 columns are still 4 rows)
+            if (Math.ceil(colors / columns) === Math.ceil(colors / (columns - 1)))
+                continue;
+            swatches.style.gridTemplateColumns = 'repeat(' + columns + ', 84px)';
+            if (tooTall() <= 0 || columns >= colors)
+                break;
+        }
+    }
+    const over = tooTall();
+    if (over > 0 && !document.getElementById('accountsSection').hidden && list.clientHeight > ACCOUNTS_MIN_HEIGHT)
+        list.style.maxHeight = Math.max(list.clientHeight - over, ACCOUNTS_MIN_HEIGHT) + 'px';
+    showCurrentAccount();
+}
+
+// The saved accounts (background.accounts.js): a click switches to one, the background does the
+// switching and reloads the forum's tabs. Shown when turned on in the settings
+function initAccounts() {
+    chrome.storage.local.get('multiAccounts', function (items) {
+        if (!items.multiAccounts)
+            return;
+        document.getElementById('accountsSection').hidden = false;
+
+        // the background keeps them, it gives the list without their cookies
+        chrome.runtime.sendMessage({ type: 'listAccounts' }, function (list) {
+            if (chrome.runtime.lastError || !list || !list.accounts)
+                return;
+            const accounts = list.accounts;
+
+            chrome.cookies.get({ url: 'https://www.ivelt.com', name: 'phpbb3_sw7kk_u' }, function (cookie) {
+                const currentId = cookie && cookie.value !== '1' ? cookie.value : '';
+                showAccounts(accounts, currentId);
+                // signed in with an account that isn't saved yet
+                document.getElementById('save_account').hidden = !currentId || accounts.some(a => a.userId === currentId);
+
+                // no name yet for the signed-in account: the forum's pages find it (js/accounts.js), its
+                // own profile page always has it
+                const current = accounts.find(a => a.userId === currentId);
+                document.getElementById('open_own_profile').hidden = !current || !!current.name;
+                document.getElementById('not_remembered').hidden = !current || current.remembered !== false;
+            });
+        });
+    });
+}
+
+function open_own_profile() {
+    chrome.cookies.get({ url: 'https://www.ivelt.com', name: 'phpbb3_sw7kk_u' }, function (cookie) {
+        if (cookie)
+            openForumLink('https://www.ivelt.com/forum/memberlist.php?mode=viewprofile&u=' + encodeURIComponent(cookie.value));
+    });
+}
+
+function showAccounts(accounts, currentId) {
+    const list = document.getElementById('accountsList');
+    list.replaceChildren();
+
+    accounts.forEach(function (account) {
+        const name = account.name || 'באנוצער ' + account.userId;
+        const row = document.createElement('div');
+        row.className = 'account_row';
+        row.setAttribute('role', 'button');
+        row.tabIndex = 0;
+        row.classList.toggle('current', account.userId === currentId);
+        row.classList.toggle('expired', !!account.expired && account.userId !== currentId);
+
+        let avatar;
+        // the picture itself is kept with the account, the forum doesn't let the popup load its address
+        if (/^data:image\//.test(account.avatar || '')) {
+            avatar = document.createElement('img');
+            avatar.src = account.avatar;
+            avatar.alt = '';
+        } else {
+            avatar = document.createElement('span');
+            avatar.textContent = name.charAt(0);
+        }
+        avatar.className = 'account_avatar';
+
+        const nameElement = document.createElement('span');
+        nameElement.className = 'account_name';
+        nameElement.textContent = name;
+
+        const status = document.createElement('span');
+        status.className = 'account_status';
+        if (account.userId === currentId)
+            status.textContent = 'אריינגעלאגט';
+        else if (account.expired)
+            status.textContent = 'לאג אריין נאכאמאל';
+        // signed in without "remember me": it lasts only as long as its session
+        else if (account.remembered === false)
+            status.textContent = 'אן "געדענק מיך"';
+        if (account.remembered === false && !account.expired)
+            row.title = 'אריינגעלאגט אן "געדענק מיך": נאך א צייט אן באנוצן וועט מען זיך דארפן אריינלאגן נאכאמאל. ' +
+                'צו פארמיידן דאס, לאג אויס פון דעם אקאונט און לאג אריין נאכאמאל מיט "געדענק מיך" אנגעצייכנט';
+
+        const forget = document.createElement('button');
+        forget.className = 'account_forget';
+        forget.textContent = '×';
+        forget.title = 'מעק אויס דעם אקאונט פון דער ליסטע (מען ווערט נישט ארויסגעלאגט פונעם פארום, נאר דאס עקסטענשען געדענקט עס מער נישט)';
+        // asked right here, a second click: the browser's confirm() takes seconds to show in a popup
+        let undoAsk;
+        const stopAsking = function () {
+            clearTimeout(undoAsk);
+            forget.classList.remove('asking');
+            forget.textContent = '×';
+        };
+        forget.addEventListener('click', function (e) {
+            e.stopPropagation();
+            if (!forget.classList.contains('asking')) {
+                forget.classList.add('asking');
+                forget.textContent = 'אויסמעקן?';
+                undoAsk = setTimeout(stopAsking, 4000);
+                return;
+            }
+            stopAsking();
+            row.remove();
+            chrome.runtime.sendMessage({ type: 'forgetAccount', userId: account.userId }, initAccounts);
+        });
+        row.addEventListener('mouseleave', stopAsking);
+
+        row.append(avatar, nameElement, status, forget);
+        row.addEventListener('click', () => accountClicked(account, currentId));
+        row.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                accountClicked(account, currentId);
+            }
+        });
+        list.appendChild(row);
+    });
+
+    // with many accounts the list scrolls, the signed-in one is shown. Only the list is scrolled:
+    // scrollIntoView() also scrolls the page, and while the browser is still growing the popup that
+    // left it scrolled, so the popup scrolled for nothing
+    showCurrentAccount();
+    makeRoomForScrollbar();
+}
+
+function showAccountsMessage(text) {
+    const message = document.getElementById('accountsMessage');
+    message.textContent = text;
+    message.hidden = !text;
+}
+
+function accountClicked(account, currentId) {
+    if (account.userId === currentId)
+        return;
+
+    // the forum doesn't take its cookies any more, so it signs in from the start, with its name filled in
+    if (account.expired) {
+        add_account(account.userId);
+        return;
+    }
+
+    showAccountsMessage('מען טוישט דעם אקאונט…');
+    // the tab it's switched in: with the setting, the only one reloaded
+    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+        switchTo(account, tabs[0] && tabs[0].id);
+    });
+}
+
+function switchTo(account, tabId) {
+    chrome.runtime.sendMessage({ type: 'switchAccount', userId: account.userId, tabId: tabId }, function (response) {
+        if (chrome.runtime.lastError || !response || response.error) {
+            showAccountsMessage('עס האט נישט געקלאפט, פרוביר נאכאמאל');
+            return;
+        }
+        if (response.expired) {
+            showAccountsMessage((account.name || 'דער אקאונט') + ' איז מער נישט אריינגעלאגט. קליק אויף אים זיך אריינצולאגן נאכאמאל');
+            initAccounts();
+            return;
+        }
+        // tabs with a post being written weren't reloaded, so the text isn't lost: told, then closed
+        if (response.kept) {
+            showAccountsMessage((response.kept === 1 ? 'א טעב' : response.kept + ' טעבס') +
+                ' מיט א תגובה וואס איז נאך נישט אוועקגעשיקט ' + (response.kept === 1 ? 'איז' : 'זענען') +
+                ' נישט רילאודעד געווארן, ' + (response.kept === 1 ? 'ער ווייזט' : 'זיי ווייזן') + ' נאך דעם פריערדיגן אקאונט');
+            setTimeout(() => window.close(), 5000);
+            return;
+        }
+        window.close();
+    });
+}
+
+// userId: a saved account to sign in again (its name is filled in on the sign-in page)
+function add_account(userId) {
+    chrome.runtime.sendMessage({ type: 'addAccount', userId: typeof userId === 'string' ? userId : undefined }, () => window.close());
+}
+
+function save_account() {
+    chrome.runtime.sendMessage({ type: 'saveAccount' }, initAccounts);
 }
 
 document.addEventListener('DOMContentLoaded', function () {
@@ -153,6 +387,18 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 document.addEventListener('DOMContentLoaded', initThemeSwatches);
+
+document.addEventListener('DOMContentLoaded', function () {
+    window.addEventListener('resize', makeRoomForScrollbar);
+    new ResizeObserver(makeRoomForScrollbar).observe(document.body);
+});
+
+document.addEventListener('DOMContentLoaded', function () {
+    document.getElementById('add_account').addEventListener('click', add_account);
+    document.getElementById('save_account').addEventListener('click', save_account);
+    document.getElementById('open_own_profile').addEventListener('click', open_own_profile);
+    initAccounts();
+});
 
 document.addEventListener('DOMContentLoaded', function () {
     const manifest = chrome.runtime.getManifest();

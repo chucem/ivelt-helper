@@ -13,10 +13,17 @@ const preferencesOptions = [
 	"alwaysCopyTopic",
 	'cachedTopicMappingExpire',
 	'copyAttachments',
+	'quoteSourceLink',
 	'stickyPostButtons',
+	'compactQuotesMobile',
 	'titleOpensUnread',
 	'doubleClickLike',
 	'ShowMultiNotifs',
+	'olderNotifsPlus',
+	'splitQuotedNotifs',
+	'splitLikedNotifs',
+	'splitMentionedNotifs',
+	'splitPmNotifs',
 	'upDownArrowKeys',
 	'spoilerPolish',
 	'imageResizer',
@@ -33,7 +40,9 @@ const preferencesOptions = [
 	'profileCards',
 	'printShowLikes',
 	'printLikesStyle',
-	'editorUndo'
+	'editorUndo',
+	'multiAccounts',
+	'switchReloadsOneTab'
 ];
 
 // Listen to settings changes
@@ -61,8 +70,29 @@ function startListeners(){
 			notify();
 		});
 	});
+	showTopicMappingStatus();
+	chrome.storage.onChanged.addListener((changes, area) => {
+		if(area === 'local' && (changes.topicMappingFetch || changes.forceUpdateTopicMapCache))
+			showTopicMappingStatus();
+	});
 	document.querySelector('.js-copy-logs').addEventListener('click', copyLogs);
 	document.getElementById('resetSettings').addEventListener('click', resetSettings);
+}
+
+// Under "update the list now": when the commentary topics list was last downloaded (background.js
+// records it). The button itself only marks it, the next forum page downloads it, so till then it says so
+async function showTopicMappingStatus(){
+	const { topicMappingFetch = {}, forceUpdateTopicMapCache } = await chrome.storage.local.get(['topicMappingFetch', 'forceUpdateTopicMapCache']);
+	const { updatedAt, failedAt } = topicMappingFetch;
+	// isolated, so the browser's (often English) date doesn't get mixed into the Yiddish around it
+	const when = time => '⁨' + new Date(time).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) + '⁩';
+
+	let text = updatedAt ? 'לעצט אפדעיטעט ' + when(updatedAt) : '';
+	if(failedAt && (!updatedAt || failedAt > updatedAt))
+		text += (text ? '. ' : '') + 'דער לעצטער פרואוו (' + when(failedAt) + ') האט נישט געארבעט';
+	if(forceUpdateTopicMapCache === true)
+		text = 'ווערט אפדעיטעט ווען מען עפנט דעם קומענדיגן בלאט אויפן פארום';
+	document.getElementById('topicMappingStatus').textContent = text;
 }
 
 // The notification check is off by default (an empty backgroundSyncNotifMinutes). Its checkbox
@@ -105,7 +135,7 @@ function startNotificationCheck(){
 
 // The defaults live in background.js, so it does the reset
 function resetSettings(){
-	if(!confirm('זענט איר זיכער אז איר ווילט צוריקשטעלן אלע אנשטעלונגען ווי זיי זענען געווען פון אנהייב?'))
+	if(!confirm('ביסטו זיכער אז דו ווילסט צוריקשטעלן אלע אנשטעלונגען ווי זיי זענען געווען פון אנהייב?'))
 		return;
 
 	chrome.runtime.sendMessage({ type: 'resetSettings' }, () => location.reload());
@@ -136,6 +166,16 @@ function postSettingChange(items){
 
 	if(items.hasOwnProperty('printShowLikes')){
 		document.getElementById('printLikesStyle').disabled = !items.printShowLikes;
+	}
+
+	if(items.hasOwnProperty('multiAccounts')){
+		document.getElementById('switchReloadsOneTab').disabled = !items.multiAccounts;
+	}
+
+	// only means something with the bells split
+	if(items.hasOwnProperty('ShowMultiNotifs')){
+		['olderNotifsPlus', 'splitQuotedNotifs', 'splitLikedNotifs', 'splitMentionedNotifs', 'splitPmNotifs']
+			.forEach(id => document.getElementById(id).disabled = !items.ShowMultiNotifs);
 	}
 
 	// on unless turned off
@@ -223,12 +263,12 @@ function initSettingsSyncToggle(enabled){
 		chrome.runtime.sendMessage({ type: 'settingsSyncStart' }, response => {
 			if(chrome.runtime.lastError || !response || response.error){
 				checkbox.checked = false;
-				notify('עס האט נישט געקלאפט, פרובירט נאכאמאל');
+				notify('עס האט נישט געקלאפט, פרוביר נאכאמאל');
 				return;
 			}
 
 			if(response.pulled.length){
-				notify('די אנשטעלונגען פון אייערע אנדערע קאמפיוטערס זענען אריינגעברענגט געווארן');
+				notify('די אנשטעלונגען פון דיינע אנדערע קאמפיוטערס זענען אריינגעברענגט געווארן');
 				setTimeout(() => location.reload(), 1500);
 			}
 			else
@@ -289,6 +329,11 @@ function compareVersions(a, b){
 	return aPre.localeCompare(bPre, undefined, { numeric: true });
 }
 
+// The ID the manifest's "key" gives: a copy of the code (dev) and test build zips keep the key,
+// release zips drop it (release.yml). So a dev copy checks for test builds even right after a
+// release, when its version has no "-beta" yet
+const BETA_EXTENSION_ID = 'mkhocmhicodbokdhfjgamkhebdelcdaa';
+
 // The stores check through the browser, which also downloads the update.
 // GitHub: the newest release, test builds (prereleases) only for someone already on one.
 // Gives { update, checkedAt }: checkedAt only when the answer is from an earlier check
@@ -297,7 +342,7 @@ async function checkForUpdate(source, installed){
 		const response = await fetch('https://api.github.com/repos/chucem/ivelt-helper/releases?per_page=20');
 		if(!response.ok)
 			throw new Error(response.status);
-		const onPrerelease = installed.includes('-');
+		const onPrerelease = installed.includes('-') || chrome.runtime.id === BETA_EXTENSION_ID;
 		const newest = (await response.json())
 			.filter(release => !release.draft && (onPrerelease || !release.prerelease))
 			.sort((a, b) => compareVersions(b.tag_name, a.tag_name))[0];
@@ -367,7 +412,7 @@ async function showInstallSource(){
 		// version opens it again (reopenSettingsAfterUpdate in background.js)
 		action.href = '#';
 		action.textContent = 'אפדעיט יעצט';
-		action.title = 'לייגט אריין די נייע ווערסיע. די בלאט מאכט זיך צו און עפנט זיך ווידער מיט דער נייער ווערסיע';
+		action.title = 'לייג אריין די נייע ווערסיע. דער בלאט מאכט זיך צו און עפנט זיך ווידער מיט דער נייער ווערסיע';
 		action.addEventListener('click', async e => {
 			e.preventDefault();
 			await chrome.storage.local.set({ reopenSettingsUntil: Date.now() + 60 * 1000 });
