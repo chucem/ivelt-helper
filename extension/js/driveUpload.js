@@ -34,9 +34,15 @@
     const DROPBOX_API = 'https://api.dropboxapi.com/2';
     const DROPBOX_CONTENT = 'https://content.dropboxapi.com/2';
     // Uploads go up in chunks (Google wants multiples of 256 KB); a small first
-    // one, so the speed is known early
+    // one, so the speed is known early. After that each chunk is sized to take
+    // about CHUNK_MS at the measured speed: every chunk waits for the server's
+    // answer before the next one goes, so on fast internet small chunks would
+    // spend much of the time waiting.
     const FIRST_CHUNK = 1024 * 1024;
-    const CHUNK = 4 * 1024 * 1024;
+    const MIN_CHUNK = 4 * 1024 * 1024;
+    const MAX_CHUNK = 64 * 1024 * 1024; // well under Dropbox's 150 MB per request
+    const CHUNK_PIECE = 256 * 1024;
+    const CHUNK_MS = 4000;
     const HOLD_STATUS_MS = 4000;
     const TOO_BIG_WINDOW_MS = 30000; // how long after picking a file a failure is blamed on its size
     const VIDEO_EXTENSION = /\.(mp4|m4v|mov|webm|mkv|avi|wmv|3gp|flv|mpe?g)$/i;
@@ -222,7 +228,12 @@
         return {
             // The end of the next chunk to send, from what's confirmed so far
             next(offset) {
-                chunkEnd = Math.min(offset + (offset ? CHUNK : FIRST_CHUNK), total);
+                let size = FIRST_CHUNK;
+                if (offset) {
+                    const bySpeed = Math.floor(rate * CHUNK_MS / CHUNK_PIECE) * CHUNK_PIECE;
+                    size = Math.min(MAX_CHUNK, Math.max(MIN_CHUNK, bySpeed));
+                }
+                chunkEnd = Math.min(offset + size, total);
                 return chunkEnd;
             },
             confirm(offset) {
