@@ -266,6 +266,34 @@
 }
 
 #ivd-wrap .ivd-status:empty { display: none; }
+/* Cancelled: the line stays, the name struck out, the ring frozen and grey */
+#ivd-wrap .ivd-status.ivd-cancelled { color: #80868B; }
+#ivd-wrap .ivd-status.ivd-cancelled .ivd-status-text { text-decoration: line-through; }
+#ivd-wrap .ivd-status.ivd-cancelled .ivd-ring-fill { stroke: #BDC1C6; }
+/* The ⊘: the size of the ✕ button it replaces (a whole 36px circle looks
+   bigger than the progress ring), in the same 36px space, so the text stays put */
+#ivd-wrap .ivd-status.ivd-cancelled .ivd-ring svg {
+    width: 28px;
+    height: 28px;
+    margin: 4px;
+}
+#ivd-wrap .ivd-status.ivd-cancelled .ivd-ring-text::after {
+    content: '';
+    width: 2.75px;
+    height: 22px;
+    border-radius: 2px;
+    background: #BDC1C6;
+    transform: rotate(45deg);
+}
+/* Read out by screen readers, not shown */
+#ivd-wrap .ivd-sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+}
 /* The ✕ is display:flex, which would beat the hidden attribute */
 #ivd-wrap .ivd-status[hidden], #ivd-wrap .ivd-status [hidden] { display: none; }
 

@@ -804,18 +804,31 @@
             clearTimeout(statusTimer);
             // The line is built once (ring, text, ✕) and only updated here: replacing
             // it every 0.2s would swallow a click on the ✕ that lands in between
-            const uploading = typeof progress === 'number';
+            // kind 'cancelled' keeps the line as it was, the name struck out and
+            // the ring a grey ⊘. The word is
+            // only in the tooltip and for screen readers.
+            const withRing = typeof progress === 'number';
+            const cancelled = kind === 'cancelled';
+            const uploading = withRing && !cancelled;
             statusText.textContent = text || '';
-            status.className = 'ivd-status' + (kind ? ' ivd-' + kind : '') + (uploading ? ' ivd-with-ring' : '');
-            status.hidden = !text && !uploading;
-            ring.hidden = !uploading;
+            status.title = cancelled ? 'אפגעשטעלט' : '';
+            if (cancelled) statusText.append(el('span', 'ivd-sr-only', ' – אפגעשטעלט'));
+            status.className = 'ivd-status' + (kind ? ' ivd-' + kind : '') + (withRing ? ' ivd-with-ring' : '');
+            status.hidden = !text && !withRing;
+            ring.hidden = !withRing;
             cancelBtn.hidden = !(uploading && uploadAbort);
             button.classList.toggle('ivd-uploading', uploading);
-            if (uploading) {
+            if (withRing) {
                 const percent = Math.round(progress * 100);
-                ringFill.setAttribute('stroke-dasharray', `${percent} 100`);
-                ringText.textContent = percent + '%';
-                button.style.setProperty('--ivd-p', percent);
+                // Cancelled: a grey ⊘ (the whole circle with a slash, drawn in CSS).
+                // Not a part-filled ring, which would look stuck, not a ✕, which
+                // would look like the cancel button, and not a stop square, which
+                // suggests it can be started again
+                ringFill.setAttribute('stroke-dasharray', cancelled ? '100 0' : `${percent} 100`);
+                ringText.textContent = cancelled ? '' : percent + '%';
+            }
+            if (uploading) {
+                button.style.setProperty('--ivd-p', Math.round(progress * 100));
             } else {
                 button.style.removeProperty('--ivd-p');
             }
@@ -1213,7 +1226,7 @@
 
             setBusy(true);
             let shareFailed = false;
-            let done = 0;
+            let current = null; // the file going up and its percent, for the cancelled line
             uploadAbort = new AbortController();
             const signal = uploadAbort.signal;
 
@@ -1225,9 +1238,12 @@
                 for (let i = 0; i < files.length; i++) {
                     const file = files[i];
                     const prefix = files.length > 1 ? `(${i + 1}/${files.length}) ` : '';
-                    const onProgress = (p, waiting) => showStatus(waiting
-                        ? `${prefix}ווארט אויף אינטערנעט…`
-                        : `${prefix}לייגט ארויף ${file.name}…`, '', 0, p);
+                    const onProgress = (p, waiting) => {
+                        current = { name: prefix + file.name, p };
+                        showStatus(waiting
+                            ? `${prefix}ווארט אויף אינטערנעט…`
+                            : `${prefix}לייגט ארויף ${file.name}…`, '', 0, p);
+                    };
                     onProgress(0);
 
                     let uploaded;
@@ -1244,7 +1260,6 @@
                     // Into the post right away, so a later failure never loses it
                     const textarea = findTextarea();
                     if (textarea) insertAtCursor(textarea, linkBBCode(uploaded.name, uploaded.url));
-                    done++;
                 }
 
                 if (shareFailed) {
@@ -1254,9 +1269,8 @@
                 }
             } catch (err) {
                 if (err.name === 'AbortError') {
-                    showStatus(done
-                        ? `⏹ אפגעשטעלט (${done} ארויף)`
-                        : '⏹ אפגעשטעלט', 'warn', HOLD_STATUS_MS / 2);
+                    if (current) showStatus(current.name, 'cancelled', HOLD_STATUS_MS, current.p);
+                    else showStatus('');
                     return;
                 }
                 if (err.code === 'not_connected' || err.code === 'account_mismatch') await refreshAccount();
