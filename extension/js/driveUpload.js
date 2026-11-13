@@ -43,6 +43,8 @@
     const MAX_CHUNK = 64 * 1024 * 1024; // well under Dropbox's 150 MB per request
     const CHUNK_PIECE = 256 * 1024;
     const CHUNK_MS = 4000;
+    const STALL_MS = 60000; // nothing moving this long: the connection is gone
+    const RESUME_MAX_MS = 5 * 60 * 1000; // keep trying to resume this long
     const HOLD_STATUS_MS = 4000;
     const TOO_BIG_WINDOW_MS = 30000; // how long after picking a file a failure is blamed on its size
     const VIDEO_EXTENSION = /\.(mp4|m4v|mov|webm|mkv|avi|wmv|3gp|flv|mpe?g)$/i;
@@ -213,15 +215,17 @@
     // by the speed measured so far, so it goes up smoothly instead of waiting and
     // then jumping. It never runs past the chunk being sent, never goes back, and
     // shows 100% only when the file is there.
+    // onProgress(p, waiting): waiting is true while the connection is down.
     function chunkProgress(total, onProgress) {
         const began = performance.now();
         let confirmed = 0, confirmedAt = began, rate = 0, chunkEnd = 0, shown = 0;
+        let waitingSince = 0, waitedMs = 0; // time without a connection doesn't count for the speed
         const show = (bytes) => {
             const p = total ? Math.min(bytes / total, 0.99) : 0;
-            if (p > shown) onProgress(shown = p);
+            if (p > shown) onProgress(shown = p, false);
         };
         const tick = setInterval(() => {
-            if (!rate) return;
+            if (!rate || waitingSince) return;
             const guess = confirmed + rate * (performance.now() - confirmedAt);
             show(Math.min(guess, confirmed + (chunkEnd - confirmed) * 0.95));
         }, 200);
@@ -239,12 +243,24 @@
             confirm(offset) {
                 confirmedAt = performance.now();
                 confirmed = offset;
-                rate = offset / (confirmedAt - began);
+                rate = offset / Math.max(1, confirmedAt - began - waitedMs);
                 show(offset);
+            },
+            waiting(on) {
+                if (on === !!waitingSince) return;
+                const now = performance.now();
+                if (on) {
+                    waitingSince = now;
+                } else {
+                    waitedMs += now - waitingSince;
+                    waitingSince = 0;
+                    confirmedAt = now; // the guess goes on from here, not from before the drop
+                }
+                onProgress(shown, on);
             },
             done() {
                 clearInterval(tick);
-                onProgress(1);
+                onProgress(1, false);
             },
             stop() {
                 clearInterval(tick);
@@ -252,49 +268,127 @@
         };
     }
 
-    // Cancelling: the signal aborts the request that's running. Returns true if it
-    // was cancelled already, so the request isn't sent at all.
+    // Cancelling: the signal aborts the request that's running
     function abortError() {
         const error = new Error('Upload cancelled');
         error.name = 'AbortError';
         return error;
     }
 
-    function watchAbort(xhr, signal, reject) {
-        if (!signal) return false;
-        if (signal.aborted) {
-            reject(abortError());
-            return true;
-        }
-        const onAbort = () => xhr.abort();
-        signal.addEventListener('abort', onAbort, { once: true });
-        xhr.addEventListener('loadend', () => signal.removeEventListener('abort', onAbort));
-        xhr.onabort = () => reject(abortError());
-        return false;
+    function networkError() {
+        const error = new Error('Network error while uploading');
+        error.retriable = true;
+        return error;
     }
 
-    // Resumable upload: one request to create the file, then the bytes in chunks
-    async function uploadFile(file, token, folderId, onProgress, signal) {
-        const start = await fetch(`${UPLOAD_API}/files?uploadType=resumable&fields=id,name,webViewLink`, {
-            method: 'POST',
-            headers: {
-                Authorization: 'Bearer ' + token,
-                'Content-Type': 'application/json; charset=UTF-8',
-                'X-Upload-Content-Type': file.type || 'application/octet-stream'
-            },
-            body: JSON.stringify({ name: file.name, parents: [folderId] }),
-            signal
+    function sleep(ms, signal) {
+        return new Promise((resolve, reject) => {
+            if (signal && signal.aborted) return reject(abortError());
+            const onAbort = () => {
+                clearTimeout(timer);
+                reject(abortError());
+            };
+            const timer = setTimeout(() => {
+                if (signal) signal.removeEventListener('abort', onAbort);
+                resolve();
+            }, ms);
+            if (signal) signal.addEventListener('abort', onAbort, { once: true });
         });
-        if (!start.ok) throw httpError(start.status, 'Upload', await start.text().catch(() => ''));
+    }
 
-        const sessionUrl = start.headers.get('Location');
-        if (!sessionUrl) throw new Error('Google Drive did not return an upload address');
+    // Sends an XHR and resolves with it once the server answers (any status).
+    // Rejects with an AbortError when cancelled, and with a retriable network
+    // error when the connection fails or nothing moves for STALL_MS (a dropped
+    // Wi-Fi can leave a request hanging without an error).
+    function sendXhr(xhr, body, signal) {
+        return new Promise((resolve, reject) => {
+            if (signal && signal.aborted) return reject(abortError());
+            let stalled = false;
+            let timer = null;
+            const arm = () => {
+                clearTimeout(timer);
+                timer = setTimeout(() => {
+                    stalled = true;
+                    xhr.abort();
+                }, STALL_MS);
+            };
+            const onAbort = () => xhr.abort();
+            xhr.upload.onprogress = arm;
+            xhr.onprogress = arm;
+            xhr.onload = () => resolve(xhr);
+            xhr.onerror = () => reject(networkError());
+            xhr.onabort = () => reject(stalled ? networkError() : abortError());
+            xhr.onloadend = () => {
+                clearTimeout(timer);
+                if (signal) signal.removeEventListener('abort', onAbort);
+            };
+            if (signal) signal.addEventListener('abort', onAbort, { once: true });
+            arm();
+            xhr.send(body);
+        });
+    }
 
+    // A failure worth trying again: no connection, or the server busy for a moment
+    function isRetriable(err) {
+        return !!err.retriable || err.status === 408 || err.status === 429 || err.status >= 500;
+    }
+
+    // Resuming after a dropped connection: wait() waits a little longer each time
+    // (1, 2, 4… up to 30 seconds) and gives up after RESUME_MAX_MS without a
+    // single success; anything that isn't a connection problem is thrown at once.
+    // ok() after every success starts the count again.
+    function resumer(progress, signal) {
+        let failingSince = 0;
+        let delay = 1000;
+        return {
+            async wait(err) {
+                if (!isRetriable(err)) throw err;
+                const now = performance.now();
+                if (!failingSince) failingSince = now;
+                if (now - failingSince > RESUME_MAX_MS) throw err;
+                progress.waiting(true);
+                await sleep(delay, signal);
+                delay = Math.min(delay * 2, 30000);
+            },
+            ok() {
+                failingSince = 0;
+                delay = 1000;
+                progress.waiting(false);
+            }
+        };
+    }
+
+    // Resumable upload: one request to create the file, then the bytes in chunks.
+    // When the connection drops, it asks Google how much it has and goes on from there.
+    async function uploadFile(file, token, folderId, onProgress, signal) {
         const progress = chunkProgress(file.size, onProgress);
+        const retry = resumer(progress, signal);
+        let sessionUrl = null;
         try {
+            while (!sessionUrl) {
+                try {
+                    sessionUrl = await driveStartSession(file, token, folderId, signal);
+                    retry.ok();
+                } catch (err) {
+                    await retry.wait(err);
+                }
+            }
+
             let offset = 0;
+            let askFirst = false; // after a failure: how much did Google get?
             for (;;) {
-                const result = await driveSendChunk(sessionUrl, file, offset, progress.next(offset), signal);
+                let result;
+                try {
+                    result = askFirst
+                        ? await driveSendChunk(sessionUrl, file, offset, null, signal)
+                        : await driveSendChunk(sessionUrl, file, offset, progress.next(offset), signal);
+                    retry.ok();
+                } catch (err) {
+                    await retry.wait(err);
+                    askFirst = true;
+                    continue;
+                }
+                askFirst = false;
                 if (result.done) {
                     progress.done();
                     return result.file;
@@ -304,39 +398,62 @@
             }
         } catch (err) {
             // Cancelled: tell Google to drop what it got so far
-            if (err.name === 'AbortError') fetch(sessionUrl, { method: 'DELETE' }).catch(() => {});
+            if (err.name === 'AbortError' && sessionUrl) fetch(sessionUrl, { method: 'DELETE' }).catch(() => {});
             throw err;
         } finally {
             progress.stop();
         }
     }
 
-    // One PUT of bytes [start, end) of the file. Google answers 308 with how much
-    // it has so far (Range: bytes=0-N), or 200/201 with the file when it's all there.
-    function driveSendChunk(sessionUrl, file, start, end, signal) {
-        return new Promise((resolve, reject) => {
-            const xhr = new XMLHttpRequest();
-            xhr.open('PUT', sessionUrl);
-            const total = file.size || 0;
-            xhr.setRequestHeader('Content-Range', total
-                ? `bytes ${start}-${end - 1}/${total}`
-                : 'bytes */0');
-            xhr.onload = () => {
-                if (xhr.status >= 200 && xhr.status < 300) {
-                    resolve({ done: true, file: JSON.parse(xhr.responseText) });
-                } else if (xhr.status === 308) {
-                    // Google keeps whole 256 KB pieces, so without a readable Range the
-                    // whole chunk is there (going by it avoids resending one forever)
-                    const range = /bytes=0-(\d+)/.exec(xhr.getResponseHeader('Range') || '');
-                    resolve({ done: false, received: range ? Number(range[1]) + 1 : end });
-                } else {
-                    reject(httpError(xhr.status, 'Upload', xhr.responseText));
-                }
-            };
-            xhr.onerror = () => reject(new Error('Network error while uploading'));
-            if (watchAbort(xhr, signal, reject)) return;
-            xhr.send(total ? file.slice(start, end) : null);
-        });
+    async function driveStartSession(file, token, folderId, signal) {
+        let start;
+        try {
+            start = await fetch(`${UPLOAD_API}/files?uploadType=resumable&fields=id,name,webViewLink`, {
+                method: 'POST',
+                headers: {
+                    Authorization: 'Bearer ' + token,
+                    'Content-Type': 'application/json; charset=UTF-8',
+                    'X-Upload-Content-Type': file.type || 'application/octet-stream'
+                },
+                body: JSON.stringify({ name: file.name, parents: [folderId] }),
+                signal
+            });
+        } catch (err) {
+            throw err.name === 'AbortError' ? abortError() : networkError();
+        }
+        if (!start.ok) throw httpError(start.status, 'Upload', await start.text().catch(() => ''));
+        const sessionUrl = start.headers.get('Location');
+        if (!sessionUrl) throw new Error('Google Drive did not return an upload address');
+        return sessionUrl;
+    }
+
+    // One PUT of bytes [start, end) of the file, or with end null an empty PUT
+    // that only asks how much Google has. Google answers 308 with how much it has
+    // so far (Range: bytes=0-N; none means nothing yet), or 200/201 with the file
+    // when it's all there.
+    async function driveSendChunk(sessionUrl, file, start, end, signal) {
+        const total = file.size || 0;
+        const asking = end === null;
+        const xhr = new XMLHttpRequest();
+        xhr.open('PUT', sessionUrl);
+        xhr.setRequestHeader('Content-Range', asking || !total
+            ? `bytes */${total}`
+            : `bytes ${start}-${end - 1}/${total}`);
+        await sendXhr(xhr, asking || !total ? null : file.slice(start, end), signal);
+
+        if (xhr.status >= 200 && xhr.status < 300) {
+            return { done: true, file: JSON.parse(xhr.responseText) };
+        }
+        if (xhr.status === 308) {
+            const header = xhr.getResponseHeader('Range');
+            const range = /bytes=0-(\d+)/.exec(header || '');
+            if (range) return { done: false, received: Number(range[1]) + 1 };
+            // No Range: when asking, Google has nothing yet. After a chunk, Google
+            // keeps whole 256 KB pieces, so an unreadable header means the whole
+            // chunk is there (going by it avoids resending one forever).
+            return { done: false, received: asking ? 0 : end };
+        }
+        throw httpError(xhr.status, 'Upload', xhr.responseText);
     }
 
     async function makePublic(fileId, token) {
@@ -351,54 +468,87 @@
     // Dropbox-API-Arg is an HTTP header, so anything outside ASCII (e.g. a Yiddish
     // file name) has to be written as a \uXXXX escape
     function dropboxArg(value) {
-        return JSON.stringify(value).replace(/[\u007f-\uffff]/g,
+        return JSON.stringify(value).replace(/[\u007f-￿]/g,
             c => '\\u' + c.charCodeAt(0).toString(16).padStart(4, '0'));
     }
 
+    // Where Dropbox says an upload session really is, when a chunk was sent at the
+    // wrong offset (e.g. it got the chunk before the connection dropped): the
+    // error has correct_offset somewhere inside it
+    function dropboxCorrectOffset(text) {
+        let answer;
+        try { answer = JSON.parse(text); } catch (err) { return undefined; }
+        const find = (value) => {
+            if (!value || typeof value !== 'object') return undefined;
+            if (typeof value.correct_offset === 'number') return value.correct_offset;
+            for (const key of Object.keys(value)) {
+                const found = find(value[key]);
+                if (found !== undefined) return found;
+            }
+            return undefined;
+        };
+        return find(answer.error);
+    }
+
     // One request to Dropbox's content endpoint
-    function dropboxSend(token, endpoint, arg, body, signal) {
-        return new Promise((resolve, reject) => {
-            const xhr = new XMLHttpRequest();
-            xhr.open('POST', `${DROPBOX_CONTENT}/${endpoint}`);
-            xhr.setRequestHeader('Authorization', 'Bearer ' + token);
-            xhr.setRequestHeader('Content-Type', 'application/octet-stream');
-            xhr.setRequestHeader('Dropbox-API-Arg', dropboxArg(arg));
-            xhr.onload = () => {
-                if (xhr.status >= 200 && xhr.status < 300) resolve(xhr.responseText ? JSON.parse(xhr.responseText) : null);
-                else reject(httpError(xhr.status, 'Upload', xhr.responseText));
-            };
-            xhr.onerror = () => reject(new Error('Network error while uploading'));
-            if (watchAbort(xhr, signal, reject)) return;
-            xhr.send(body);
-        });
+    async function dropboxSend(token, endpoint, arg, body, signal) {
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', `${DROPBOX_CONTENT}/${endpoint}`);
+        xhr.setRequestHeader('Authorization', 'Bearer ' + token);
+        xhr.setRequestHeader('Content-Type', 'application/octet-stream');
+        xhr.setRequestHeader('Dropbox-API-Arg', dropboxArg(arg));
+        await sendXhr(xhr, body, signal);
+        if (xhr.status >= 200 && xhr.status < 300) return xhr.responseText ? JSON.parse(xhr.responseText) : null;
+        const error = httpError(xhr.status, 'Upload', xhr.responseText);
+        if (xhr.status === 409) error.correctOffset = dropboxCorrectOffset(xhr.responseText);
+        throw error;
     }
 
     // Into the app's own folder; a name that is already taken gets " (1)" added.
     // A file that fits in the first chunk goes up in one request; anything bigger
-    // through an upload session, chunk by chunk, so the percent is real.
+    // through an upload session, chunk by chunk, so the percent is real. When the
+    // connection drops, the same chunk is sent again; if Dropbox already had it,
+    // it answers where the session really is, and the upload goes on from there.
     async function uploadDropboxFile(file, token, onProgress, signal) {
         const commit = { path: '/' + file.name.replace(/[\\/]/g, '_'), mode: 'add', autorename: true };
         const progress = chunkProgress(file.size, onProgress);
+        const retry = resumer(progress, signal);
+        const send = async (endpoint, arg, body) => {
+            for (;;) {
+                try {
+                    const answer = await dropboxSend(token, endpoint, arg, body, signal);
+                    retry.ok();
+                    return answer;
+                } catch (err) {
+                    if (err.correctOffset !== undefined) throw err;
+                    await retry.wait(err);
+                }
+            }
+        };
         try {
             let result;
             let end = progress.next(0);
             if (end >= file.size) {
-                result = await dropboxSend(token, 'files/upload', commit, file, signal);
+                result = await send('files/upload', commit, file);
             } else {
-                const session = await dropboxSend(token, 'files/upload_session/start', { close: false }, file.slice(0, end), signal);
+                const session = await send('files/upload_session/start', { close: false }, file.slice(0, end));
                 let offset = end;
                 progress.confirm(offset);
                 for (;;) {
                     end = progress.next(offset);
                     const cursor = { session_id: session.session_id, offset };
-                    if (end >= file.size) {
-                        result = await dropboxSend(token, 'files/upload_session/finish',
-                            { cursor, commit }, file.slice(offset), signal);
-                        break;
+                    try {
+                        if (end >= file.size) {
+                            result = await send('files/upload_session/finish', { cursor, commit }, file.slice(offset));
+                            break;
+                        }
+                        await send('files/upload_session/append_v2', { cursor, close: false }, file.slice(offset, end));
+                        offset = end;
+                    } catch (err) {
+                        if (err.correctOffset === undefined) throw err;
+                        retry.ok();
+                        offset = err.correctOffset;
                     }
-                    await dropboxSend(token, 'files/upload_session/append_v2',
-                        { cursor, close: false }, file.slice(offset, end), signal);
-                    offset = end;
                     progress.confirm(offset);
                 }
             }
@@ -1075,7 +1225,9 @@
                 for (let i = 0; i < files.length; i++) {
                     const file = files[i];
                     const prefix = files.length > 1 ? `(${i + 1}/${files.length}) ` : '';
-                    const onProgress = (p) => showStatus(`${prefix}לייגט ארויף ${file.name}…`, '', 0, p);
+                    const onProgress = (p, waiting) => showStatus(waiting
+                        ? `${prefix}ווארט אויף אינטערנעט…`
+                        : `${prefix}לייגט ארויף ${file.name}…`, '', 0, p);
                     onProgress(0);
 
                     let uploaded;
