@@ -468,7 +468,7 @@
     // Dropbox-API-Arg is an HTTP header, so anything outside ASCII (e.g. a Yiddish
     // file name) has to be written as a \uXXXX escape
     function dropboxArg(value) {
-        return JSON.stringify(value).replace(/[\u007f-￿]/g,
+        return JSON.stringify(value).replace(/[\u007f-\uffff]/g,
             c => '\\u' + c.charCodeAt(0).toString(16).padStart(4, '0'));
     }
 
