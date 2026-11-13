@@ -304,6 +304,19 @@
 :root[data-ivh-theme] #ivd-wrap .ivd-status.ivd-ok { color: var(--t-success); }
 :root[data-ivh-theme] #ivd-wrap .ivd-status.ivd-warn { color: var(--t-warn); }
 :root[data-ivh-theme] #ivd-wrap .ivd-status.ivd-error { color: var(--t-error); }
+/* The upload folder link, the progress ring, its ✕ and the cancelled line */
+:root[data-ivh-theme] #ivd-wrap .ivd-folder-link { background-color: var(--t-button-bg); border-color: var(--t-button-border); color: var(--t-link); }
+:root[data-ivh-theme] #ivd-wrap .ivd-folder-link:hover { background-color: var(--t-button-hover); border-color: var(--t-accent); }
+:root[data-ivh-theme] #ivd-wrap .ivd-folder-open { color: var(--t-muted); }
+:root[data-ivh-theme] #ivd-wrap .ivd-ring-track { stroke: var(--t-row3); }
+:root[data-ivh-theme] #ivd-wrap .ivd-ring-fill { stroke: var(--t-accent); }
+:root[data-ivh-theme] #ivd-wrap .ivd-ring-text { color: var(--t-text); }
+:root[data-ivh-theme] #ivd-wrap .ivd-cancel { background-color: var(--t-row3); color: var(--t-muted); }
+:root[data-ivh-theme] #ivd-wrap .ivd-cancel:hover { background-color: var(--t-button-hover); color: var(--t-text); }
+:root[data-ivh-theme] #ivd-wrap .ivd-status.ivd-cancelled { color: var(--t-muted); }
+:root[data-ivh-theme] #ivd-wrap .ivd-status.ivd-cancelled .ivd-ring-fill { stroke: color-mix(in srgb, var(--t-muted) 55%, transparent); }
+:root[data-ivh-theme] #ivd-wrap .ivd-status.ivd-cancelled .ivd-ring-text::after { background-color: color-mix(in srgb, var(--t-muted) 55%, transparent); }
+:root[data-ivh-theme] .ivd-in-toolbar #ivd-button.ivd-uploading::after { background: conic-gradient(var(--t-accent) calc(var(--ivd-p, 0) * 1%), var(--t-row3) 0); }
 :root[data-ivh-theme] #ivd-wrap.ivd-dragover #ivd-button,
 :root[data-ivh-theme] #ivd-wrap.ivd-dragover .ivd-popup,
 :root[data-ivh-theme] #ivd-wrap.ivd-dragover .ivd-btn.ivd-primary { outline-color: var(--t-accent); }

@@ -173,6 +173,34 @@
 
 #ivd-wrap .ivd-account-text { min-width: 0; }
 
+/* The upload folder: icon, name, ↗; a small pill that looks clickable */
+#ivd-wrap .ivd-folder-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    max-width: 100%;
+    margin-top: 5px;
+    padding: 2px 8px 2px 6px;
+    border: 1px solid #c9d7e5;
+    border-radius: 12px;
+    background: #fff;
+    color: #105289;
+    font-size: 12px;
+    line-height: 18px;
+    text-decoration: none;
+    box-sizing: border-box;
+}
+#ivd-wrap .ivd-folder-link:hover { background: #e8f0f8; border-color: #9fb8d0; }
+#ivd-wrap .ivd-folder-link:focus-visible { outline: 2px solid #0a8ed0; outline-offset: 1px; }
+#ivd-wrap .ivd-folder-link svg { width: 14px; height: 14px; flex-shrink: 0; fill: #F4B400; }
+#ivd-wrap .ivd-folder-name {
+    direction: ltr;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+#ivd-wrap .ivd-folder-open { flex-shrink: 0; color: #5f7d99; }
+
 #ivd-wrap .ivd-account-name {
     font-weight: bold;
     overflow: hidden;

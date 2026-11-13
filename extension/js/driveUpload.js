@@ -33,6 +33,8 @@
     const UPLOAD_API = 'https://www.googleapis.com/upload/drive/v3';
     const DROPBOX_API = 'https://api.dropboxapi.com/2';
     const DROPBOX_CONTENT = 'https://content.dropboxapi.com/2';
+    // The app folder access only sees Apps/<app folder>, so that's where files go
+    const DROPBOX_FOLDER_URL = 'https://www.dropbox.com/home/Apps/iVelt%20Helper';
     // Uploads go up in chunks (Google wants multiples of 256 KB); a small first
     // one, so the speed is known early. After that each chunk is sized to take
     // about CHUNK_MS at the measured speed: every chunk waits for the server's
@@ -702,7 +704,15 @@
         const accountText = el('div', 'ivd-account-text');
         const accountName = el('div', 'ivd-account-name');
         const accountEmail = el('bdi', 'ivd-account-email');
-        accountText.append(accountName, accountEmail);
+        // Where the files go: opens the upload folder on the service's site
+        // a folder icon, the folder's name, and ↗ for "opens in a new tab"
+        const folderLink = el('a', 'ivd-folder-link');
+        folderLink.target = '_blank';
+        folderLink.rel = 'noopener noreferrer';
+        folderLink.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M10 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>';
+        const folderName = el('bdi', 'ivd-folder-name');
+        folderLink.append(folderName, el('span', 'ivd-folder-open', '↗'));
+        accountText.append(accountName, accountEmail, folderLink);
         accountBox.append(avatar, accountText);
 
         const quotaBox = el('div', 'ivd-quota');
@@ -867,11 +877,47 @@
                 avatar.hidden = !account.photo;
                 if (account.photo) avatar.src = account.photo;
                 button.title = provider.name + ': ' + account.email;
+                updateFolderLink();
             } else {
                 button.title = buttonLabel;
             }
 
             [pickBtn, connectBtn, switchBtn, disconnectBtn, ...Object.values(switchTabs)].forEach(b => { b.disabled = busy; });
+        }
+
+        // Dropbox: always the app's own folder. Google Drive: the folder the
+        // background page found or made (saved once a file went up); until then,
+        // My Drive, in the connected account (authuser picks it when several
+        // Google accounts are signed in).
+        // The link shows the folder's name, so it says where the files go
+        function setFolderLink(href, name) {
+            folderLink.href = href;
+            folderName.textContent = name;
+            folderLink.title = `עפן דעם פאלדער אויף ${provider.name}`;
+            folderLink.setAttribute('aria-label', `${name}: עפן דעם פאלדער אויף ${provider.name}`);
+        }
+
+        function updateFolderLink() {
+            if (providerKey === 'dropbox') {
+                setFolderLink(DROPBOX_FOLDER_URL, 'Apps/iVelt Helper');
+                return;
+            }
+            const email = account && account.email;
+            const authuser = email ? '?authuser=' + encodeURIComponent(email) : '';
+            setFolderLink('https://drive.google.com/drive/my-drive' + authuser, 'iVelt Helper');
+            try {
+                chrome.storage.local.get(['driveFolder', 'driveFolderName'], ({ driveFolder, driveFolderName }) => {
+                    if (chrome.runtime.lastError || providerKey !== 'drive') return;
+                    // The name from the settings: the folder files will go to next
+                    const name = (driveFolderName || '').trim() || 'iVelt Helper';
+                    const known = driveFolder && driveFolder.id && driveFolder.email === email && driveFolder.name === name;
+                    setFolderLink(known
+                        ? `https://drive.google.com/drive/folders/${encodeURIComponent(driveFolder.id)}${authuser}`
+                        : 'https://drive.google.com/drive/my-drive' + authuser, name);
+                });
+            } catch (err) {
+                // the extension was reloaded; the My Drive link stays
+            }
         }
 
         function freeSpace() {
