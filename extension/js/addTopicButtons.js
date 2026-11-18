@@ -4,6 +4,26 @@ const CACHE_KEY = "topicMappingCache";
 const CACHE_TIME_KEY = "topicMappingLastFetchTime";
 const CACHE_STARTED_KEY = "topicMappingDownloadStartedAt";
 
+// The click functions of the buttons below, by the number in their data-ih-action
+const buttonActions = [];
+document.addEventListener('click', e => {
+    const a = e.target instanceof Element && e.target.closest('a[data-ih-action]');
+    const action = a && buttonActions[a.dataset.ihAction];
+    if (action) {
+        action.call(a, e);
+        // and closes the ⋯ menu it was clicked in, so it doesn't stay open over the post. After
+        // the click is done: closed during it, the forum's own handling of the click opens it again
+        const menu = a.closest('.dropdown-container.dropdown-visible');
+        if (menu) {
+            setTimeout(() => {
+                if (menu.classList.contains('dropdown-visible')) {
+                    menu.querySelector(':scope > .dropdown-toggle')?.click();
+                }
+            });
+        }
+    }
+}, true); // capture, before the forum's own menu handlers
+
 function createButton(reference, customClass, title, text, onclick, itext="") {
     let li = document.createElement('li');
     let a = document.createElement('a');
@@ -17,7 +37,12 @@ function createButton(reference, customClass, title, text, onclick, itext="") {
     // A function, so nothing from a post (an image address, a file name) is ever turned into code.
     // A string only for the forum's own onclick code, see addQuoteLastButton
     if (typeof onclick === 'function'){
-        a.addEventListener('click', onclick)
+        // Run from one listener on the page by the button's number: when the buttons don't fit,
+        // phpBB copies them into the post's ⋯ menu, and a copy keeps its attributes but not a
+        // listener added to the button itself
+        const action = String(buttonActions.length);
+        buttonActions.push(onclick);
+        a.dataset.ihAction = action;
     } else if (onclick){
         a.setAttribute('onClick', onclick)
     }
