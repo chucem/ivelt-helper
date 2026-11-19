@@ -1,0 +1,32 @@
+<!doctype html>
+<html dir="rtl" lang="yi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>iVelt Helper | סיין-אין</title>
+  <link type="text/css" href="css/fonts.css" rel="stylesheet">
+  <style>
+    body { margin: 0; padding: 24px 16px; background: #eef2f6; color: #1f2d3a; font: 17px/1.6 Arial, sans-serif; }
+    main { max-width: 480px; margin: 0 auto; background: #fff; border: 1px solid #c9d3dd; border-radius: 10px; padding: 20px; }
+    h1 { font-size: 21px; margin: 0 0 12px; color: #105289; }
+    p { margin: 0 0 14px; }
+    bdi { direction: ltr; unicode-bidi: isolate; font-family: monospace; font-size: 14px; word-break: break-all; }
+    button { font: inherit; padding: 10px 18px; border-radius: 6px; border: 1px solid #105289; background: #105289; color: #fff; cursor: pointer; width: 100%; }
+    button.secondary { background: #fff; color: #105289; margin-top: 10px; }
+    #denied { color: #b3261e; }
+    [hidden] { display: none !important; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>אייוועלט העלפער: סיין-אין</h1>
+    <p>אויף דעם בראוזער עפנט זיך דער סיין-אין פון Google Drive / Dropbox אין א נייעם טעב.
+      כדי צו וויסן ווען דו ביסט פארטיג, דארף אייוועלט העלפער א פערמישן פאר איין אדרעס,
+      וואו דער סיין-אין שיקט דיך צוריק: <bdi id="host"></bdi>. ער זעט נישט קיין אנדערע זייטלעך.</p>
+    <p id="denied" hidden>אן דעם פערמישן קען מען נישט פארבינדן דעם אקאונט אויף דעם בראוזער.</p>
+    <button id="allow" type="button">גיב פערמישן און גיי ווייטער</button>
+    <button id="close" class="secondary" type="button">פארמאך</button>
+  </main>
+  <script src="js/signin.js"></script>
+</body>
+</html>

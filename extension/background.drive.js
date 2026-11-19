@@ -51,7 +51,7 @@ async function runAuthFlow(options) {
     flow.timeoutMsForNonInteractive = 8000;
   }
 
-  const redirect = await chrome.identity.launchWebAuthFlow(flow);
+  const redirect = await launchAuthFlow(flow, options.tabId);
   const result = new URLSearchParams(new URL(redirect).hash.slice(1));
   if (result.get('error')) throw new Error('Google sign-in: ' + result.get('error'));
   if (result.get('state') !== state) throw new Error('Google sign-in: the answer is not for this sign-in');
@@ -77,8 +77,8 @@ async function getAccount() {
 }
 
 // Always shows Google's account picker, so the user consciously chooses
-async function connectAccount() {
-  const token = await runAuthFlow({ selectAccount: true });
+async function connectAccount(tabId) {
+  const token = await runAuthFlow({ selectAccount: true, tabId });
   const account = await fetchAccount(token);
   await chrome.storage.local.set({ [DRIVE_ACCOUNT_KEY]: account });
   return account;
@@ -98,7 +98,7 @@ async function disconnectAccount() {
 // A valid token for the connected account: cached, renewed silently, or
 // (as a last resort, since the user just clicked) through the sign-in window.
 // With silentOnly it never opens a window and just fails instead.
-async function getToken(account, staleToken, silentOnly) {
+async function getToken(account, staleToken, silentOnly, tabId) {
   const items = await chrome.storage.session.get(DRIVE_TOKEN_KEY);
   const cached = items[DRIVE_TOKEN_KEY];
   if (cached && cached.token !== staleToken && cached.expiresAt - 60000 > Date.now()) return cached.token;
@@ -108,7 +108,7 @@ async function getToken(account, staleToken, silentOnly) {
     token = await runAuthFlow({ silent: true, email: account.email });
   } catch (err) {
     if (silentOnly) throw err;
-    token = await runAuthFlow({ email: account.email });
+    token = await runAuthFlow({ email: account.email, tabId });
   }
 
   // Google may hand back a different account than the one shown in the editor -
@@ -186,7 +186,7 @@ async function getDriveQuota() {
   };
 }
 
-async function getDriveUploadTarget(staleToken) {
+async function getDriveUploadTarget(staleToken, tabId) {
   const account = await getAccount();
   if (!account) {
     const error = new Error('No Google account is connected');
@@ -197,13 +197,13 @@ async function getDriveUploadTarget(staleToken) {
   const { driveFolderName } = await chrome.storage.local.get('driveFolderName');
   const name = (driveFolderName || '').trim() || DRIVE_DEFAULT_FOLDER;
 
-  let token = await getToken(account, staleToken);
+  let token = await getToken(account, staleToken, false, tabId);
   try {
     return { token, account, folderId: await ensureDriveFolder(token, name, account) };
   } catch (err) {
     if (err.status !== 401) throw err;
     // Token was revoked behind our back - get a fresh one and try once more
-    token = await getToken(account, token);
+    token = await getToken(account, token, false, tabId);
     return { token, account, folderId: await ensureDriveFolder(token, name, account) };
   }
 }
@@ -214,17 +214,17 @@ async function getDriveUploadTarget(staleToken) {
 
 const driveHandlers = {
   driveAccount: () => getAccount().then(account => ({ account })),
-  driveConnect: () => connectAccount().then(account => ({ account })),
+  driveConnect: (request, tabId) => connectAccount(tabId).then(account => ({ account })),
   driveDisconnect: () => disconnectAccount().then(() => ({ account: null })),
   driveQuota: () => getDriveQuota(),
-  driveUploadTarget: (request) => getDriveUploadTarget(request.staleToken)
+  driveUploadTarget: (request, tabId) => getDriveUploadTarget(request.staleToken, tabId)
 };
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   const handler = driveHandlers[request.type];
   if (!handler) return;
 
-  handler(request)
+  handler(request, sender.tab ? sender.tab.id : undefined)
     .then(sendResponse)
     .catch((err) => sendResponse({ error: err.message, code: err.code }));
   return true; // keep the channel open for the async response

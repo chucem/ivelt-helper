@@ -63,7 +63,7 @@ async function saveDropboxAccess(result) {
 
 // Always shows Dropbox's own page with the account on it; "switch account"
 // also forces a fresh login, so the user consciously chooses
-async function dropboxConnect(switchAccount) {
+async function dropboxConnect(switchAccount, tabId) {
   const { verifier, challenge } = await makePkcePair();
   const redirectUri = chrome.identity.getRedirectURL();
   const params = new URLSearchParams({
@@ -78,10 +78,10 @@ async function dropboxConnect(switchAccount) {
   });
   if (switchAccount) params.set('force_reauthentication', 'true');
 
-  const redirect = await chrome.identity.launchWebAuthFlow({
+  const redirect = await launchAuthFlow({
     url: 'https://www.dropbox.com/oauth2/authorize?' + params.toString(),
     interactive: true
-  });
+  }, tabId);
   const answer = new URL(redirect).searchParams;
   if (answer.get('error')) throw new Error('Dropbox sign-in: ' + (answer.get('error_description') || answer.get('error')));
   const code = answer.get('code');
@@ -199,7 +199,7 @@ async function getDropboxUploadTarget(staleToken) {
 
 const dropboxHandlers = {
   dropboxAccount: () => getDropboxAccount().then(account => ({ account })),
-  dropboxConnect: (request) => dropboxConnect(!!request.switchAccount).then(account => ({ account })),
+  dropboxConnect: (request, tabId) => dropboxConnect(!!request.switchAccount, tabId).then(account => ({ account })),
   dropboxDisconnect: () => dropboxDisconnect().then(() => ({ account: null })),
   dropboxQuota: () => getDropboxQuota(),
   dropboxUploadTarget: (request) => getDropboxUploadTarget(request.staleToken)
@@ -209,7 +209,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   const handler = dropboxHandlers[request.type];
   if (!handler) return;
 
-  handler(request)
+  handler(request, sender.tab ? sender.tab.id : undefined)
     .then(sendResponse)
     .catch((err) => sendResponse({ error: err.message, code: err.code }));
   return true; // keep the channel open for the async response
