@@ -2,8 +2,9 @@
 
 .ih-draft-bar {
     display: flex;
+    flex-wrap: wrap; /* on a narrow phone the buttons go to their own row instead of off the screen */
     align-items: center;
-    gap: 10px;
+    gap: 6px 10px;
     margin-bottom: 6px;
     padding: 8px 10px;
     border: 1px solid var(--t-border, #B9C2C9);
@@ -20,8 +21,13 @@
     font-size: 16px;
 }
 .ih-draft-text {
-    flex: 1;
+    flex: 1 1 160px;
     min-width: 0;
+}
+/* the buttons stay together, so on a narrow phone both move to the next row */
+.ih-draft-buttons {
+    display: flex;
+    gap: 10px;
 }
 .ih-draft-words {
     display: -webkit-box;

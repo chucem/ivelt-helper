@@ -79,8 +79,10 @@
         bar.innerHTML = `
             <i class="icon fa-history fa-fw ih-draft-icon" aria-hidden="true"></i>
             <span class="ih-draft-text"><span class="ih-draft-when"></span><span class="ih-draft-words"></span></span>
-            <button type="button" class="button ih-draft-restore">צוריקשטעלן</button>
-            <button type="button" class="button button-secondary ih-draft-drop">אויסמעקן</button>`;
+            <span class="ih-draft-buttons">
+                <button type="button" class="button ih-draft-restore">צוריקשטעלן</button>
+                <button type="button" class="button button-secondary ih-draft-drop">אויסמעקן</button>
+            </span>`;
         bar.querySelector('.ih-draft-when').textContent = 'א נישט-געשיקטע תגובה פון ' + timeAgo(draft.savedAt);
         bar.querySelector('.ih-draft-words').textContent = firstWords(draft.text);
 
