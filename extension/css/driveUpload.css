@@ -173,6 +173,34 @@
 
 #ivd-wrap .ivd-account-text { min-width: 0; }
 
+/* The upload folder: icon, name, ↗; a small pill that looks clickable */
+#ivd-wrap .ivd-folder-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    max-width: 100%;
+    margin-top: 5px;
+    padding: 2px 8px 2px 6px;
+    border: 1px solid #c9d7e5;
+    border-radius: 12px;
+    background: #fff;
+    color: #105289;
+    font-size: 12px;
+    line-height: 18px;
+    text-decoration: none;
+    box-sizing: border-box;
+}
+#ivd-wrap .ivd-folder-link:hover { background: #e8f0f8; border-color: #9fb8d0; }
+#ivd-wrap .ivd-folder-link:focus-visible { outline: 2px solid #0a8ed0; outline-offset: 1px; }
+#ivd-wrap .ivd-folder-link svg { width: 14px; height: 14px; flex-shrink: 0; fill: #F4B400; }
+#ivd-wrap .ivd-folder-name {
+    direction: ltr;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+#ivd-wrap .ivd-folder-open { flex-shrink: 0; color: #5f7d99; }
+
 #ivd-wrap .ivd-account-name {
     font-weight: bold;
     overflow: hidden;
@@ -266,6 +294,116 @@
 }
 
 #ivd-wrap .ivd-status:empty { display: none; }
+/* Cancelled: the line stays, the name struck out, the ring frozen and grey */
+#ivd-wrap .ivd-status.ivd-cancelled { color: #80868B; }
+#ivd-wrap .ivd-status.ivd-cancelled .ivd-status-text { text-decoration: line-through; }
+#ivd-wrap .ivd-status.ivd-cancelled .ivd-ring-fill { stroke: #BDC1C6; }
+/* The ⊘: the size of the ✕ button it replaces (a whole 36px circle looks
+   bigger than the progress ring), in the same 36px space, so the text stays put */
+#ivd-wrap .ivd-status.ivd-cancelled .ivd-ring svg {
+    width: 28px;
+    height: 28px;
+    margin: 4px;
+}
+#ivd-wrap .ivd-status.ivd-cancelled .ivd-ring-text::after {
+    content: '';
+    width: 2.75px;
+    height: 22px;
+    border-radius: 2px;
+    background: #BDC1C6;
+    transform: rotate(45deg);
+}
+/* Read out by screen readers, not shown */
+#ivd-wrap .ivd-sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+}
+/* The ✕ is display:flex, which would beat the hidden attribute */
+#ivd-wrap .ivd-status[hidden], #ivd-wrap .ivd-status [hidden] { display: none; }
+
+/* Upload progress: a ring with the percent inside, before the file name */
+#ivd-wrap .ivd-status.ivd-with-ring {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+#ivd-wrap .ivd-ring {
+    position: relative;
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+}
+#ivd-wrap .ivd-ring svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg); /* start at the top */
+}
+#ivd-wrap .ivd-ring circle {
+    fill: none;
+    stroke-width: 3.5;
+}
+#ivd-wrap .ivd-ring-track { stroke: #E3E7EA; }
+#ivd-wrap .ivd-ring-fill {
+    stroke: #1A73E8;
+    stroke-linecap: round;
+    transition: stroke-dasharray 0.2s linear;
+}
+#ivd-wrap .ivd-ring-text {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: bold;
+    color: #37474F;
+    direction: ltr;
+}
+
+/* Cancel: a round grey ✕ at the end of the progress line, like Google Drive's */
+#ivd-wrap .ivd-cancel {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    margin-inline-start: auto;
+    padding: 0;
+    border: none;
+    border-radius: 50%;
+    background: #E8EAED;
+    color: #5F6368;
+    cursor: pointer;
+}
+#ivd-wrap .ivd-cancel svg {
+    width: 16px;
+    height: 16px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2.4;
+    stroke-linecap: round;
+}
+#ivd-wrap .ivd-cancel:hover { background: #DADCE0; color: #3C4043; }
+#ivd-wrap .ivd-cancel:focus-visible { outline: 2px solid #0a8ed0; outline-offset: 1px; }
+
+/* The same progress as a thin ring around the button, seen with the popup closed */
+.ivd-in-toolbar #ivd-button.ivd-uploading { position: relative; }
+.ivd-in-toolbar #ivd-button.ivd-uploading::after {
+    content: '';
+    position: absolute;
+    inset: -3px;
+    border-radius: 50%;
+    background: conic-gradient(#1A73E8 calc(var(--ivd-p, 0) * 1%), rgba(0, 0, 0, 0.12) 0);
+    -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 2.5px), #000 calc(100% - 2px));
+    mask: radial-gradient(farthest-side, transparent calc(100% - 2.5px), #000 calc(100% - 2px));
+    pointer-events: none;
+}
 #ivd-wrap .ivd-status.ivd-ok { color: #1B5E20; }
 #ivd-wrap .ivd-status.ivd-warn { color: #7A4F01; }
 #ivd-wrap .ivd-status.ivd-error { color: #B71C1C; }
