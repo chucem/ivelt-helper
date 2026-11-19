@@ -202,3 +202,39 @@
     color: var(--ui-heading);
     pointer-events: auto;
   }
+
+/* On a phone (the settings open as a page) the 780px box went off the screen: here it takes the
+   screen's width, and the credits go under the settings instead of beside them */
+@media (max-width: 820px) {
+  .wrap {
+    width: auto;
+    margin-top: 0;
+    padding: 10px;
+  }
+  .mainContent {
+    width: auto;
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+    'h'
+    'n'
+    'm';
+  }
+  .aaa {
+    width: auto;
+    margin: 20px 0;
+    padding: 10px;
+  }
+  .pageHeader {
+    margin-bottom: 25px;
+  }
+  .credits {
+    border-right: 0;
+    border-top: 1px solid var(--ui-border);
+    padding: 15px 0 0;
+  }
+}
+@media (max-width: 480px) {
+  .theme-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

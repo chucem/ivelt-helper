@@ -18,6 +18,13 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 
+// On a phone the popup opens as a whole page (a screen narrower than any computer's), which
+// scrolls by itself: no fitting it into a popup's 600px there, the colors would get wider than the
+// screen (css/popup.css)
+const AS_PAGE = screen.width <= 700;
+if (AS_PAGE)
+    document.documentElement.classList.add('as-page');
+
 const FORUM_HOSTS = /(^|\.)ivelt\.com$/;
 
 function isForumUrl(url) {
@@ -125,6 +132,8 @@ function makeRoomForScrollbar() {
     roomForScrollbarAsked = true;
     requestAnimationFrame(function () {
         roomForScrollbarAsked = false;
+        if (AS_PAGE)
+            return;
         fitInPopupHeight();
         const body = document.body;
         const scrollbar = window.innerWidth - document.documentElement.clientWidth;
