@@ -33,8 +33,11 @@
     const UPLOAD_API = 'https://www.googleapis.com/upload/drive/v3';
     const DROPBOX_API = 'https://api.dropboxapi.com/2';
     const DROPBOX_CONTENT = 'https://content.dropboxapi.com/2';
-    // The app folder access only sees Apps/<app folder>, so that's where files go
-    const DROPBOX_FOLDER_URL = 'https://www.dropbox.com/home/Apps/iVelt%20Helper';
+    // The app folder access only sees its own folder, which starts out as Apps/iVelt Helper.
+    // The user can move the app folder (Dropbox keeps uploading into it), and the app
+    // can't find out where it went: Dropbox won't share it or tell the app its path.
+    // Dropbox's own search finds it wherever it is, so the link opens that.
+    const DROPBOX_FOLDER_URL = 'https://www.dropbox.com/search/personal?query=' + encodeURIComponent('iVelt Helper');
     // Uploads go up in chunks (Google wants multiples of 256 KB); a small first
     // one, so the speed is known early. After that each chunk is sized to take
     // about CHUNK_MS at the measured speed: every chunk waits for the server's
@@ -899,7 +902,7 @@
 
         function updateFolderLink() {
             if (providerKey === 'dropbox') {
-                setFolderLink(DROPBOX_FOLDER_URL, 'Apps/iVelt Helper');
+                setFolderLink(DROPBOX_FOLDER_URL, 'iVelt Helper');
                 return;
             }
             const email = account && account.email;
