@@ -126,10 +126,11 @@
       { "combo": ["Ctrl", "Enter"], "yi": "שיק די תגובה", "en": "Submit your post" },
       { "combo": ["Alt", "V"], "yi": "פריוויאו", "en": "Preview your post" },
       { "combo": ["Alt", "A"], "yi": "אקטיווע אשכולות", "en": "Active topics" },
+      { "combo": ["Alt", "H"], "yi": "הויפט בלאט", "en": "Home page" },
       { "combo": ["Alt", "N"], "yi": "עפן די נאטיפיקאציעס", "en": "Open notifications" },
+      { "combo": ["Alt", "M"], "yi": "די קומענדיגע אומגעליינטע נאטיפיקאציע", "en": "Next unread notification" },
       { "combo": ["Ctrl", "Z"], "yi": "צוריקדרייען ביים שרייבן", "en": "Undo while writing" },
-      { "combo": ["Ctrl", "Y"], "yi": "ווידער טון", "en": "Redo" },
-      { "combo": ["Alt", "M"], "yi": "די קומענדיגע אומגעליינטע נאטיפיקאציע", "en": "Next unread notification", "wide": true }
+      { "combo": ["Ctrl", "Y"], "yi": "ווידער טון", "en": "Redo" }
     ]
   },
   {

@@ -26,7 +26,7 @@
 • צוריקדרייען (Ctrl+Z) און ווידער טון (Ctrl+Y) ביים שרייבן.
 • בילדער פארקלענערער: פארקלענערט בילדער אז זיי זאלן אריינפאסן אין די גרייס פון אן עטעטשמענט, און מאכט א גאנצן פאלדער אין איין ZIP.
 • פעיסט א בילד גלייך אין די תגובה.
-• לייגט ארויף פיילס אויף דיין אייגענעם Google Drive אדער Dropbox, און לייגט אריין דעם לינק אין דער תגובה, אויך אין א פריוואטע מעסעדזש. מען קען זיי שלעפן גלייך אויפן קנעפל, און אויב מען וויל גייט א ווידיא וואס מען שלעפט אריין אין דער תגובה אויך אהין.
+• לייגט ארויף פיילס אויף דיין אייגענעם Google Drive אדער Dropbox, און לייגט אריין דעם לינק אין דער תגובה, אויך אין א פריוואטע מעסעדזש. מען קען זיי שלעפן גלייך אויפן קנעפל, און אויב מען וויל גייט א ווידיא וואס מען שלעפט אריין אין דער תגובה אויך אהין. מען זעט וויפיל איז שוין ארויף, מען קען עס אפשטעלן, און ווען די אינטערנעט פאלט אראפ גייט עס ווייטער פון וואו עס האט זיך אפגעשטעלט.
 • ווארנט איידער מען פארלאזט א בלאט מיט א נישט-געשיקטע תגובה.
 
 ★ קיבאורד שארטקאטס
@@ -82,7 +82,7 @@ Most features can be turned on or off in the extension's settings, and they stay
 • Undo (Ctrl+Z) and redo (Ctrl+Y) while writing.
 • Image resizer: shrinks images to fit the attachment size, and packs a whole folder into one ZIP.
 • Paste an image straight into a post.
-• Upload files to your own Google Drive or Dropbox and insert the link in the post, in private messages too. Drag files straight onto the button, and optionally a video dragged into the post goes there too.
+• Upload files to your own Google Drive or Dropbox and insert the link in the post, in private messages too. Drag files straight onto the button, and optionally a video dragged into the post goes there too. See how much is up, cancel it, and if the connection drops it goes on from where it stopped.
 • A warning before leaving a page with an unsent post.
 
 ★ Keyboard shortcuts
