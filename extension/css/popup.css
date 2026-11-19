@@ -270,3 +270,9 @@ body {
 .accounts_hint a {
   color: var(--ui-link);
 }
+
+/* On a phone the popup opens as a page (js/popup.js marks it): the colors fill the screen's width
+   in as many columns as fit, instead of a fixed four that could be wider than the screen */
+html.as-page .theme-swatches {
+  grid-template-columns: repeat(auto-fill, minmax(76px, 1fr));
+}
