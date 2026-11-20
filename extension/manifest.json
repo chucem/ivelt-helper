@@ -196,7 +196,9 @@
     "declarativeNetRequestWithHostAccess"
   ],
   "optional_host_permissions": [
-    "https://*.chromiumapp.org/*"
+    "https://ahidenbhdkloaingggdcijofobjboopi.chromiumapp.org/*",
+    "https://hnklcnfpeamfiflmpnmjphigmbjoeknc.chromiumapp.org/*",
+    "https://mkhocmhicodbokdhfjgamkhebdelcdaa.chromiumapp.org/*"
   ],
   "host_permissions": [
     "*://*.ivelt.com/*",
