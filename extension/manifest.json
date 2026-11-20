@@ -195,6 +195,9 @@
     "notifications",
     "declarativeNetRequestWithHostAccess"
   ],
+  "optional_host_permissions": [
+    "https://*.chromiumapp.org/*"
+  ],
   "host_permissions": [
     "*://*.ivelt.com/*",
     "*://www.xn--4dbhss5b.com/*",

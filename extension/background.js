@@ -334,4 +334,4 @@ function commitDebugLog(name, values){
   })
 }
 
-importScripts('./background.notifications.js', './background.drive.js', './background.dropbox.js', './background.settingsSync.js', './background.accounts.js')
+importScripts('./background.notifications.js', './background.webAuth.js', './background.drive.js', './background.dropbox.js', './background.settingsSync.js', './background.accounts.js')
