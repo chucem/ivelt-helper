@@ -159,6 +159,13 @@
     },
     {
       "matches": [
+        "*://*.ivelt.com/forum/posting.php*",
+        "*://*.ivelt.com/forum/ucp.php*"
+      ],
+      "js": ["js/replyCaretEnd.js"]
+    },
+    {
+      "matches": [
         "*://*.ivelt.com/forum/ucp.php*"
       ],
       "js": ["js/pmMentions.js"]
