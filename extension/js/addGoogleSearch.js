@@ -103,8 +103,16 @@ function addMobileSearchBar(){
     bar.addEventListener('keydown', function (e) {
         if (e.key === 'Escape') {
             bar.hidden = true;
+            iconLink.setAttribute('aria-expanded', 'false');
             iconLink.focus();
         }
+    });
+    // A click (or tap) anywhere else on the page closes it, like the forum's own drop-downs.
+    // What was typed stays in the box for the next time it's opened
+    document.addEventListener('click', function (e) {
+        if (bar.hidden || bar.contains(e.target) || iconLink.contains(e.target)) return;
+        bar.hidden = true;
+        iconLink.setAttribute('aria-expanded', 'false');
     });
 
     iconLink.closest('ul').after(bar);

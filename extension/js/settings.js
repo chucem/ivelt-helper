@@ -15,6 +15,7 @@ const preferencesOptions = [
 	'copyAttachments',
 	'quoteSourceLink',
 	'stickyPostButtons',
+	'stickyHeader',
 	'compactQuotesMobile',
 	'titleOpensUnread',
 	'doubleClickLike',
