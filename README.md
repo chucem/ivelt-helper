@@ -36,6 +36,7 @@ Extra buttons next to the regular quote button on every post:
 * **Profile card** – resting the mouse on a username (an author, a name in a quote, a mention) opens a card with everything their profile shows: avatar, online, rank, profile fields, contact links, statistics and signature. The mouse can move into the card to use its links.
 * **Double-click to like** – double-clicking a post (not on its words) likes it, with a small 👍 where you clicked. It never takes a like away. Off by default; turn it on in the settings.
 * Option to keep the post buttons visible while scrolling through a long post.
+* Option to keep the top bar (quick links, notifications and search) at the top while scrolling.
 
 ### Notifications
 * Toolbar badge with your unread notification count, and optional browser notifications, even when אייוועלט isn't open.

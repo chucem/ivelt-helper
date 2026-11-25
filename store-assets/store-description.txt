@@ -38,6 +38,7 @@
 ★ ליינען
 • א קליק אויף אן אשכול מיט נייע תגובות עפנט עס ביי דער ערשטער אומגעליינטער תגובה.
 • שענערע ספוילערס: די ווערטער און בילדער בלייבן צוגעדעקט אויף זייער פלאץ, און א קליק ווייזט זיי.
+• די אויבערשטע שורה (שנעלע לינקס, נאטיפיקאציעס און זוכן) קען בלייבן אויבן די גאנצע צייט.
 • 16 קאליר טעמעס, העל און טונקל.
 
 ★ אויף א טעלעפאן
@@ -94,6 +95,7 @@ Most features can be turned on or off in the extension's settings, and they stay
 ★ Reading
 • Clicking a topic with new replies opens it at the first unread post.
 • Nicer spoilers: words and pictures stay covered in place until clicked.
+• Optionally keep the top bar (quick links, notifications and search) at the top while scrolling.
 • 16 color themes, light and dark.
 
 ★ On a phone
