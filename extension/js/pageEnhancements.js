@@ -17,6 +17,10 @@ function enchancePage(items) {
 
     const checkStickyPosition = () => {
       let firstStickyFound = false;
+      // With the frozen header (js/stickyHeader.js) the top of the page is under the bar, so a post
+      // counts from the bar's bottom; otherwise the previous post kept its buttons while its last
+      // lines were hidden under the bar, and they showed over the next post
+      const top = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--ih-header-height')) || 0;
 
       postButtons.forEach(btn => {
         const parent = btn.parentElement;
@@ -25,7 +29,7 @@ function enchancePage(items) {
         const btnRect = btn.getBoundingClientRect();
 
         // Add or remove the sticky-post class based on the parent's top position
-        if (parentRect.top < 0 && parentRect.bottom > 30 && !firstStickyFound) {
+        if (parentRect.top < top && parentRect.bottom > top + 30 && !firstStickyFound) {
           firstStickyFound = true;
 
           if (!btn.classList.contains('sticky-post')) {
