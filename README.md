@@ -58,7 +58,7 @@ Extra buttons next to the regular quote button on every post:
 * The editor opens on the **Attachments** tab instead of **Options**, so adding a file is one click (can be turned off).
 
 ### Reading posts
-* **Spoiler polish**: the spoiled words are covered with moving dust right where they are (so a couple of spoiled words stay in the middle of their line), and pictures are blurred with sparkling dots over them. A long spoiler shows only its first three lines. One click reveals it and opens it to its full height. Printed spoilers come out open. Off by default; turn it on in the settings.
+* **Spoiler polish**: the spoiled words are covered with moving dust right where they are (so a couple of spoiled words stay in the middle of their line), and pictures are blurred with sparkling dots over them. A long spoiler shows only its first three lines. One click reveals it and opens it to its full height, and a "▲" button under it covers it again. Printed spoilers come out open. Off by default; turn it on in the settings.
 
 ### On a phone
 * The search icon opens a search box right there, with Google search and a button to the advanced search.
