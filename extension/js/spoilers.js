@@ -32,9 +32,22 @@
             spoiler.classList.add('ih-spoiler-long');
         }
 
-        spoiler.tabIndex = 0;
-        spoiler.setAttribute('role', 'button');
-        spoiler.title = 'ספוילער';
+        const hideButton = document.createElement('button');
+        hideButton.type = 'button';
+        hideButton.className = 'ih-spoiler-hide';
+        hideButton.title = 'באהאלט דעם ספוילער ווידער';
+        hideButton.textContent = spoiler.classList.contains('ih-spoiler-inline') && !spoiler.classList.contains('ih-spoiler-long')
+            ? '▲'
+            : '▲ באהאלט';
+        spoiler.appendChild(hideButton);
+
+        const markHidden = () => {
+            spoiler.classList.add('ih-spoiler-hidden');
+            spoiler.tabIndex = 0;
+            spoiler.setAttribute('role', 'button');
+            spoiler.title = 'ספוילער';
+        };
+        markHidden();
 
         const reveal = (event) => {
             if (!spoiler.classList.contains('ih-spoiler-hidden')) return;
@@ -49,7 +62,19 @@
 
         spoiler.addEventListener('click', reveal);
         spoiler.addEventListener('keydown', (event) => {
-            if (event.key === 'Enter' || event.key === ' ') reveal(event);
+            if (event.target === spoiler && (event.key === 'Enter' || event.key === ' ')) reveal(event);
+        });
+
+        hideButton.addEventListener('click', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            if (spoiler.classList.contains('ih-spoiler-long')) collapse(spoiler, markHidden);
+            else markHidden();
+            spoiler.focus({ preventScroll: true });
+            // a long spoiler shrinks back to 3 lines, so its top may now be above the screen
+            setTimeout(() => {
+                if (spoiler.getBoundingClientRect().top < 0) spoiler.scrollIntoView({ block: 'start', behavior: 'smooth' });
+            }, spoiler.classList.contains('ih-spoiler-long') ? EXPAND_MS : 0);
         });
     }
 
@@ -93,6 +118,17 @@
         spoiler.style.maxHeight = spoiler.scrollHeight + 'px';
         setTimeout(() => {
             spoiler.style.maxHeight = '';
+            spoiler.style.overflow = '';
+        }, EXPAND_MS);
+    }
+
+    function collapse(spoiler, markHidden) {
+        spoiler.style.overflow = 'hidden';
+        spoiler.style.maxHeight = spoiler.scrollHeight + 'px';
+        spoiler.offsetHeight; // start the transition from the full height
+        markHidden();
+        spoiler.style.maxHeight = '';
+        setTimeout(() => {
             spoiler.style.overflow = '';
         }, EXPAND_MS);
     }
