@@ -1,0 +1,33 @@
+/* Frozen header (js/stickyHeader.js): the navbar at the top of the window while scrolling,
+   without the big header above it. Only once the script turned the setting's class on */
+html.ih-header-stuck #page-header > .navbar {
+    position: fixed;
+    top: 0;
+    z-index: 50; /* over the posts and the kept post buttons, under the forum's pop-ups */
+    box-sizing: border-box;
+    margin: 0;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    box-shadow: 0 2px 6px rgb(0 0 0 / 20%);
+}
+
+/* A jump to a post (#p123) leaves its top visible under the bar */
+html.ih-sticky-header {
+    scroll-padding-top: calc(var(--ih-header-height, 0px) + 6px);
+}
+
+/* The kept post buttons (stickyPostButtons) just below the bar, not hidden behind it */
+html.ih-sticky-header .sticky-post {
+    top: calc(var(--ih-header-height, 0px) + 5px) !important;
+}
+
+/* On the desktop the search icon only shows while frozen, since the search boxes are out of sight
+   then; it opens the same search bar as on a phone (js/addGoogleSearch.js) */
+@media (min-width: 701px) {
+    html.ih-header-stuck #page-header > .navbar .responsive-search {
+        display: block;
+    }
+    html.ih-header-stuck #ih-mobile-search:not([hidden]) {
+        display: block;
+    }
+}

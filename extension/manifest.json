@@ -107,6 +107,13 @@
     },
     {
       "matches": [
+        "*://*.ivelt.com/*"
+      ],
+      "css": ["css/stickyHeader.css"],
+      "js": ["js/stickyHeader.js"]
+    },
+    {
+      "matches": [
         "*://*.ivelt.com/forum/viewtopic.php*"
       ],
       "js": ["js/settingsReady.js", "js/print.js"],

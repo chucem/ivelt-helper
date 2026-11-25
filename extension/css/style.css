@@ -95,6 +95,10 @@ hr {
 .row.row-indented {
     padding-right: 30px;
 }
+/* Two options that belong together (the ones kept on screen while scrolling): a smaller gap between them */
+.row-pair > .row:not(:last-child) {
+    margin-bottom: 10px;
+}
 #notify {
     position: fixed;
     top: 0;
