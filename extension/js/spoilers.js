@@ -35,7 +35,7 @@
         const hideButton = document.createElement('button');
         hideButton.type = 'button';
         hideButton.className = 'ih-spoiler-hide';
-        hideButton.title = 'באהאלט דעם ספוילער ווידער';
+        hideButton.title = 'באהאלט צוריק דעם ספוילער';
         hideButton.textContent = spoiler.classList.contains('ih-spoiler-inline') && !spoiler.classList.contains('ih-spoiler-long')
             ? '▲'
             : '▲ באהאלט';
