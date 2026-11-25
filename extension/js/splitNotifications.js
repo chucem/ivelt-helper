@@ -267,6 +267,11 @@ function splitNotifications() {
       groupLI.appendChild(groupUL);
       group[0].before(groupLI);
       group.forEach(li => groupUL.appendChild(li));
+
+      // phpBB folds the header's links into the ☰ menu only when it checks the header's width, on
+      // load and on a resize. The bells are wider now, so on a phone where everything fit before
+      // (e.g. 439px wide) the bells went to a second row with the links still out. Check once more
+      window.dispatchEvent(new Event('resize'));
     }
 }
 

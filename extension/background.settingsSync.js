@@ -29,6 +29,7 @@ const SYNCED_SETTINGS = [
   'backgroundSyncNotifMinutes',
   'cachedTopicMappingExpire',
   'stickyPostButtons',
+  'stickyHeader',
   'compactQuotesMobile',
   'titleOpensUnread',
   'doubleClickLike',

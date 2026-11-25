@@ -8,6 +8,7 @@ function enchancePage(items) {
   // aren't squeezed into a narrow column. The style only applies on a narrow screen
   if (items.compactQuotesMobile !== false) {
     document.documentElement.classList.add('ih-compact-quotes');
+    recheckCollapsedQuotes();
   }
 
 // Sticky post buttons logic with logging
@@ -107,6 +108,30 @@ function enchancePage(items) {
     pagination.insertBefore(linkWrap, pagination.firstChild);
   }
 
+}
+
+// The forum's script (imcger Collapse Quote) cuts long quotes once, while the page loads: each one
+// taller than 30 lines gets that height, a fade and a "ווייז מער..." button. The compact quotes style
+// comes after that and takes away the space at the sides, so the text is wider and a quote shorter.
+// A quote that fits now kept its button, which showed nothing more, with empty space above it (e.g. at
+// 594px wide). So once more, with the new sizes: a quote that fits now is shown whole
+function recheckCollapsedQuotes() {
+  document.querySelectorAll('div.content > blockquote .imcger-quote-text').forEach(box => {
+    const text = box.firstElementChild;
+    const shadow = box.lastElementChild;
+    const button = box.nextElementSibling;
+    // Only the ones it cut and that are still closed
+    if (!box.style.height || !text || !shadow?.classList.contains('imcger-quote-shadow') || shadow.style.display !== 'block' ||
+        !button?.classList.contains('imcger-quote-button')) {
+      return;
+    }
+
+    if (text.offsetHeight <= parseFloat(box.style.height)) {
+      box.style.height = '';
+      shadow.style.display = 'none';
+      button.style.display = 'none';
+    }
+  });
 }
 
 function showCopiedTip(anchor) {
