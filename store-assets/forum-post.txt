@@ -1,17 +1,16 @@
-[size=150][b]אייוועלט העלפער 2.8.4 איז ארויס[/b][/size]
+[size=150][b]אייוועלט העלפער 2.8.5 איז ארויס[/b][/size]
 
-א קליינע אפדעיט מיט פארריכטונגען.
+א קליינע פארריכטונג.
 
 [b]פארריכטונגען:[/b]
 [list]
-[*][b]שענערע ספוילערס[/b] – א ספוילער וואס מען האט אויפגעמאכט קען מען צוריק באהאלטן מיט א "▲ באהאלט" קנעפל.
-[*]מיט די אויבערשטע שורה די גאנצע צייט: די תגובה קנעפלעך וואס בלייבן ביים סקראלן ווייזן זיך ביי דער ריכטיגער תגובה.
+[*]מיט די אויבערשטע שורה די גאנצע צייט: דער "ווייז ווייניגער" קנעפל ביי א לאנגן ציטאט ווייזט זיך נישט מער איבער דער שורה.
 [/list]
 
 [b]ווי באקומט מען עס:[/b]
 ווער עס האט עס שוין, באקומט עס אליין אין א טאג ארום. צו באקומען גלייך: עפנט די סעטינגס פונעם עקסטענשען (רייט קליק אויפן אייקאן ← Options), און דרוקט "אפדעיט יעצט".
 נייע: [url=https://chromewebstore.google.com/detail/ivelt-helper-v2/ahidenbhdkloaingggdcijofobjboopi]Chrome Web Store[/url] | [url=https://microsoftedge.microsoft.com/addons/detail/ivelt-helper-v2/hnklcnfpeamfiflmpnmjphigmbjoeknc]Edge Add-ons[/url] | [url=https://github.com/chucem/ivelt-helper/releases/latest]GitHub[/url]
 
-[b]א יישר כח[/b] פאר [smention u=5372]קנאפער ידען[/smention] פארן ספוילער קנעפל.
+[b]א יישר כח[/b] פאר [smention u=5372]קנאפער ידען[/smention].
 
 פראבלעמען אדער געדאנקען? שרייבט דא אינעם אשכול, אדער אויף [url=https://github.com/chucem/ivelt-helper/issues]GitHub[/url].
