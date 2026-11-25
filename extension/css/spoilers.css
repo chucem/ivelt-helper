@@ -33,6 +33,36 @@
     pointer-events: none;
 }
 
+.ih-spoiler-hide {
+    display: block;
+    margin: 0.2em 0 0;
+    padding: 0 0.3em;
+    border: 0;
+    border-radius: 4px;
+    background: none;
+    color: inherit;
+    font: inherit;
+    font-size: 0.85em;
+    opacity: 0.6;
+    cursor: pointer;
+}
+.ih-spoiler-hide:hover,
+.ih-spoiler-hide:focus-visible {
+    opacity: 1;
+    text-decoration: underline;
+}
+.ih-spoiler-inline:not(.ih-spoiler-long) .ih-spoiler-hide {
+    display: inline;
+    margin: 0 0.15em;
+    padding: 0 0.15em;
+    font-size: 0.7em;
+    vertical-align: middle;
+    text-decoration: none;
+}
+.ih-spoiler.ih-spoiler-hidden .ih-spoiler-hide {
+    display: none;
+}
+
 .ih-spoiler-inline,
 .ih-spoiler-inline .spoilcontent {
     display: inline !important;
@@ -117,6 +147,9 @@
 }
 
 @media print {
+    .ih-spoiler-hide {
+        display: none;
+    }
     .ih-spoiler-hidden {
         --ih-dust: 0;
     }
