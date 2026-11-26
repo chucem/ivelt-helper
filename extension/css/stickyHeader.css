@@ -93,32 +93,29 @@ html.ih-topic-stuck #page-header > .navbar {
 .ih-sticky-topic > .action-bar > .search-box {
     display: none;
 }
+/* "first unread • N replies", moved out of the pages box to sit by the title */
+.ih-sticky-topic-info {
+    flex: 0 0 auto;
+    font-size: 11px;
+    white-space: nowrap;
+}
 /* Where the whole list of pages doesn't fit next to the title: only what fits on one line (the
-   page-jump button, the arrows and the page it's on), without the "first unread / N replies" words
-   (a bare text there, so the font size hides it) */
+   page-jump button, the arrows and the page it's on). !important: the forum's own phone style
+   shows them with a stronger rule */
 @media (max-width: 1000px) {
-    .ih-sticky-topic > .action-bar > .pagination {
-        font-size: 0;
-    }
-    .ih-sticky-topic > .action-bar > .pagination > .mark {
-        display: none;
-    }
-    .ih-sticky-topic > .action-bar > .pagination > ul {
-        font-size: 11px;
-    }
-    /* !important: the forum's own phone style shows them with a stronger rule */
     .ih-sticky-topic > .action-bar > .pagination > ul > li:not(.active, .arrow, .page-jump) {
         display: none !important;
     }
 }
-/* On a narrow screen: the title on a line of its own, the buttons on one line under it */
+/* On a narrow screen: the title and "first unread • N replies" on one line, the buttons on one
+   line under it */
 @media (max-width: 700px) {
     html.ih-topic-stuck .ih-sticky-topic {
         flex-wrap: wrap;
         gap: 4px 10px;
     }
     .ih-sticky-topic > h2.topic-title {
-        flex-basis: 100%;
+        flex: 1 1 0;
     }
     .ih-sticky-topic > .action-bar {
         flex: 1 1 100%;

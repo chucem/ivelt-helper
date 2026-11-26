@@ -91,6 +91,12 @@
 		pageBody.prepend(row);
 		const titleSpot = document.createElement('div');
 		const buttonsSpot = document.createElement('div');
+		// "first unread • N replies", the words before the page numbers: in the row they go next to
+		// the title, since on a narrow screen there's no room for them next to the buttons
+		const pagination = buttons.querySelector(':scope > .pagination');
+		const pagesList = pagination && pagination.querySelector(':scope > ul');
+		const info = document.createElement('span');
+		info.className = 'ih-sticky-topic-info';
 		let shown = false;
 		// where the title's bottom was in the page when the row opened: the page under it doesn't
 		// move, so it's checked against that, not against the empty box (whose edges differ by the
@@ -106,8 +112,13 @@
 				title.before(titleSpot);
 				buttons.before(buttonsSpot);
 				titleSpot.style.height = `${title.offsetHeight}px`;
-				row.append(title, buttons);
+				while (pagesList && pagination.firstChild && pagination.firstChild !== pagesList) {
+					info.append(pagination.firstChild);
+				}
+				row.append(title, info, buttons);
 			} else {
+				if (pagesList) pagination.prepend(...info.childNodes);
+				info.remove();
 				titleSpot.replaceWith(title);
 				buttonsSpot.replaceWith(buttons);
 			}
