@@ -92,6 +92,10 @@
 		const titleSpot = document.createElement('div');
 		const buttonsSpot = document.createElement('div');
 		let shown = false;
+		// where the title's bottom was in the page when the row opened: the page under it doesn't
+		// move, so it's checked against that, not against the empty box (whose edges differ by the
+		// title's margins, which made the row close and open again and again at that spot)
+		let titleBottom = 0;
 
 		// Moves them, and sizes the empty boxes so whatever comes after them stays where it was
 		const move = (into) => {
@@ -117,10 +121,14 @@
 		return {
 			row,
 			update(stuck, barHeight, spotRect) {
-				// once the title (or its empty box) is all under the bar
-				const place = shown ? titleSpot : title;
-				const shouldShow = stuck && place.getBoundingClientRect().bottom < barHeight;
+				// opens once the title is all under the bar, and closes only once it's a little below it
+				// again, so a scroll that stops right at the edge doesn't open and close it
+				let shouldShow;
+				if (!stuck) shouldShow = false;
+				else if (shown) shouldShow = titleBottom - window.scrollY <= barHeight + 4;
+				else shouldShow = title.getBoundingClientRect().bottom < barHeight;
 				if (shouldShow !== shown) {
+					if (shouldShow) titleBottom = window.scrollY + title.getBoundingClientRect().bottom;
 					shown = shouldShow;
 					move(shown);
 				}

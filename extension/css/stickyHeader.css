@@ -76,7 +76,7 @@ html.ih-topic-stuck #page-header > .navbar {
     text-overflow: ellipsis;
 }
 .ih-sticky-topic > .action-bar {
-    flex: 0 1 auto;
+    flex: 0 0 auto;
     display: flex;
     align-items: center;
     gap: 6px;
@@ -86,14 +86,43 @@ html.ih-topic-stuck #page-header > .navbar {
     float: none;
     margin: 0;
 }
+.ih-sticky-topic > .action-bar > .pagination {
+    white-space: nowrap;
+}
 /* the frozen bar has a search icon already, and the row has no room for the box */
 .ih-sticky-topic > .action-bar > .search-box {
     display: none;
 }
-/* on a narrow screen the buttons may need a second line rather than going off the screen */
+/* Where the whole list of pages doesn't fit next to the title: only what fits on one line (the
+   page-jump button, the arrows and the page it's on), without the "first unread / N replies" words
+   (a bare text there, so the font size hides it) */
+@media (max-width: 1000px) {
+    .ih-sticky-topic > .action-bar > .pagination {
+        font-size: 0;
+    }
+    .ih-sticky-topic > .action-bar > .pagination > .mark {
+        display: none;
+    }
+    .ih-sticky-topic > .action-bar > .pagination > ul {
+        font-size: 11px;
+    }
+    .ih-sticky-topic > .action-bar > .pagination > ul > li:not(.active, .arrow, .page-jump) {
+        display: none;
+    }
+}
+/* On a narrow screen: the title on a line of its own, the buttons on one line under it */
 @media (max-width: 700px) {
     html.ih-topic-stuck .ih-sticky-topic {
         flex-wrap: wrap;
         gap: 4px 10px;
+    }
+    .ih-sticky-topic > h2.topic-title {
+        flex-basis: 100%;
+    }
+    .ih-sticky-topic > .action-bar {
+        flex: 1 1 100%;
+    }
+    .ih-sticky-topic > .action-bar > .pagination {
+        margin-right: auto;
     }
 }
