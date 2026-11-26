@@ -13,17 +13,18 @@
 
 (function () {
     'use strict';
+    const KEYS = ['whatsNewVersion', 'whatsNewFrom', 'whatsNewCheckTiming', 'whatsNewLaterUntil'];
+    const LATER_MS = 24 * 60 * 60 * 1000;
+
+    let overlay = null;
+
+    // before anything returns, so overlay is there when the settings page calls it
     const onSettingsPage = location.protocol === 'chrome-extension:';
     if (onSettingsPage) {
         window.ihShowWhatsNew = showFromSettings;
         return;
     }
     if (!document.getElementById('page-body')) return; // not the forum, e.g. Cloudflare's check page
-
-    const KEYS = ['whatsNewVersion', 'whatsNewFrom', 'whatsNewCheckTiming', 'whatsNewLaterUntil'];
-    const LATER_MS = 24 * 60 * 60 * 1000;
-
-    let overlay = null;
 
     function init() {
         if (window.top !== window || !chrome.storage || !chrome.storage.local) return;
