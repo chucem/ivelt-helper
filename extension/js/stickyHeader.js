@@ -4,8 +4,8 @@
 // layout shows, shows on the desktop too while the bar is frozen, and opens the search bar of
 // js/addGoogleSearch.js inside it. css/stickyHeader.css has the look
 //
-// With stickyTopicBar too (off by default), in a topic: once its title and the buttons row under it
-// (reply, topic tools, pages) scroll under the bar, they're moved into a third row under it, both
+// With stickyTopicBar too (off by default), in a topic: once its title is all under the bar, the
+// title and the buttons row under it (reply, topic tools, pages) are moved into a third row under it, both
 // in one line, and moved back when scrolled up to their place again. The real ones are moved, not
 // copied, so the forum's drop-downs in them still work; an empty box keeps their place meanwhile
 (function(){
@@ -117,8 +117,8 @@
 		return {
 			row,
 			update(stuck, barHeight, spotRect) {
-				// past them: the bottom of the buttons row (or its empty box) is under the bar
-				const place = shown ? buttonsSpot : buttons;
+				// once the title (or its empty box) is all under the bar
+				const place = shown ? titleSpot : title;
 				const shouldShow = stuck && place.getBoundingClientRect().bottom < barHeight;
 				if (shouldShow !== shown) {
 					shown = shouldShow;
