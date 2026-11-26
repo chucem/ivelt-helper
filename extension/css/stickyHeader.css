@@ -11,12 +11,7 @@ html.ih-header-stuck #page-header > .navbar {
     box-shadow: 0 2px 6px rgb(0 0 0 / 20%);
 }
 
-/* The forum's "ווייז מער..." / "ווייז ווייניגער" button on a long quote (imcger Collapse Quote) has
-   z-index 999, only to stay over the quote's own fade, so it went over the bar while scrolling.
-   1 still keeps it over the fade */
-html.ih-sticky-header .imcger-quote-button {
-    z-index: 1;
-}
+/* The "ווייז מער..." button of a long quote goes under the bar: see css/appcss.css */
 
 /* A jump to a post (#p123) leaves its top visible under the bar */
 html.ih-sticky-header {
