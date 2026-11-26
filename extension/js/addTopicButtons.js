@@ -192,12 +192,28 @@ async function addBtn() {
 
 function addSimpleButton(btn, href, customClass, title, text, onclick, itext=""){
     let button = createButton(href, customClass, title, text, onclick, itext);
+    insertPostButton(btn, button.li);
+}
 
+// Our buttons go right after the forum's quote button, each new one first, so the last one added
+// stands next to it. A locked topic has no quote button: then they go where it would be, before the
+// first of ours already there, or else before the like button (or the phone menu), in the same order
+function insertPostButton(btn, li) {
     let quoteLi = getQuoteElm(btn)?.parentElement;
-    if (quoteLi){
-        quoteLi.parentNode.insertBefore(button.li, quoteLi.nextSibling)
+    if (quoteLi) {
+        quoteLi.parentNode.insertBefore(li, quoteLi.nextSibling);
+        return;
     }
+    const before = btn.querySelector(':scope > li:has(> .custom-btn), :scope > li.postlove-li, :scope > li.responsive-menu');
+    btn.insertBefore(li, before);
+}
 
+// The page with the post's text (its BBCode in #message): the quote page, or in a locked topic,
+// where the forum's quote page says the topic is locked, the private message quote page, which
+// still has it. The PM link from the post's profile when there's one, else built from the post's number
+function getQuoteSourceHref(btn, postID) {
+    const link = getQuoteElm(btn) || getPMHref(postID);
+    return link ? link.getAttribute("href") : `./ucp.php?i=pm&mode=compose&action=quotepost&p=${postID}`;
 }
 
 function getQuoteElm(btn){
@@ -224,12 +240,9 @@ function addUnderlineForQuoteBtn(btn) {
 }
 
 function addCopyQuoteButton(btn, postID, imageData){
-    // the post's text comes from its quote (or PM reply) page, so a post without one gets no button
-    let sourceURL = getPMHref(postID) || getQuoteElm(btn)
-    if (!sourceURL) {
-        return;
-    }
-    const href = sourceURL.getAttribute("href");
+    // the post's text comes from its PM quote (or quote) page, see getQuoteSourceHref
+    const pmLink = getPMHref(postID);
+    const href = pmLink ? pmLink.getAttribute("href") : getQuoteSourceHref(btn, postID);
     addSimpleButton(btn, null, 'fa-copy', 'ציטיר אין אנדערע אשכול', 'ציטיר אין אנדערע אשכול',
         () => copyQuote(href, postID, imageData))
 }
@@ -244,11 +257,7 @@ function addPMQuoteButton(btn, postID) {
 
     let button = createButton(pmLink.getAttribute('href'), 'fa-envelope', 'שיק א פריוואטע מעסעדזש מיט א ציטאט פון דער תגובה', 'פריוואטע מעסעדזש מיט א ציטאט');
     button.li.classList.add('ih-pm-quote');
-
-    let quoteLi = getQuoteElm(btn)?.parentElement;
-    if (quoteLi) {
-        quoteLi.parentNode.insertBefore(button.li, quoteLi.nextSibling)
-    }
+    insertPostButton(btn, button.li);
 }
 
 function addQuoteLastButton(btn, isPosting) {
@@ -307,7 +316,8 @@ function ping_user(post_id){
         let PostDetails = getPostDetails(post_id)
         let text = `[quote="${PostDetails.username}" user_id=${PostDetails.id} time=${PostDetails.time} post_id=${post_id}]\n[/quote]`
 
-        if (iveltSetting("alwaysCopyTopic") === true){
+        // a locked topic has no reply box to put it in
+        if (iveltSetting("alwaysCopyTopic") === true || !document.querySelector("#message-box textarea")){
             navigator.clipboard.writeText(text)
             iveltNotify("קאפירט צום קליפבאורד")
         } else {
@@ -552,7 +562,7 @@ function addQuoteInOtherTopicButton(btn, postID, topicMapping, imageData) {
     if (!targetTopicId) {
         return;
     }
-    let sourceURL = getQuoteElm(btn)
+    const href = getQuoteSourceHref(btn, postID);
 
     addSimpleButton(
         btn,
@@ -560,7 +570,7 @@ function addQuoteInOtherTopicButton(btn, postID, topicMapping, imageData) {
         'fa-comment',
         'ציטיר אינעם קאמענטארן אשכול',
         'ציטיר אינעם קאמענטארן אשכול',
-        () => quoteInOtherTopic(sourceURL.getAttribute("href"), postID, targetTopicId, imageData))
+        () => quoteInOtherTopic(href, postID, targetTopicId, imageData))
 
 }
 
