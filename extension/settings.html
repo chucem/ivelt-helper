@@ -7,6 +7,7 @@
   <link type='text/css' href='css/style.css' rel='stylesheet'>
   <link type='text/css' href='css/fonts.css' rel='stylesheet'>
   <link type='text/css' href='css/styles2.css' rel='stylesheet'>
+  <link type='text/css' href='css/whatsNew.css' rel='stylesheet'>
   <!-- the page follows the forum's color theme, loaded early so it doesn't flash white first -->
   <script src="js/themes.data.js"></script>
   <script src="js/theme.js"></script>
@@ -24,7 +25,7 @@
         <p>קומט אריין פאר א גלעזעלע שנאפס און א גוט ווארט</p>
       </header>
       <h1 id="header">iVelt Helper | אייוועלט העלפער</h1>
-      <div class="version">ווערסיע <bdi id="version"></bdi><span class="version-part" id="installSource"></span><span class="version-part" id="updateStatus"></span></div>
+      <div class="version">ווערסיע <bdi id="version"></bdi><span class="version-part" id="installSource"></span><span class="version-part" id="updateStatus"></span><span class="version-part"><a href="#" id="showWhatsNew">וואס איז ניי?</a></span></div>
     </div>
   <div class="credits">
     <h4 >קרעדיט:</h4>
@@ -88,17 +89,56 @@
         <input type='search' id='settingsFilter' class='text-input' dir='auto' placeholder='🔍 זוך אן אנשטעלונג' aria-label='זוך אן אנשטעלונג' autocomplete='off' spellcheck='false' />
         <div id='settingsFilterNone' class='settings-filter-none hidden'>קיין אנשטעלונג מיט די ווערטער</div>
       </div>
-      <div class='row'>
-        <input type='checkbox' id='themesEnabled' />
-        <label for='themesEnabled' class='label'>טויש די קאלירן און אויסקוק פון אייוועלט <span style="font-size: 0.8em;">(עס ווייזט זיך א "קאלירן" טעב דא אויבן, און אין דעם עקסטענשען מעניו)</span></label>
-      </div>
-      <div class='row'>
-        <input type='checkbox' id='settingsSync' />
-        <label for='settingsSync' class='label'>האלט די אנשטעלונגען און קאלירן די זעלבע אויף אלע מיינע קאמפיוטערס <span style="font-size: 0.8em;">(דורך דעם בראוזער'ס סינק, ווען מען איז אריינגעלאגט אין בראוזער. Google Drive/Dropbox אקאונטס און דיבאג לאגס בלייבן נאר אויף דעם קאמפיוטער)</span></label>
+      <div class='settings-group'>
+        <h3>אלגעמיין</h3>
+        <div class='row'>
+          <input type='checkbox' id='themesEnabled' />
+          <label for='themesEnabled' class='label'>טויש די קאלירן און אויסקוק פון אייוועלט <span style="font-size: 0.8em;">(עס ווייזט זיך א "קאלירן" טעב דא אויבן, און אין דעם עקסטענשען מעניו)</span></label>
+        </div>
+        <div class='row'>
+          <input type='checkbox' id='settingsSync' />
+          <label for='settingsSync' class='label'>האלט די אנשטעלונגען און קאלירן די זעלבע אויף אלע מיינע קאמפיוטערס <span style="font-size: 0.8em;">(דורך דעם בראוזער'ס סינק, ווען מען איז אריינגעלאגט אין בראוזער. Google Drive/Dropbox אקאונטס און דיבאג לאגס בלייבן נאר אויף דעם קאמפיוטער)</span></label>
+        </div>
       </div>
 
       <div class='settings-group'>
-        <h3>שרייבן און ציטירן</h3>
+        <h3>שרייבן א תגובה</h3>
+        <div class='row'>
+          <input type='checkbox' id='warnOnLosingPost' class='option' />
+          <label for='warnOnLosingPost' class='label'>ווארן מיך איידער איך פארליר א נישט-געשיקטע תגובה/אשכול, און איידער איך פארצייכן אלע נאטיפיקאציעס ווי געליינט</label>
+        </div>
+        <div class='row'>
+          <input type='checkbox' id='keepDrafts' class='option' />
+          <label for='keepDrafts' class='label'>האלט אן וואס איך שרייב אין א תגובה ביז עס ווערט געשיקט, כדי צו קענען צוריקצושטעלן <span style="font-size: 0.8em;">(אויב דער טעב ווערט פארמאכט אדער דער בראוזער פאלט אראפ)</span></label>
+        </div>
+        <div class='row'>
+          <input type='checkbox' id='editorUndo' class='option' />
+          <label for='editorUndo' class='label'>לאז צוריקדרייען (undo) און ווידער טון ביים שרייבן <span class="shortcut-key">Ctrl+Z</span> <span class="shortcut-key">Ctrl+Y</span>, אויך נאך די BBCode קנעפלעך, מיט צוויי קנעפלעך אויבן אין שרייב קעסטל</label>
+        </div>
+        <div class='row'>
+          <input type='checkbox' id='imageResizer' class='option' />
+          <label for='imageResizer' class='label'>פארקלענער אויטאמאטיש בילדער וואס זענען צו גרויס פאר אן עטעטשמענט, און מאך א פאלדער (אדער מער פיילס ווי עס איז דא פלאץ) אין א ZIP</label>
+        </div>
+        <div class='row'>
+          <input type='checkbox' id='pasteImages' class='option' />
+          <label for='pasteImages' class='label'>לאז אריינלייגן (פעיסט) בילדער גלייך אין דער תגובה, ווי אין Gmail</label>
+        </div>
+        <div class='row'>
+          <input type='checkbox' id='openAttachmentsTab' class='option' />
+          <label for='openAttachmentsTab' class='label'>ביים שרייבן א תגובה, עפן גלייך דעם "עטעטשמענטס" טעב (אנשטאט "אפציעס")</label>
+        </div>
+      </div>
+
+      <div class='settings-group'>
+        <h3>ציטירן</h3>
+        <div class='row'>
+          <input type='checkbox' id='quoteSelection' class='option' />
+          <label for='quoteSelection' class='label'>ווען איך צייכן אן ווערטער אין א תגובה, ציטירט איר "ציטיר" קנעפל נאר זיי <span style="font-size: 0.8em;">(דער קנעפל ווערט "ציטיר אנגעצייכנט")</span></label>
+        </div>
+        <div class='row row-indented'>
+          <input type='checkbox' id='quoteJumpToReply' class='option' />
+          <label for='quoteJumpToReply' class='label'>נאכן ציטירן, גיי אראפ צום תגובה קעסטל, גרייט צו שרייבן נאכן ציטאט</label>
+        </div>
         <div class='row'>
           <input type='checkbox' id='alwaysCopyTopic' class='option' />
           <label for='alwaysCopyTopic' class='label'>ביים <span class="shortcut-key"><i class="icon fa-at fa-fw" aria-hidden="true"></i></span> "דערמאן תגובה" קנעפל: קאפיר עס צום קליפבאורד אנשטאט עס גלייך אריינצולייגן אין שרייב קעסטל</label>
@@ -116,37 +156,18 @@
             <option value="none">קיין לינק</option>
           </select>
         </div>
-        <div class='row'>
-          <input type='checkbox' id='warnOnLosingPost' class='option' />
-          <label for='warnOnLosingPost' class='label'>ווארן מיך איידער איך פארליר א נישט-געשיקטע תגובה/אשכול, און איידער איך פארצייכן אלע נאטיפיקאציעס ווי געליינט</label>
-        </div>
-        <div class='row'>
-          <input type='checkbox' id='keepDrafts' class='option' />
-          <label for='keepDrafts' class='label'>האלט אן וואס איך שרייב אין א תגובה ביז עס ווערט געשיקט, כדי צו קענען צוריקצושטעלן <span style="font-size: 0.8em;">(אויב דער טעב ווערט פארמאכט אדער דער בראוזער פאלט אראפ)</span></label>
-        </div>
-        <div class='row'>
-          <input type='checkbox' id='quoteSelection' class='option' />
-          <label for='quoteSelection' class='label'>ווען איך צייכן אן ווערטער אין א תגובה, ציטירט איר "ציטיר" קנעפל נאר זיי <span style="font-size: 0.8em;">(דער קנעפל ווערט "ציטיר אנגעצייכנט")</span></label>
-        </div>
-        <div class='row row-indented'>
-          <input type='checkbox' id='quoteJumpToReply' class='option' />
-          <label for='quoteJumpToReply' class='label'>נאכן ציטירן, גיי אראפ צום תגובה קעסטל, גרייט צו שרייבן נאכן ציטאט</label>
-        </div>
-        <div class='row'>
-          <input type='checkbox' id='editorUndo' class='option' />
-          <label for='editorUndo' class='label'>לאז צוריקדרייען (undo) און ווידער טון ביים שרייבן <span class="shortcut-key">Ctrl+Z</span> <span class="shortcut-key">Ctrl+Y</span>, אויך נאך די BBCode קנעפלעך, מיט צוויי קנעפלעך אויבן אין שרייב קעסטל</label>
-        </div>
-        <div class='row'>
-          <input type='checkbox' id='imageResizer' class='option' />
-          <label for='imageResizer' class='label'>פארקלענער אויטאמאטיש בילדער וואס זענען צו גרויס פאר אן עטעטשמענט, און מאך א פאלדער (אדער מער פיילס ווי עס איז דא פלאץ) אין א ZIP</label>
-        </div>
-        <div class='row'>
-          <input type='checkbox' id='pasteImages' class='option' />
-          <label for='pasteImages' class='label'>לאז אריינלייגן (פעיסט) בילדער גלייך אין דער תגובה, ווי אין Gmail</label>
-        </div>
-        <div class='row'>
-          <input type='checkbox' id='openAttachmentsTab' class='option' />
-          <label for='openAttachmentsTab' class='label'>ביים שרייבן א תגובה, עפן גלייך דעם "עטעטשמענטס" טעב (אנשטאט "אפציעס")</label>
+        <div class='row' >
+          <input type='checkbox' id='topicMappingUpdate' />
+          <label for='topicMappingUpdate' class='label'>אפדעיט די ליסטע פון קאמענטארן אשכולות יעדע</label>
+          <select id='cachedTopicMappingExpire' class='option' aria-label='ווי אפט צו אפדעיטן די ליסטע פון קאמענטארן אשכולות'>
+            <option value="3600">שעה</option>
+            <option value="86400">טאג</option>
+            <option value="604800">וואך</option>
+          </select>
+          <div>
+            <a style="font-size: 0.8em;" id='forceUpdateTopicMapCache' class='button'>אפדעיט די ליסטע יעצט</a>
+            <div style="font-size: 0.8em;" id='topicMappingStatus'></div>
+          </div>
         </div>
       </div>
 
@@ -182,16 +203,7 @@
       </div>
 
       <div class='settings-group'>
-        <h3>ליינען אן אשכול</h3>
-        <div class='row'>
-          <input type='checkbox' id='titleOpensUnread' class='option' />
-          <label for='titleOpensUnread' class='label'>א קליק אויפן לינק פון אן אשכול מיט נייע תגובות עפנט עס ביי דער ערשטער אומגעליינטער תגובה (אנשטאט דעם ערשטן בלאט)</label>
-        </div>
-        <div class='row'>
-          <input type='checkbox' id='doubleClickLike' class='option' />
-          <label for='doubleClickLike' class='label'>א דאבל-קליק אויף א תגובה (נישט אויף די ווערטער) באדאנקט עס</label>
-        </div>
-        <!-- the two "keep on screen while scrolling" options, a little closer together -->
+        <h3>אויסקוק פון א בלאט</h3>
         <div class='row-pair'>
           <div class='row'>
             <input type='checkbox' id='stickyPostButtons' class='option' />
@@ -207,12 +219,28 @@
           <label for='compactQuotesMobile' class='label'>אויף א שמאלע סקרין/פאון, ווייז ציטאטן אן דעם ליידיגע פלאץ אין די זייטן <span style="font-size: 0.8em;">(אז ציטאטן אין ציטאטן ווערן נישט א שמאלע זייל)</span></label>
         </div>
         <div class='row'>
+          <input type='checkbox' id='spoilerPolish' class='option' />
+          <label for='spoilerPolish' class='label'>ווייז שענערע ספוילערס: די ווערטער און בילדער בלייבן אויף זייער פלאץ צוגעדעקט, און א קליק ווייזט זיי</label>
+        </div>
+        <div class='row'>
           <input type='checkbox' id='whoLiked' class='option' />
           <label for='whoLiked' class='label'>א קליינע פייל אויפן דאנק קנעפל ווייזט ווער עס האט באדאנקט די תגובה</label>
         </div>
         <div class='row'>
           <input type='checkbox' id='profileCards' class='option' />
           <label for='profileCards' class='label'>ווען מען האלט די מויז אויף א נאמען, ווייז א קארטל מיט זיין פראפייל</label>
+        </div>
+      </div>
+
+      <div class='settings-group'>
+        <h3>קליקן און קיבאורד</h3>
+        <div class='row'>
+          <input type='checkbox' id='titleOpensUnread' class='option' />
+          <label for='titleOpensUnread' class='label'>א קליק אויפן לינק פון אן אשכול מיט נייע תגובות עפנט עס ביי דער ערשטער אומגעליינטער תגובה (אנשטאט דעם ערשטן בלאט)</label>
+        </div>
+        <div class='row'>
+          <input type='checkbox' id='doubleClickLike' class='option' />
+          <label for='doubleClickLike' class='label'>א דאבל-קליק אויף א תגובה (נישט אויף די ווערטער) באדאנקט עס</label>
         </div>
         <div class='row'>
           <input type='checkbox' id='copyPostLink' class='option' />
@@ -227,13 +255,13 @@
           </select>
         </div>
         <div class='row'>
-          <input type='checkbox' id='spoilerPolish' class='option' />
-          <label for='spoilerPolish' class='label'>ווייז שענערע ספוילערס: די ווערטער און בילדער בלייבן אויף זייער פלאץ צוגעדעקט, און א קליק ווייזט זיי</label>
-        </div>
-        <div class='row'>
           <input type='checkbox' id='upDownArrowKeys' class='option' />
           <label for='upDownArrowKeys' class='label'>נוץ די ארויף/אראפ עראוס <span class="shortcut-key">↑</span><span class="shortcut-key">↓</span> אויפן קיבאורד צו שפרינגען צום אנהייב/סוף פונעם בלאט</label>
         </div>
+      </div>
+
+      <div class='settings-group'>
+        <h3>פרינטן</h3>
         <div class='row'>
           <input type='checkbox' id='printShowLikes' class='option' />
           <label for='printShowLikes' class='label'>ביים <span class="shortcut-key"><i class="icon fa-print fa-fw" aria-hidden="true"></i></span> פרינטן עטליכע בלעטער / דעם גאנצן אשכול, ווייז אונטער יעדע תגובה די לייקס</label>
@@ -295,12 +323,12 @@
       </div>
 
       <div class='settings-group'>
-        <h3>אנדערע</h3>
+        <h3>אקאונטס און עקסטענשען מעניו</h3>
         <div class='row'>
           <input type='checkbox' id='multiAccounts' class='option' />
           <label for='multiAccounts' class='label'>מערערע אקאונטס: בלייב אריינגעלאגט אין עטליכע אקאונטס, און טויש צווישן זיי פונעם עקסטענשען מעניו <span style="font-size: 0.8em;">(יעדע אקאונט'ס לאגין קוקיס ווערן אפגעהיטן נאר אויף דעם קאמפיוטער, אין דעם עקסטענשען, נישט אויפן פארום'ס בלאט און נישט אין סינק. ווער עס קען נוצן דעם בראוזער קען זיך אריינלאגן אין זיי. אויסלעשן דאס מעקט זיי אויס)</span></label>
         </div>
-        <div class='row'>
+        <div class='row row-indented'>
           <input type='checkbox' id='switchReloadsOneTab' class='option' />
           <label for='switchReloadsOneTab' class='label'>ביים טוישן אקאונט, רילאוד נאר דעם טעב וואו מען האט געטוישט <span style="font-size: 0.8em;">(די אנדערע טעבס ווייזן א מעלדונג אז זיי ווייזן נאך דעם פריערדיגן אקאונט, מיט א רילאוד קנעפל)</span></label>
         </div>
@@ -308,19 +336,10 @@
           <input type='checkbox' id='popupSameTab' class='option' />
           <label for='popupSameTab' class='label'>די לינקס אינעם פאפ-אפ עפענען זיך אינעם זעלבן טעב, ווען ער איז שוין אויף אייוועלט</label>
         </div>
-        <div class='row' >
-          <input type='checkbox' id='topicMappingUpdate' />
-          <label for='topicMappingUpdate' class='label'>אפדעיט די ליסטע פון קאמענטארן אשכולות יעדע</label>
-          <select id='cachedTopicMappingExpire' class='option' aria-label='ווי אפט צו אפדעיטן די ליסטע פון קאמענטארן אשכולות'>
-            <option value="3600">שעה</option>
-            <option value="86400">טאג</option>
-            <option value="604800">וואך</option>
-          </select>
-          <div>
-            <a style="font-size: 0.8em;" id='forceUpdateTopicMapCache' class='button'>אפדעיט די ליסטע יעצט</a>
-            <div style="font-size: 0.8em;" id='topicMappingStatus'></div>
-          </div>
-        </div>
+      </div>
+
+      <div class='settings-group'>
+        <h3>אנדערע</h3>
         <div class='row' >
           <input type='checkbox' id='debugMode' class='option' />
           <label for='debugMode' class='label warning'>דיבאג מאוד <span style="font-size: 0.8em;">(נאר פאר טעכנישע פראבלעמען)</span></label>
@@ -353,7 +372,7 @@
 
       <div class='row'>
         <ul>
-          <li><span class="shortcut-key"><i class="icon fa-quote-left fa-fw" aria-hidden="true">1</i></span> צו ציטירן נאר די לעצטע תגובה, אן די פריערדיגע ציטאטן וואס זענען אין איר. <span style="font-size: 0.8em;">(ווייזט זיך נאר ביי א תגובה וואס האט א ציטאט)</span></li>
+          <li><span class="shortcut-key"><i class="icon fa-quote-left last fa-fw" aria-hidden="true">1</i></span> צו ציטירן נאר די לעצטע תגובה, אן די פריערדיגע ציטאטן וואס זענען אין איר. <span style="font-size: 0.8em;">(ווייזט זיך נאר ביי א תגובה וואס האט א ציטאט)</span></li>
           <li><span class="shortcut-key"><i class="icon fa-at fa-fw" aria-hidden="true"></i></span> צו דערמאנען די תגובה, אזוי אז דער שרייבער באקומט א נאטיפיקאציע.</li>
           <li><span class="shortcut-key"><i class="icon fa-copy fa-fw" aria-hidden="true"></i></span> צו ציטירן די תגובה אין אנדערע אשכול.</li>
           <li><span class="shortcut-key"><i class="icon fa-comment fa-fw" aria-hidden="true"></i></span> צו ציטירן די תגובה אינעם קאמענטארן אשכול.</li>
@@ -370,6 +389,7 @@
   </div>
   <div id="notify"></div>
   <script src="js/whatsNew.data.js"></script>
+  <script src="js/whatsNew.js"></script>
   <script src="js/settingsTheme.js"></script>
   <script src="js/settings.js"></script>
 </div>

@@ -501,6 +501,13 @@ window.addEventListener('hashchange', showTab);
 window.addEventListener('hashchange', showLinkedSetting);
 document.addEventListener('DOMContentLoaded', initSettingsFilter);
 document.addEventListener('DOMContentLoaded', markNewSettings);
+// the what's-new pop-up again, also after it was closed (js/whatsNew.js)
+document.addEventListener('DOMContentLoaded', () => {
+	document.getElementById('showWhatsNew').addEventListener('click', e => {
+		e.preventDefault();
+		if(window.ihShowWhatsNew) window.ihShowWhatsNew();
+	});
+});
 document.addEventListener('DOMContentLoaded', () => setTimeout(showLinkedSetting));
 document.addEventListener('DOMContentLoaded', showVersion);
 document.addEventListener('DOMContentLoaded', showInstallSource);

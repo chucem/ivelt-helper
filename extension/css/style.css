@@ -131,7 +131,13 @@ hr {
     box-shadow: 0 0 0 6px transparent;
 }
 .row.row-indented {
-    padding-right: 30px;
+    margin-right: 10px;
+    padding-right: 20px;
+    border-right: 2px solid var(--ui-border);
+}
+/* a setting that only matters with the one above: tucked under it, joined by the line */
+.settings-group .row:has(+ .row-indented) {
+    margin-bottom: 8px;
 }
 /* Two options that belong together (the ones kept on screen while scrolling): a smaller gap between them */
 .row-pair > .row:not(:last-child) {
@@ -337,16 +343,32 @@ select {
 }
 
 .shortcut-key .icon:before { padding-right: 2px; }
+/* "quote last" (the quote mark with a 1) sized like the real button on the forum, so it's centered */
+.shortcut-key .icon.last {
+	width: 20px;
+	padding-left: 2px;
+	text-align: center;
+	box-sizing: border-box;
+}
+.shortcut-key .icon.last:before { padding-right: 0; }
+  /* each group of settings in a box of its own, so what goes together is seen at a glance */
   .settings-group {
-    margin-bottom: 30px;
+    margin-bottom: 22px;
+    padding: 14px 16px 2px;
+    border: 1px solid var(--ui-border);
+    border-radius: 8px;
+    background: color-mix(in srgb, var(--ui-surface) 70%, transparent);
   }
   .settings-group h3 {
     font-size: 15px;
     font-weight: 600;
     color: var(--ui-heading);
-    margin: 0 0 18px;
-    padding-bottom: 4px;
+    margin: 0 0 16px;
+    padding-bottom: 6px;
     border-bottom: 1px solid var(--ui-border);
+  }
+  .settings-group .row {
+    margin-bottom: 18px;
   }
   .aaa .row + h2 {
     margin-top: 30px;
