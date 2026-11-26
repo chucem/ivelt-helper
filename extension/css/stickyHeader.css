@@ -106,8 +106,9 @@ html.ih-topic-stuck #page-header > .navbar {
     .ih-sticky-topic > .action-bar > .pagination > ul {
         font-size: 11px;
     }
+    /* !important: the forum's own phone style shows them with a stronger rule */
     .ih-sticky-topic > .action-bar > .pagination > ul > li:not(.active, .arrow, .page-jump) {
-        display: none;
+        display: none !important;
     }
 }
 /* On a narrow screen: the title on a line of its own, the buttons on one line under it */
