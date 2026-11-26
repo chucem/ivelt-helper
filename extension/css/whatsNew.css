@@ -83,6 +83,13 @@
 .ih-whats-new-list li {
     margin: 4px 0;
 }
+/* the link at the end of a line about a setting, to that setting */
+.ih-whats-new-list a.ih-whats-new-setting {
+    color: var(--t-link, #105289);
+    font-size: 12px;
+    font-weight: bold;
+    white-space: nowrap;
+}
 
 .ih-whats-new-buttons {
     display: flex;

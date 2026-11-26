@@ -92,6 +92,17 @@ hr {
     margin: 0 0 24px;
     text-align: right;
 }
+/* the setting a link pointed to (settings.html#<its id>, e.g. from the what's-new pop-up) */
+.row.setting-target {
+    border-radius: 6px;
+    background: color-mix(in srgb, var(--ui-selection) 55%, transparent);
+    box-shadow: 0 0 0 6px color-mix(in srgb, var(--ui-selection) 55%, transparent);
+    transition: background 1.5s, box-shadow 1.5s;
+}
+.row.setting-target.setting-target-fade {
+    background: transparent;
+    box-shadow: 0 0 0 6px transparent;
+}
 .row.row-indented {
     padding-right: 30px;
 }

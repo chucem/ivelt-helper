@@ -424,7 +424,23 @@ async function showInstallSource(){
 	statusLine.replaceChildren('ס\'איז דא א נייע ווערסיע ', version, ' – ', action);
 }
 
+// A link to one setting (settings.html#stickyHeader, from the what's-new pop-up) scrolls to its
+// row and marks it for a few seconds, so it's found at once
+function showLinkedSetting(){
+	const id = decodeURIComponent(location.hash.slice(1));
+	const field = id && document.getElementById(id);
+	const row = field && field.closest('#tab-settings .row');
+	if(!row) return;
+	row.scrollIntoView({ block: 'center' });
+	row.classList.remove('setting-target', 'setting-target-fade');
+	row.classList.add('setting-target');
+	setTimeout(() => row.classList.add('setting-target-fade'), 2500);
+	setTimeout(() => row.classList.remove('setting-target', 'setting-target-fade'), 4500);
+}
+
 window.addEventListener('hashchange', showTab);
+window.addEventListener('hashchange', showLinkedSetting);
+document.addEventListener('DOMContentLoaded', () => setTimeout(showLinkedSetting));
 document.addEventListener('DOMContentLoaded', showVersion);
 document.addEventListener('DOMContentLoaded', showInstallSource);
 document.addEventListener('DOMContentLoaded', showTab);

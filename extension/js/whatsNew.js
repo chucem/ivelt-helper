@@ -71,7 +71,7 @@
 
         const title = element('h2', 'ih-whats-new-title', 'וואס איז ניי אינעם אייוועלט עקסטענשען');
         title.id = 'ih-whats-new-title';
-        dialog.append(title, element('div', 'ih-whats-new-version', 'דער עקסטענשען איז יעצט אפגעדעיטעט געווארן צו ווערסיע ' + version));
+        dialog.append(title, element('div', 'ih-whats-new-version', 'דער עקסטענשען איז יעצט אפדעיטעד געווארן צו ווערסיע ' + version));
 
         if (checkTiming) {
             const notice = element('div', 'ih-whats-new-notice');
@@ -89,7 +89,7 @@
                 dialog.appendChild(element('h3', 'ih-whats-new-release', 'ווערסיע ' + release.version));
             }
             addList(dialog, 'נייע זאכן', release.features);
-            addList(dialog, 'תיקונים', release.fixes);
+            addList(dialog, 'פארבעסערונגען', release.fixes);
         });
 
         // closing is the main button, the way out of the pop-up
@@ -111,7 +111,21 @@
         if (!items || !items.length) return;
         dialog.appendChild(element('h3', null, heading));
         const list = element('ul', 'ih-whats-new-list');
-        items.forEach((text) => list.appendChild(element('li', null, text)));
+        // a line is its text, or { text, setting } for one about a setting: then it ends with a
+        // link that opens the settings at that setting (settings.html#<its id>), marked there
+        items.forEach((item) => {
+            const li = element('li', null, typeof item === 'string' ? item : item.text);
+            if (item.setting) {
+                const link = element('a', 'ih-whats-new-setting', 'צו דער אנשטעלונג ←');
+                link.href = '#';
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    openSettings(item.setting);
+                });
+                li.append(' ', link);
+            }
+            list.appendChild(li);
+        });
         dialog.appendChild(list);
     }
 
