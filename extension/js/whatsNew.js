@@ -190,7 +190,9 @@
         // on the settings page itself: go to that setting there
         if (onSettingsPage) {
             hide();
-            location.hash = hash;
+            // the same address doesn't change, so it's told to go there again
+            if (location.hash.slice(1) === hash) window.dispatchEvent(new HashChangeEvent('hashchange'));
+            else location.hash = hash;
             return;
         }
         try {

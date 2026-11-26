@@ -88,11 +88,11 @@ async function showTopicMappingStatus(){
 	// isolated, so the browser's (often English) date doesn't get mixed into the Yiddish around it
 	const when = time => '⁨' + new Date(time).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) + '⁩';
 
-	let text = updatedAt ? 'לעצט אפדעיטעט ' + when(updatedAt) : '';
+	let text = updatedAt ? 'לעצט אפדעיטעד ' + when(updatedAt) : '';
 	if(failedAt && (!updatedAt || failedAt > updatedAt))
 		text += (text ? '. ' : '') + 'דער לעצטער פרואוו (' + when(failedAt) + ') האט נישט געארבעט';
 	if(forceUpdateTopicMapCache === true)
-		text = 'ווערט אפדעיטעט ווען מען עפנט דעם קומענדיגן בלאט אויפן פארום';
+		text = 'ווערט אפדעיטעד ווען מען עפנט דעם קומענדיגן בלאט אויפן פארום';
 	document.getElementById('topicMappingStatus').textContent = text;
 }
 
