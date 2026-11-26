@@ -92,6 +92,33 @@ hr {
     margin: 0 0 24px;
     text-align: right;
 }
+/* the filter box over the settings (js/settings.js), and what it hides */
+.settings-filter {
+    margin: 0 0 22px;
+}
+.settings-filter .text-input {
+    max-width: 320px;
+}
+.settings-filter-none {
+    margin-top: 10px;
+    color: var(--ui-muted);
+    font-size: 14px;
+}
+.filtered-out {
+    display: none !important;
+}
+/* "ניי" before a setting the latest version added (js/settings.js) */
+.new-tag {
+    display: inline-block;
+    padding: 1px 7px;
+    border-radius: 9px;
+    background: var(--ui-accent);
+    color: var(--ui-on-header);
+    font-size: 11px;
+    font-weight: bold;
+    line-height: 1.5;
+    vertical-align: 2px;
+}
 /* the setting a link pointed to (settings.html#<its id>, e.g. from the what's-new pop-up) */
 .row.setting-target {
     border-radius: 6px;

@@ -83,6 +83,11 @@
     <div class='tab-panel' id='tab-settings'>
     <div class='sub-section'>
       <h2>אנשטעלונגען</h2>
+      <!-- shows only the settings with these words (js/settings.js) -->
+      <div class='settings-filter'>
+        <input type='search' id='settingsFilter' class='text-input' dir='auto' placeholder='🔍 זוך אן אנשטעלונג' aria-label='זוך אן אנשטעלונג' autocomplete='off' spellcheck='false' />
+        <div id='settingsFilterNone' class='settings-filter-none hidden'>קיין אנשטעלונג מיט די ווערטער</div>
+      </div>
       <div class='row'>
         <input type='checkbox' id='themesEnabled' />
         <label for='themesEnabled' class='label'>טויש די קאלירן און אויסקוק פון אייוועלט <span style="font-size: 0.8em;">(עס ווייזט זיך א "קאלירן" טעב דא אויבן, און אין דעם עקסטענשען מעניו)</span></label>
@@ -211,11 +216,15 @@
         </div>
         <div class='row'>
           <input type='checkbox' id='copyPostLink' class='option' />
-          <label for='copyPostLink' class='label'>א קליק אויפן <span class="shortcut-key"><i class="icon fa-file fa-fw" aria-hidden="true"></i></span> אייקאן נעבן א תגובה קאפירט דעם לינק צו דער תגובה, אנשטאט אריינצוגיין אין לינק</label>
+          <label for='copyPostLink' class='label'>א קליק אויפן <span class="shortcut-key"><i class="icon fa-file fa-fw" aria-hidden="true"></i></span> אייקאן נעבן א תגובה קאפירט דעם לינק צו דער תגובה, אנשטאט אריינצוגיין אין לינק <span style="font-size: 0.8em;">(Shift+קליק מיט א "קעפל: ..." פונעם אשכול)</span></label>
         </div>
         <div class='row'>
-          <input type='checkbox' id='copyTopicLink' class='option' />
-          <label for='copyTopicLink' class='label'>א קליק אויפן נאמען פונעם אשכול (אויבן, אינעם אשכול) קאפירט א "קעפל: ..." לינק צום אשכול <span style="font-size: 0.8em;">(Ctrl+קליק עפנט עס ווי פריער)</span></label>
+          <label for='copyTopicLink' class='label'>א קליק אויפן נאמען פונעם אשכול (אויבן, אינעם אשכול) קאפירט <span style="font-size: 0.8em;">(Shift+קליק דאס אנדערע, Ctrl+קליק עפנט עס ווי פריער)</span></label>
+          <select id='copyTopicLink' class='option'>
+            <option value="heading">א "קעפל: ..." לינק</option>
+            <option value="link">נאר דעם לינק</option>
+            <option value="off">גארנישט (עס עפנט דעם אשכול)</option>
+          </select>
         </div>
         <div class='row'>
           <input type='checkbox' id='spoilerPolish' class='option' />
@@ -288,11 +297,6 @@
       <div class='settings-group'>
         <h3>אנדערע</h3>
         <div class='row'>
-          <input type='checkbox' id='hideUserName' class='option' />
-          <del> <label for='hideUserName' class='label' >ווייז נישט מיין ניק ווען איך בין אריינגעסיינט</label></del>
-          <div style="font-size: 0.8em;">ביטע שטעל די <a href="https://www.ivelt.com/forum/ucp.php?i=165">"באהאלט מיין ניק"</a> אפציע אויף "יא". <a href="https://www.ivelt.com/forum/viewtopic.php?p=5080519#p5080519">ליינט מער</a></div>
-        </div>
-        <div class='row'>
           <input type='checkbox' id='multiAccounts' class='option' />
           <label for='multiAccounts' class='label'>מערערע אקאונטס: בלייב אריינגעלאגט אין עטליכע אקאונטס, און טויש צווישן זיי פונעם עקסטענשען מעניו <span style="font-size: 0.8em;">(יעדע אקאונט'ס לאגין קוקיס ווערן אפגעהיטן נאר אויף דעם קאמפיוטער, אין דעם עקסטענשען, נישט אויפן פארום'ס בלאט און נישט אין סינק. ווער עס קען נוצן דעם בראוזער קען זיך אריינלאגן אין זיי. אויסלעשן דאס מעקט זיי אויס)</span></label>
         </div>
@@ -353,8 +357,8 @@
           <li><span class="shortcut-key"><i class="icon fa-at fa-fw" aria-hidden="true"></i></span> צו דערמאנען די תגובה, אזוי אז דער שרייבער באקומט א נאטיפיקאציע.</li>
           <li><span class="shortcut-key"><i class="icon fa-copy fa-fw" aria-hidden="true"></i></span> צו ציטירן די תגובה אין אנדערע אשכול.</li>
           <li><span class="shortcut-key"><i class="icon fa-comment fa-fw" aria-hidden="true"></i></span> צו ציטירן די תגובה אינעם קאמענטארן אשכול.</li>
-          <li><span class="shortcut-key"><i class="icon fa-file fa-fw" aria-hidden="true"></i></span> (נעבן דעם נאמען פונעם שרייבער) צו קאפירן דעם לינק צו דער תגובה. <span style="font-size: 0.8em;">(מען קען דאס אויסלעשן אין די אנשטעלונגען)</span></li>
-          <li>א קליק אויפן נאמען פונעם אשכול (אויבן, אינעם אשכול) קאפירט א "קעפל: ..." לינק צום אשכול, צו פעיסטן אין א תגובה. <span style="font-size: 0.8em;">(מען קען דאס אויסלעשן אין די אנשטעלונגען)</span></li>
+          <li><span class="shortcut-key"><i class="icon fa-file fa-fw" aria-hidden="true"></i></span> (נעבן דעם נאמען פונעם שרייבער) צו קאפירן דעם לינק צו דער תגובה, Shift+קליק מיט א "קעפל: ..." פונעם אשכול. <span style="font-size: 0.8em;">(מען קען דאס אויסלעשן אין די אנשטעלונגען)</span></li>
+          <li>א קליק אויפן נאמען פונעם אשכול (אויבן, אינעם אשכול) קאפירט א "קעפל: ..." לינק צום אשכול, צו פעיסטן אין א תגובה, אדער נאר דעם לינק. Shift+קליק קאפירט דאס אנדערע. <span style="font-size: 0.8em;">(מען קען דאס אויסלעשן אין די אנשטעלונגען)</span></li>
         </ul>
       </div>
 
@@ -365,6 +369,7 @@
   </div>
   </div>
   <div id="notify"></div>
+  <script src="js/whatsNew.data.js"></script>
   <script src="js/settingsTheme.js"></script>
   <script src="js/settings.js"></script>
 </div>

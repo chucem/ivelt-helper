@@ -8,18 +8,7 @@
 		'splitQuotedNotifs', 'splitLikedNotifs', 'splitMentionedNotifs', 'splitPmNotifs', 'printShowLikes', 'printLikesStyle', 'editorUndo'];
 
 	if(chrome.storage){
-		chrome.storage.local.get([...PAGE_SETTINGS, 'hideUserName', 'warnOnLosingPost'], function(items){
-			if(items.hideUserName){
-				let userName = document.querySelector('.header-avatar .username');
-				if (userName) {
-					userName.dataset.name = userName.innerText;
-					userName.innerText = 'הא?';
-				}
-				let avatar = document.querySelector('.header-avatar .avatar');
-				if (avatar)
-					avatar.style.display = "none";
-			}
-
+		chrome.storage.local.get([...PAGE_SETTINGS, 'warnOnLosingPost'], function(items){
 			if(items.warnOnLosingPost){
 				var form = document.querySelector('form[id="qr_postform"]') || document.querySelector('form[id="postform"]');
 

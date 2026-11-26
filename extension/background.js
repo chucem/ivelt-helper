@@ -1,7 +1,6 @@
 const notificationUrl = "https://www.ivelt.com/forum/ucp.php?i=ucp_notifications";
 
 const defualtPreferences = {
-  hideUserName: false,
   alwaysCopyTopic: false,
   copyAttachments: true,
   quoteSourceLink: 'topic', // the link to the quoted post: 'topic' line above, 'source' below, 'both' or 'none'
@@ -42,7 +41,7 @@ const defualtPreferences = {
   driveFolderName: 'iVelt Helper',
   openAttachmentsTab: true,
   copyPostLink: true,
-  copyTopicLink: true, // in a topic, a click on its title copies a "קעפל: ..." link to it
+  copyTopicLink: 'heading', // in a topic, a click on its title copies: 'heading' a "קעפל: ..." link, 'link' only the address, 'off' nothing (it opens)
   whoLiked: true,
   profileCards: true,
   printShowLikes: false,

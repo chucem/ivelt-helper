@@ -49,10 +49,11 @@ function enchancePage(items) {
     checkStickyPosition();
   }
   // Copy the post link (the small icon next to the author name) on a plain left click instead of navigating.
-  // Right click, long press, middle click and modifier clicks keep the browser's default behavior.
+  // Shift+click copies it as a "קעפל: <topic>" link, ready to paste in a reply.
+  // Right click, long press, middle click and the other modifier clicks keep the browser's default behavior.
   if (items.copyPostLink !== false) {
     document.addEventListener('click', (event) => {
-      if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) {
+      if (event.button !== 0 || event.ctrlKey || event.metaKey || event.altKey) {
         return;
       }
 
@@ -68,22 +69,26 @@ function enchancePage(items) {
 
       event.preventDefault();
       const postUrl = `${window.location.origin}/forum/viewtopic.php?p=${postId}#p${postId}`;
-      navigator.clipboard.writeText(postUrl)
-        .then(() => showCopiedTip(link))
+      const title = document.querySelector('h2.topic-title > a')?.textContent.trim();
+      copyLink(link, postUrl, event.shiftKey && title ? `קעפל: ${title}` : null)
         .catch(() => { window.location.href = link.href; });
     });
   }
 
-  // In a topic, a plain left click on its title copies a "קעפל: <title>" link to the topic, the
-  // way the forum writes it above a quote from a private message, ready to paste in a reply. As
-  // BBCode for the forum, and as a link for a mail or a document. Ctrl, middle or right click
-  // still open it (asked on the forum, viewtopic.php?p=7075144)
-  const topicTitle = url.pathname === "/forum/viewtopic.php" && items.copyTopicLink !== false
+  // In a topic, a plain left click on its title copies a link to the topic: as chosen in the
+  // settings, a "קעפל: <title>" link (the way the forum writes it above a quote from a private
+  // message, ready to paste in a reply) or only the address. Shift+click copies the other one.
+  // Ctrl, middle or right click still open it (asked on the forum, viewtopic.php?p=7075144)
+  const topicStyle = items.copyTopicLink === false || items.copyTopicLink === 'off' ? null
+    : items.copyTopicLink === 'link' ? 'link' : 'heading';
+  const topicTitle = url.pathname === "/forum/viewtopic.php" && topicStyle
     && document.querySelector('h2.topic-title > a[href*="t="]');
   if (topicTitle) {
-    topicTitle.title = 'קליק צו קאפירן א לינק צום אשכול (Ctrl+קליק עפנט עס)';
+    topicTitle.title = topicStyle === 'heading'
+      ? 'קליק צו קאפירן א "קעפל" לינק צום אשכול, Shift+קליק נאר דעם לינק (Ctrl+קליק עפנט עס)'
+      : 'קליק צו קאפירן דעם לינק צום אשכול, Shift+קליק א "קעפל" לינק (Ctrl+קליק עפנט עס)';
     topicTitle.addEventListener('click', (event) => {
-      if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) {
+      if (event.button !== 0 || event.ctrlKey || event.metaKey || event.altKey) {
         return;
       }
       const topicId = new URL(topicTitle.href).searchParams.get('t');
@@ -91,18 +96,9 @@ function enchancePage(items) {
         return;
       }
       event.preventDefault();
-      const link = `${window.location.origin}/forum/viewtopic.php?t=${topicId}`;
-      const text = `קעפל: ${topicTitle.textContent.trim()}`;
-      const html = document.createElement('a');
-      html.href = link;
-      html.textContent = text;
-      const copy = typeof ClipboardItem === 'function'
-        ? navigator.clipboard.write([new ClipboardItem({
-            'text/plain': new Blob([`[url=${link}]${text}[/url]`], { type: 'text/plain' }),
-            'text/html': new Blob([html.outerHTML], { type: 'text/html' })
-          })])
-        : navigator.clipboard.writeText(`[url=${link}]${text}[/url]`);
-      copy.then(() => showCopiedTip(topicTitle, 'קעפל לינק קאפירט ✓'))
+      const heading = (topicStyle === 'heading') !== event.shiftKey;
+      copyLink(topicTitle, `${window.location.origin}/forum/viewtopic.php?t=${topicId}`,
+        heading ? `קעפל: ${topicTitle.textContent.trim()}` : null)
         .catch(() => { window.location.href = topicTitle.href; });
     });
   }
@@ -169,6 +165,27 @@ function recheckCollapsedQuotes() {
       button.style.display = 'none';
     }
   });
+}
+
+// Copies the address, or with words a link: [url=...]words[/url] for the forum's reply box, and a
+// real link for a mail or a document. Shows "קאפירט" over the anchor
+function copyLink(anchor, address, words) {
+  let copy;
+  if (!words) {
+    copy = navigator.clipboard.writeText(address);
+  } else {
+    const bbcode = `[url=${address}]${words}[/url]`;
+    const html = document.createElement('a');
+    html.href = address;
+    html.textContent = words;
+    copy = typeof ClipboardItem === 'function'
+      ? navigator.clipboard.write([new ClipboardItem({
+          'text/plain': new Blob([bbcode], { type: 'text/plain' }),
+          'text/html': new Blob([html.outerHTML], { type: 'text/html' })
+        })])
+      : navigator.clipboard.writeText(bbcode);
+  }
+  return copy.then(() => showCopiedTip(anchor, words ? 'קעפל לינק קאפירט ✓' : 'לינק קאפירט ✓'));
 }
 
 function showCopiedTip(anchor, text = 'לינק קאפירט ✓') {

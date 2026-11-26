@@ -15,7 +15,6 @@
 
 const SETTINGS_SYNC_KEY = 'settingsSync';
 const SYNCED_SETTINGS = [
-  'hideUserName',
   'alwaysCopyTopic',
   'copyAttachments',
   'getBrowserNotifications',

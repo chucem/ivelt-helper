@@ -1,5 +1,4 @@
 const preferencesOptions = [
-	'hideUserName',
 	'getBrowserNotifications',
 	'popupSameTab',
 	'warnOnLosingPost',
@@ -438,8 +437,70 @@ function showLinkedSetting(){
 	setTimeout(() => row.classList.remove('setting-target', 'setting-target-fade'), 4500);
 }
 
+// The filter box: only the settings with all the words typed show, with their group's heading.
+// Hebrew letters are matched without their final forms, so "אשכול" finds "אשכולות" too
+function initSettingsFilter(){
+	const input = document.getElementById('settingsFilter');
+	const none = document.getElementById('settingsFilterNone');
+	const panel = document.getElementById('tab-settings');
+	const fold = text => text.toLowerCase().replace(/[ךםןףץ]/g, c => 'כמנפצ'['ךםןףץ'.indexOf(c)]);
+	const rows = [...panel.querySelectorAll('.row')].filter(row => !row.closest('.settings-filter'));
+	const filter = () => {
+		const words = fold(input.value).split(/\s+/).filter(Boolean);
+		let shown = 0;
+		rows.forEach(row => {
+			const match = words.every(word => fold(row.textContent).includes(word));
+			row.classList.toggle('filtered-out', !match);
+			if(match) shown++;
+		});
+		panel.querySelectorAll('.settings-group, .row-pair').forEach(box => {
+			box.classList.toggle('filtered-out', !box.querySelector('.row:not(.filtered-out)'));
+		});
+		none.classList.toggle('hidden', shown > 0);
+	};
+	input.addEventListener('input', filter);
+	// Escape clears it
+	input.addEventListener('keydown', e => {
+		if(e.key === 'Escape' && input.value){
+			input.value = '';
+			filter();
+		}
+	});
+}
+
+// A "ניי" tag on the settings that the what's-new entry of this version (or the newest one before
+// it) names, from js/whatsNew.data.js: what the update just added is found at once
+function markNewSettings(){
+	if(typeof whatsNewReleases !== 'object') return;
+	const current = chrome.runtime.getManifest().version.split('.').map(Number);
+	const older = v => {
+		const parts = v.split('.').map(Number);
+		for(let i = 0; i < Math.max(parts.length, current.length); i++){
+			const diff = (parts[i] || 0) - (current[i] || 0);
+			if(diff) return diff < 0;
+		}
+		return true;
+	};
+	const latest = Object.keys(whatsNewReleases).filter(older)
+		.sort((a, b) => b.localeCompare(a, undefined, { numeric: true }))[0];
+	const release = latest && whatsNewReleases[latest];
+	if(!release) return;
+	[...(release.features || []), ...(release.fixes || [])].forEach(item => {
+		const field = item && item.setting && document.getElementById(item.setting);
+		const label = field && (field.closest('.row').querySelector(`label[for="${item.setting}"]`) || field.closest('.row').querySelector('label'));
+		if(!label || label.querySelector('.new-tag')) return;
+		const tag = document.createElement('span');
+		tag.className = 'new-tag';
+		tag.textContent = 'ניי';
+		tag.title = 'ניי אין ווערסיע ' + latest;
+		label.prepend(tag, ' ');
+	});
+}
+
 window.addEventListener('hashchange', showTab);
 window.addEventListener('hashchange', showLinkedSetting);
+document.addEventListener('DOMContentLoaded', initSettingsFilter);
+document.addEventListener('DOMContentLoaded', markNewSettings);
 document.addEventListener('DOMContentLoaded', () => setTimeout(showLinkedSetting));
 document.addEventListener('DOMContentLoaded', showVersion);
 document.addEventListener('DOMContentLoaded', showInstallSource);
