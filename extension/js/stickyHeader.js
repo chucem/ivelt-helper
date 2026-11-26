@@ -3,11 +3,16 @@
 // header with the logo and the search boxes above it. The navbar's search icon, which only the phone
 // layout shows, shows on the desktop too while the bar is frozen, and opens the search bar of
 // js/addGoogleSearch.js inside it. css/stickyHeader.css has the look
+//
+// With stickyTopicBar too (off by default), in a topic: once its title and the buttons row under it
+// (reply, topic tools, pages) scroll under the bar, they're moved into a third row under it, both
+// in one line, and moved back when scrolled up to their place again. The real ones are moved, not
+// copied, so the forum's drop-downs in them still work; an empty box keeps their place meanwhile
 (function(){
 	const navbar = document.querySelector('#page-header > .navbar');
 	if (!navbar) return; // not the forum, e.g. Cloudflare's check page
 
-	chrome.storage.local.get(['stickyHeader'], function(items){
+	chrome.storage.local.get(['stickyHeader', 'stickyTopicBar'], function(items){
 		if (items.stickyHeader !== true) return;
 
 		const root = document.documentElement;
@@ -20,6 +25,7 @@
 		navbar.before(spot);
 
 		let stuck = false;
+		const topicRow = items.stickyTopicBar === true ? makeTopicRow(navbar) : null;
 
 		const update = () => {
 			const spotRect = spot.getBoundingClientRect();
@@ -40,8 +46,10 @@
 				navbar.style.left = `${spotRect.left}px`;
 				navbar.style.width = `${spotRect.width}px`;
 			}
+			const barHeight = stuck ? navbar.offsetHeight : 0;
+			const rowHeight = topicRow ? topicRow.update(stuck, barHeight, spotRect) : 0;
 			// Post buttons kept on screen (stickyPostButtons) and a jump to a post stay under it
-			root.style.setProperty('--ih-header-height', `${stuck ? navbar.offsetHeight : 0}px`);
+			root.style.setProperty('--ih-header-height', `${barHeight + rowHeight}px`);
 		};
 
 		// On the desktop the search bar is only there while frozen: closed when the bar comes back
@@ -59,6 +67,7 @@
 		window.addEventListener('resize', update);
 		// The navbar's height changes when the search bar opens or a row wraps
 		new ResizeObserver(update).observe(navbar);
+		if (topicRow) new ResizeObserver(update).observe(topicRow.row);
 		update();
 
 		// Opened at a post (#p123): the browser jumped there before the bar froze, so the post's
@@ -68,4 +77,59 @@
 			target.scrollIntoView();
 		}
 	});
+
+	// The topic's title and buttons row, and the third row they move into. update() moves them in
+	// or out and returns the row's height (0 when it's not shown)
+	function makeTopicRow(navbar) {
+		const pageBody = document.getElementById('page-body');
+		const title = pageBody && pageBody.querySelector(':scope > h2.topic-title');
+		const buttons = pageBody && pageBody.querySelector(':scope > .action-bar.bar-top');
+		if (!location.pathname.endsWith('/viewtopic.php') || !title || !buttons) return null;
+
+		const row = document.createElement('div');
+		row.className = 'ih-sticky-topic';
+		pageBody.prepend(row);
+		const titleSpot = document.createElement('div');
+		const buttonsSpot = document.createElement('div');
+		let shown = false;
+
+		// Moves them, and sizes the empty boxes so whatever comes after them stays where it was
+		const move = (into) => {
+			const next = buttons.nextElementSibling;
+			const before = next ? next.getBoundingClientRect().top : 0;
+			if (into) {
+				buttonsSpot.style.height = '';
+				title.before(titleSpot);
+				buttons.before(buttonsSpot);
+				titleSpot.style.height = `${title.offsetHeight}px`;
+				row.append(title, buttons);
+			} else {
+				titleSpot.replaceWith(title);
+				buttonsSpot.replaceWith(buttons);
+			}
+			document.documentElement.classList.toggle('ih-topic-stuck', into);
+			if (into && next) {
+				const after = next.getBoundingClientRect().top;
+				buttonsSpot.style.height = `${Math.max(0, before - after)}px`;
+			}
+		};
+
+		return {
+			row,
+			update(stuck, barHeight, spotRect) {
+				// past them: the bottom of the buttons row (or its empty box) is under the bar
+				const place = shown ? buttonsSpot : buttons;
+				const shouldShow = stuck && place.getBoundingClientRect().bottom < barHeight;
+				if (shouldShow !== shown) {
+					shown = shouldShow;
+					move(shown);
+				}
+				if (!shown) return 0;
+				row.style.top = `${barHeight}px`;
+				row.style.left = `${spotRect.left}px`;
+				row.style.width = `${spotRect.width}px`;
+				return row.offsetHeight;
+			}
+		};
+	}
 })();

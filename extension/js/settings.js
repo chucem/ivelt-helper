@@ -15,6 +15,7 @@ const preferencesOptions = [
 	'quoteSourceLink',
 	'stickyPostButtons',
 	'stickyHeader',
+	'stickyTopicBar',
 	'compactQuotesMobile',
 	'titleOpensUnread',
 	'doubleClickLike',

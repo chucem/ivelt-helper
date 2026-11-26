@@ -29,6 +29,7 @@ const SYNCED_SETTINGS = [
   'cachedTopicMappingExpire',
   'stickyPostButtons',
   'stickyHeader',
+  'stickyTopicBar',
   'compactQuotesMobile',
   'titleOpensUnread',
   'doubleClickLike',

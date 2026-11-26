@@ -38,3 +38,58 @@ html.ih-sticky-header .sticky-post {
         display: block;
     }
 }
+
+/* With stickyTopicBar: the topic's title and buttons row (reply, topic tools, pages), moved into a
+   third row under the frozen bar once they're scrolled past (js/stickyHeader.js). On one line, the
+   title cut short with "…" when it doesn't fit. Set apart from the bar by a line and its own,
+   lighter color; the shadow goes under it instead of under the bar */
+.ih-sticky-topic {
+    display: none;
+}
+html.ih-topic-stuck .ih-sticky-topic {
+    position: fixed;
+    z-index: 49; /* under the bar, so the bar's drop-downs open over it */
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-sizing: border-box;
+    padding: 4px 10px;
+    border-top: 2px solid var(--t-border, #A3B6C4);
+    background-color: var(--t-surface, #F5F7FA);
+    box-shadow: 0 2px 6px rgb(0 0 0 / 20%);
+}
+html.ih-topic-stuck #page-header > .navbar {
+    box-shadow: none;
+}
+.ih-sticky-topic > h2.topic-title {
+    flex: 1 1 auto;
+    min-width: 60px;
+    margin: 0;
+    font-size: 1.4em;
+    line-height: 1.5;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.ih-sticky-topic > .action-bar {
+    flex: 0 1 auto;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0;
+}
+.ih-sticky-topic > .action-bar > * {
+    float: none;
+    margin: 0;
+}
+/* the frozen bar has a search icon already, and the row has no room for the box */
+.ih-sticky-topic > .action-bar > .search-box {
+    display: none;
+}
+/* on a narrow screen the buttons may need a second line rather than going off the screen */
+@media (max-width: 700px) {
+    html.ih-topic-stuck .ih-sticky-topic {
+        flex-wrap: wrap;
+        gap: 4px 10px;
+    }
+}

@@ -19,6 +19,7 @@ const defualtPreferences = {
   forceUpdateTopicMapCache: false,
   stickyPostButtons: false,
   stickyHeader: false, // the navbar stays at the top while scrolling
+  stickyTopicBar: false, // with it, in a topic also its title and buttons (reply, pages) as a row under the bar
   compactQuotesMobile: true, // on a phone, quotes inside quotes without the space at the sides
   titleOpensUnread: true,
   doubleClickLike: false,

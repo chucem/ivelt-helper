@@ -139,6 +139,9 @@ hr {
 .settings-group .row:has(+ .row-indented) {
     margin-bottom: 8px;
 }
+.settings-group .row-pair:has(+ .row-indented) > .row:last-child {
+    margin-bottom: 8px;
+}
 /* Two options that belong together (the ones kept on screen while scrolling): a smaller gap between them */
 .row-pair > .row:not(:last-child) {
     margin-bottom: 10px;
