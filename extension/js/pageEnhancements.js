@@ -74,6 +74,39 @@ function enchancePage(items) {
     });
   }
 
+  // In a topic, a plain left click on its title copies a "קעפל: <title>" link to the topic, the
+  // way the forum writes it above a quote from a private message, ready to paste in a reply. As
+  // BBCode for the forum, and as a link for a mail or a document. Ctrl, middle or right click
+  // still open it (asked on the forum, viewtopic.php?p=7075144)
+  const topicTitle = url.pathname === "/forum/viewtopic.php" && items.copyTopicLink !== false
+    && document.querySelector('h2.topic-title > a[href*="t="]');
+  if (topicTitle) {
+    topicTitle.title = 'קליק צו קאפירן א לינק צום אשכול (Ctrl+קליק עפנט עס)';
+    topicTitle.addEventListener('click', (event) => {
+      if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) {
+        return;
+      }
+      const topicId = new URL(topicTitle.href).searchParams.get('t');
+      if (!/^\d+$/.test(topicId || '')) {
+        return;
+      }
+      event.preventDefault();
+      const link = `${window.location.origin}/forum/viewtopic.php?t=${topicId}`;
+      const text = `קעפל: ${topicTitle.textContent.trim()}`;
+      const html = document.createElement('a');
+      html.href = link;
+      html.textContent = text;
+      const copy = typeof ClipboardItem === 'function'
+        ? navigator.clipboard.write([new ClipboardItem({
+            'text/plain': new Blob([`[url=${link}]${text}[/url]`], { type: 'text/plain' }),
+            'text/html': new Blob([html.outerHTML], { type: 'text/html' })
+          })])
+        : navigator.clipboard.writeText(`[url=${link}]${text}[/url]`);
+      copy.then(() => showCopiedTip(topicTitle, 'קעפל לינק קאפירט ✓'))
+        .catch(() => { window.location.href = topicTitle.href; });
+    });
+  }
+
   // Only run on Topic page
   if (url.pathname === "/forum/viewtopic.php"){
     // Duplicate link for "Unread Post" to bottom of page.
@@ -138,10 +171,10 @@ function recheckCollapsedQuotes() {
   });
 }
 
-function showCopiedTip(anchor) {
+function showCopiedTip(anchor, text = 'לינק קאפירט ✓') {
   const tip = document.createElement('span');
   tip.className = 'ext-copied-tip';
-  tip.innerText = 'לינק קאפירט ✓';
+  tip.innerText = text;
 
   const rect = anchor.getBoundingClientRect();
   tip.style.top = `${rect.top + window.scrollY - 28}px`;
@@ -161,5 +194,5 @@ function showCopiedTip(anchor) {
 
 // not the forum, e.g. Cloudflare's check page
 if (document.getElementById('page-body')) {
-  chrome.storage.local.get(['stickyPostButtons', 'copyPostLink', 'compactQuotesMobile'], enchancePage);
+  chrome.storage.local.get(['stickyPostButtons', 'copyPostLink', 'copyTopicLink', 'compactQuotesMobile'], enchancePage);
 }

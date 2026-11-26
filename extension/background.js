@@ -42,6 +42,7 @@ const defualtPreferences = {
   driveFolderName: 'iVelt Helper',
   openAttachmentsTab: true,
   copyPostLink: true,
+  copyTopicLink: true, // in a topic, a click on its title copies a "קעפל: ..." link to it
   whoLiked: true,
   profileCards: true,
   printShowLikes: false,

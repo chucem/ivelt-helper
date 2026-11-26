@@ -42,6 +42,7 @@ const SYNCED_SETTINGS = [
   'upDownArrowKeys',
   'spoilerPolish',
   'copyPostLink',
+  'copyTopicLink',
   'imageResizer',
   'pasteImages',
   'openAttachmentsTab',

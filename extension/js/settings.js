@@ -37,6 +37,7 @@ const preferencesOptions = [
 	'driveFolderName',
 	'openAttachmentsTab',
 	'copyPostLink',
+	'copyTopicLink',
 	'whoLiked',
 	'profileCards',
 	'printShowLikes',
