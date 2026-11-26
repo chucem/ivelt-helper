@@ -168,9 +168,7 @@ async function addBtn() {
         }
 
         if (!isPosting && !isPM) {
-            if (topicMapping) {
-                addQuoteInOtherTopicButton(btn, strippedId, topicMapping, imageData);
-            }
+            addQuoteInOtherTopicButton(btn, strippedId, topicMapping, imageData);
         }
 
         // let responsiveMenu = btn.getElementsByClassName('responsive-menu').item(0);
@@ -550,6 +548,72 @@ function getCurrentTopicIdFromDOM() {
     return match?.[1] ?? null;
 }
 
+// A topic that isn't in the list (or with no list) often names its comments topic itself: a link
+// in the topic's first post, or in its writer's signature next to a link to this topic, whose
+// words, or the words right before it, say קאמענטארן / קאמענטירן. E.g. t=84957 (its first post),
+// t=83424 and t=84696 (the signature). Any other post's link could be anything, so only those.
+// What's found is kept for the topic's other pages, where that post may not be
+const FOUND_COMMENTS_KEY = "ihFoundCommentsTopics";
+const COMMENTS_WORD = /קאמענט(?:ארן|ירן)/;
+let foundCommentsTopic; // this page's, once looked for
+
+function findCommentsTopic(topicId) {
+    if (foundCommentsTopic !== undefined) {
+        return foundCommentsTopic;
+    }
+    let saved = {};
+    try {
+        saved = JSON.parse(localStorage.getItem(FOUND_COMMENTS_KEY)) || {};
+    } catch (e) {}
+
+    const linkedTopic = a => (a.href.match(/\/viewtopic\.php\?(?:[^#]*&)?t=(\d+)/) || [])[1];
+    const places = [];
+    // the topic's first post is the first one on its first page
+    if (!/[?&]start=[1-9]/.test(location.search)) {
+        const first = document.querySelector('.post .content');
+        if (first) places.push(first);
+    }
+    document.querySelectorAll('.post .signature').forEach(sig => {
+        if ([...sig.querySelectorAll('a[href*="viewtopic.php"]')].some(a => linkedTopic(a) === topicId)) {
+            places.push(sig);
+        }
+    });
+
+    let found = null;
+    for (const place of places) {
+        for (const a of place.querySelectorAll('a[href*="viewtopic.php"]')) {
+            const target = linkedTopic(a);
+            if (target && target !== topicId && COMMENTS_WORD.test(a.textContent + textBefore(a, place))) {
+                found = target;
+                break;
+            }
+        }
+        if (found) break;
+    }
+
+    if (found && saved[topicId] !== found) {
+        saved[topicId] = found;
+        try {
+            localStorage.setItem(FOUND_COMMENTS_KEY, JSON.stringify(saved));
+        } catch (e) {}
+    }
+    foundCommentsTopic = found || saved[topicId] || null;
+    return foundCommentsTopic;
+}
+
+// The words before the link on its own line, or else on the last line with words before it
+// (t=83424 has an empty line between them), within the post or signature
+function textBefore(link, place) {
+    const range = document.createRange();
+    range.setStart(place, 0);
+    range.setEndBefore(link);
+    const box = document.createElement('div');
+    box.appendChild(range.cloneContents());
+    box.querySelectorAll('br').forEach(br => br.replaceWith('\n'));
+    box.querySelectorAll('a').forEach(a => a.replaceWith('\n'));
+    return box.textContent.split('\n').filter(line => line.trim()).pop() || '';
+}
+
 function addQuoteInOtherTopicButton(btn, postID, topicMapping, imageData) {
     const currentTopicId = getCurrentTopicIdFromDOM();
 
@@ -558,7 +622,7 @@ function addQuoteInOtherTopicButton(btn, postID, topicMapping, imageData) {
         return;
     }
 
-    const targetTopicId = topicMapping[currentTopicId];
+    const targetTopicId = topicMapping?.[currentTopicId] || findCommentsTopic(currentTopicId);
     if (!targetTopicId) {
         return;
     }
