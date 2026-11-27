@@ -151,7 +151,8 @@ function enchancePage(items) {
 // On the notifications page: next to the forum's "mark all read", one link per kind of notification
 // that has unread ones (liked, quoted, mentioned, ...) with how many, which marks only those read
 // (asked on the forum, viewtopic.php?p=7079487). The list is over several pages, and old unread ones
-// can be on any of them, so the other pages are read one by one in the background to find them all.
+// can be on any of them, so when this page doesn't have them all, the other pages are read one by
+// one in the background until they're found (the count shows "…" until then).
 // A click checks their boxes on this page, adds the ones from the other pages, and sends the forum's
 // own "mark read" form, which marks by number whatever page they're on
 function addMarkReadByKind(pagination, markAll, warn) {
@@ -225,7 +226,16 @@ function addMarkReadByKind(pagination, markAll, warn) {
     form.requestSubmit(submit);
   };
 
+  // How many are unread in all: the forum puts it in the page's title, "(3) ...", and leaves it out
+  // when there are none. Once that many are found, the other pages have nothing more to find
+  const unreadInAll = parseInt((document.title.match(/^\((\d+)\)/) || [])[1], 10) || 0;
+  const foundAll = () => [...unreadByKind.values()].reduce((sum, ids) => sum + ids.size, 0) >= unreadInAll;
+
   collect(document);
+  if (foundAll()) {
+    render(false);
+    return;
+  }
   render(true);
 
   // the other pages, from the page count the forum shows
@@ -244,6 +254,7 @@ function addMarkReadByKind(pagination, markAll, warn) {
         // Cloudflare's check page, or signed out: stop with what was found
         if (!page.getElementById('ucp')) break;
         collect(page);
+        if (foundAll()) break;
         render(true);
       } catch (e) {
         break;
