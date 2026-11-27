@@ -181,6 +181,28 @@ function addMarkReadByKind(pagination, markAll, warn) {
   markAll.after(kindLinks);
   const allLabel = markAll.textContent;
 
+  // On a narrow screen the line breaks: only between the pieces, not inside "נאטיפיקאציעס [318]"
+  // (the forum's text and number after the links), so those go in one box that doesn't break
+  const tail = [];
+  for (let node = kindLinks.nextSibling; node && node.nodeName !== 'UL'; node = node.nextSibling) {
+    tail.push(node);
+    if (node.nodeName === 'STRONG') {
+      const after = node.nextSibling;
+      const end = after && after.nodeType === Node.TEXT_NODE ? after.data.indexOf(']') : -1;
+      if (end !== -1) {
+        after.splitText(end + 1);
+        tail.push(after);
+      }
+      break;
+    }
+  }
+  if (tail.some(node => node.nodeName === 'STRONG')) {
+    const count = document.createElement('span');
+    count.className = 'ih-nowrap';
+    kindLinks.after(count);
+    count.append(...tail);
+  }
+
   const render = (stillLooking) => {
     const kinds = [...unreadByKind.keys()].sort((a, b) =>
       (order.indexOf(a) + 1 || 99) - (order.indexOf(b) + 1 || 99));
@@ -191,11 +213,11 @@ function addMarkReadByKind(pagination, markAll, warn) {
       return;
     }
     markAll.textContent = 'אלע';
-    group.append('צייכן אלס געליינט: ');
+    group.append('צייכן אלס\u00a0געליינט:\u00a0');
     kindLinks.append(...kinds.flatMap(kind => {
       const link = document.createElement('a');
       link.href = '#';
-      link.className = 'ih-mark-kind';
+      link.className = 'ih-mark-kind ih-nowrap';
       const count = unreadByKind.get(kind).size;
       link.textContent = `${kind} (${count}${stillLooking ? '…' : ''})`;
       link.title = `פארצייכן די ${count} אומגעליינטע "${kind}" נאטיפיקאציעס אלס געליינט`;

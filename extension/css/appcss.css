@@ -192,3 +192,9 @@ html .imcger-quote-button {
         padding-right: 4px !important;
     }
 }
+
+/* Notifications page, mark read by kind (js/pageEnhancements.js): a kind with its count, and
+   "נאטיפיקאציעס [318]", each stay on one line when the line breaks on a narrow screen */
+.ih-nowrap {
+    white-space: nowrap;
+}
