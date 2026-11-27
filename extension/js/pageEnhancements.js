@@ -139,8 +139,120 @@ function enchancePage(items) {
     linkWrap.insertBefore(link, linkWrap.firstChild);
 
     pagination.insertBefore(linkWrap, pagination.firstChild);
+
+    const markAll = pagination.querySelector(':scope > a.mark');
+    if (markAll) {
+      addMarkReadByKind(pagination, markAll, items.warnOnLosingPost === true);
+    }
   }
 
+}
+
+// On the notifications page: next to the forum's "mark all read", one link per kind of notification
+// that has unread ones (liked, quoted, mentioned, ...) with how many, which marks only those read
+// (asked on the forum, viewtopic.php?p=7079487). The list is over several pages, and old unread ones
+// can be on any of them, so the other pages are read one by one in the background to find them all.
+// A click checks their boxes on this page, adds the ones from the other pages, and sends the forum's
+// own "mark read" form, which marks by number whatever page they're on
+function addMarkReadByKind(pagination, markAll, warn) {
+  const form = document.getElementById('ucp');
+  const submit = form && form.querySelector('input[type="submit"][name="submit"]');
+  if (!submit) return;
+
+  // the kinds in the order of the bells, then any other in the order found
+  const order = ['באדאנקט', 'ציטירט', 'דערמאנט', 'תגובה', 'פריוואטע מעסעדזש'];
+  const unreadByKind = new Map(); // kind -> Set of notification numbers
+  const collect = (root) => {
+    root.querySelectorAll('li.row').forEach(row => {
+      const box = row.querySelector('input[name="mark[]"]');
+      const kind = row.querySelector('.notifications_title strong, .notifications_title b')?.textContent.trim();
+      if (!box || box.disabled || !kind) return;
+      if (!unreadByKind.has(kind)) unreadByKind.set(kind, new Set());
+      unreadByKind.get(kind).add(box.value);
+    });
+  };
+
+  // "mark read:" before the forum's link (then "all"), and the kinds after it
+  const group = document.createElement('span');
+  const kindLinks = document.createElement('span');
+  group.className = kindLinks.className = 'ih-mark-by-kind';
+  markAll.before(group);
+  markAll.after(kindLinks);
+  const allLabel = markAll.textContent;
+
+  const render = (stillLooking) => {
+    const kinds = [...unreadByKind.keys()].sort((a, b) =>
+      (order.indexOf(a) + 1 || 99) - (order.indexOf(b) + 1 || 99));
+    group.replaceChildren();
+    kindLinks.replaceChildren();
+    if (!kinds.length) {
+      markAll.textContent = allLabel;
+      return;
+    }
+    markAll.textContent = 'אלע';
+    group.append('צייכן אלס געליינט: ');
+    kindLinks.append(...kinds.flatMap(kind => {
+      const link = document.createElement('a');
+      link.href = '#';
+      link.className = 'ih-mark-kind';
+      const count = unreadByKind.get(kind).size;
+      link.textContent = `${kind} (${count}${stillLooking ? '…' : ''})`;
+      link.title = `פארצייכן די ${count} אומגעליינטע "${kind}" נאטיפיקאציעס אלס געליינט`;
+      link.addEventListener('click', event => {
+        event.preventDefault();
+        markKindRead(kind);
+      });
+      return [' · ', link];
+    }));
+  };
+
+  const markKindRead = (kind) => {
+    const ids = [...unreadByKind.get(kind)];
+    if (warn && !confirm(`פארצייכן די ${ids.length} אומגעליינטע "${kind}" נאטיפיקאציעס אלס געליינט?`)) return;
+    form.querySelectorAll('input[name="mark[]"]').forEach(box => { box.checked = false; });
+    ids.forEach(id => {
+      const box = form.querySelector(`input[name="mark[]"][value="${id}"]`);
+      if (box) {
+        box.checked = true;
+      } else {
+        const hidden = document.createElement('input');
+        hidden.type = 'hidden';
+        hidden.name = 'mark[]';
+        hidden.value = id;
+        form.appendChild(hidden);
+      }
+    });
+    form.requestSubmit(submit);
+  };
+
+  collect(document);
+  render(true);
+
+  // the other pages, from the page count the forum shows
+  const total = parseInt(pagination.querySelector(':scope > strong')?.textContent, 10) || 0;
+  const perPage = parseInt(pagination.querySelector('[data-per-page]')?.dataset.perPage, 10) || 50;
+  const here = parseInt(new URLSearchParams(location.search).get('start'), 10) || 0;
+  const starts = [];
+  for (let start = 0; start < total; start += perPage) {
+    if (start !== here) starts.push(start);
+  }
+  (async () => {
+    for (const start of starts) {
+      try {
+        const response = await fetch(`${location.pathname}?i=ucp_notifications&start=${start}`);
+        const page = new DOMParser().parseFromString(await response.text(), 'text/html');
+        // Cloudflare's check page, or signed out: stop with what was found
+        if (!page.getElementById('ucp')) break;
+        collect(page);
+        render(true);
+      } catch (e) {
+        break;
+      }
+      // one by one, a little apart, so the forum's protection doesn't take it for an attack
+      await new Promise(resolve => setTimeout(resolve, 300));
+    }
+    render(false);
+  })();
 }
 
 // The forum's script (imcger Collapse Quote) cuts long quotes once, while the page loads: each one
@@ -211,5 +323,5 @@ function showCopiedTip(anchor, text = 'לינק קאפירט ✓') {
 
 // not the forum, e.g. Cloudflare's check page
 if (document.getElementById('page-body')) {
-  chrome.storage.local.get(['stickyPostButtons', 'copyPostLink', 'copyTopicLink', 'compactQuotesMobile'], enchancePage);
+  chrome.storage.local.get(['stickyPostButtons', 'copyPostLink', 'copyTopicLink', 'compactQuotesMobile', 'warnOnLosingPost'], enchancePage);
 }
