@@ -374,12 +374,21 @@ function hasNestedQuotes(text) {
 
 }
 
+// The innermost quote, again until only the outer one is left. With the line break after it, but
+// only when there is one: the post can go on right after it on the same line ("[/quote][list=1]",
+// viewtopic.php?p=7079969), and a fixed extra character cut the first one of it
 function removeNestedQuotes(text) {
-    let nestedQuote = text.substring(
-        text.lastIndexOf('[quote'),
-        text.indexOf("[/quote]", text.lastIndexOf('[quote')) + 9
-    );
-    let modifiedText = text.replace(nestedQuote, "");
+    const start = text.lastIndexOf('[quote');
+    const close = text.indexOf('[/quote]', start);
+    if (start === -1 || close === -1) {
+        return text;
+    }
+    let end = close + '[/quote]'.length;
+    const lineBreak = text.slice(end).match(/^\r?\n/);
+    if (lineBreak) {
+        end += lineBreak[0].length;
+    }
+    let modifiedText = text.slice(0, start) + text.slice(end);
 
     if (hasNestedQuotes(modifiedText)) {
         return removeNestedQuotes(modifiedText);
