@@ -11,12 +11,7 @@ html.ih-header-stuck #page-header > .navbar {
     box-shadow: 0 2px 6px rgb(0 0 0 / 20%);
 }
 
-/* The forum's "ווייז מער..." / "ווייז ווייניגער" button on a long quote (imcger Collapse Quote) has
-   z-index 999, only to stay over the quote's own fade, so it went over the bar while scrolling.
-   1 still keeps it over the fade */
-html.ih-sticky-header .imcger-quote-button {
-    z-index: 1;
-}
+/* The "ווייז מער..." button of a long quote goes under the bar: see css/appcss.css */
 
 /* A jump to a post (#p123) leaves its top visible under the bar */
 html.ih-sticky-header {
@@ -36,5 +31,91 @@ html.ih-sticky-header .sticky-post {
     }
     html.ih-header-stuck #ih-mobile-search:not([hidden]) {
         display: block;
+    }
+}
+
+/* With stickyTopicBar: the topic's title and buttons row (reply, topic tools, pages), moved into a
+   third row under the frozen bar once the title is under it (js/stickyHeader.js). On one line, the
+   title cut short with "…" when it doesn't fit. It continues the bar: the same color, set apart by a
+   line like the one between the bar's own two rows, and the bar's rounded bottom and shadow move
+   down to it */
+.ih-sticky-topic {
+    display: none;
+}
+html.ih-topic-stuck .ih-sticky-topic {
+    position: fixed;
+    z-index: 49; /* under the bar, so the bar's drop-downs open over it */
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    box-sizing: border-box;
+    padding: 4px 10px 5px;
+    border-top: 2px solid var(--t-surface, #fff);
+    border-radius: 0 0 7px 7px;
+    background-color: var(--t-row3, #CADCEB);
+    box-shadow: 0 2px 6px rgb(0 0 0 / 20%);
+}
+html.ih-topic-stuck #page-header > .navbar {
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    box-shadow: none;
+}
+.ih-sticky-topic > h2.topic-title {
+    flex: 1 1 auto;
+    min-width: 60px;
+    margin: 0;
+    font-size: 1.4em;
+    line-height: 1.5;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.ih-sticky-topic > .action-bar {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin: 0;
+}
+.ih-sticky-topic > .action-bar > * {
+    float: none;
+    margin: 0;
+}
+.ih-sticky-topic > .action-bar > .pagination {
+    white-space: nowrap;
+}
+/* the frozen bar has a search icon already, and the row has no room for the box */
+.ih-sticky-topic > .action-bar > .search-box {
+    display: none;
+}
+/* "first unread • N replies", moved out of the pages box to sit by the title */
+.ih-sticky-topic-info {
+    flex: 0 0 auto;
+    font-size: 11px;
+    white-space: nowrap;
+}
+/* Where the whole list of pages doesn't fit next to the title: only what fits on one line (the
+   page-jump button, the arrows and the page it's on). !important: the forum's own phone style
+   shows them with a stronger rule */
+@media (max-width: 1000px) {
+    .ih-sticky-topic > .action-bar > .pagination > ul > li:not(.active, .arrow, .page-jump) {
+        display: none !important;
+    }
+}
+/* On a narrow screen: the title and "first unread • N replies" on one line, the buttons on one
+   line under it */
+@media (max-width: 700px) {
+    html.ih-topic-stuck .ih-sticky-topic {
+        flex-wrap: wrap;
+        gap: 4px 10px;
+    }
+    .ih-sticky-topic > h2.topic-title {
+        flex: 1 1 0;
+    }
+    .ih-sticky-topic > .action-bar {
+        flex: 1 1 100%;
+    }
+    .ih-sticky-topic > .action-bar > .pagination {
+        margin-right: auto;
     }
 }

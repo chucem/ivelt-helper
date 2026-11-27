@@ -69,9 +69,17 @@
 }
 
 
+/* The forum's "ווייז מער..." / "ווייז ווייניגער" button on a long quote (imcger Collapse Quote) has
+   z-index 999, only to stay over the quote's own fade, so it went over the frozen bar
+   (js/stickyHeader.js) and over the kept post buttons below. 1 still keeps it over the fade */
+html .imcger-quote-button {
+    z-index: 1;
+}
+/* The kept post buttons (stickyPostButtons): 2, over a long quote's "ווייז מער..." button that
+   scrolls under them (viewtopic.php?p=7078231), and still under the frozen bar (50) */
 .sticky-post{
     position: fixed !important;
-    z-index: 1 !important;
+    z-index: 2 !important;
     top: 5px !important;
     background-color: rgb(202 220 235 / 45%);
     border: 1px solid #C7C3BF;
@@ -183,4 +191,10 @@
         padding-left: 4px !important;
         padding-right: 4px !important;
     }
+}
+
+/* Notifications page, mark read by kind (js/pageEnhancements.js): a kind with its count, and
+   "נאטיפיקאציעס [318]", each stay on one line when the line breaks on a narrow screen */
+.ih-nowrap {
+    white-space: nowrap;
 }

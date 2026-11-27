@@ -168,9 +168,7 @@ async function addBtn() {
         }
 
         if (!isPosting && !isPM) {
-            if (topicMapping) {
-                addQuoteInOtherTopicButton(btn, strippedId, topicMapping, imageData);
-            }
+            addQuoteInOtherTopicButton(btn, strippedId, topicMapping, imageData);
         }
 
         // let responsiveMenu = btn.getElementsByClassName('responsive-menu').item(0);
@@ -192,12 +190,28 @@ async function addBtn() {
 
 function addSimpleButton(btn, href, customClass, title, text, onclick, itext=""){
     let button = createButton(href, customClass, title, text, onclick, itext);
+    insertPostButton(btn, button.li);
+}
 
+// Our buttons go right after the forum's quote button, each new one first, so the last one added
+// stands next to it. A locked topic has no quote button: then they go where it would be, before the
+// first of ours already there, or else before the like button (or the phone menu), in the same order
+function insertPostButton(btn, li) {
     let quoteLi = getQuoteElm(btn)?.parentElement;
-    if (quoteLi){
-        quoteLi.parentNode.insertBefore(button.li, quoteLi.nextSibling)
+    if (quoteLi) {
+        quoteLi.parentNode.insertBefore(li, quoteLi.nextSibling);
+        return;
     }
+    const before = btn.querySelector(':scope > li:has(> .custom-btn), :scope > li.postlove-li, :scope > li.responsive-menu');
+    btn.insertBefore(li, before);
+}
 
+// The page with the post's text (its BBCode in #message): the quote page, or in a locked topic,
+// where the forum's quote page says the topic is locked, the private message quote page, which
+// still has it. The PM link from the post's profile when there's one, else built from the post's number
+function getQuoteSourceHref(btn, postID) {
+    const link = getQuoteElm(btn) || getPMHref(postID);
+    return link ? link.getAttribute("href") : `./ucp.php?i=pm&mode=compose&action=quotepost&p=${postID}`;
 }
 
 function getQuoteElm(btn){
@@ -224,12 +238,9 @@ function addUnderlineForQuoteBtn(btn) {
 }
 
 function addCopyQuoteButton(btn, postID, imageData){
-    // the post's text comes from its quote (or PM reply) page, so a post without one gets no button
-    let sourceURL = getPMHref(postID) || getQuoteElm(btn)
-    if (!sourceURL) {
-        return;
-    }
-    const href = sourceURL.getAttribute("href");
+    // the post's text comes from its PM quote (or quote) page, see getQuoteSourceHref
+    const pmLink = getPMHref(postID);
+    const href = pmLink ? pmLink.getAttribute("href") : getQuoteSourceHref(btn, postID);
     addSimpleButton(btn, null, 'fa-copy', 'ציטיר אין אנדערע אשכול', 'ציטיר אין אנדערע אשכול',
         () => copyQuote(href, postID, imageData))
 }
@@ -244,11 +255,7 @@ function addPMQuoteButton(btn, postID) {
 
     let button = createButton(pmLink.getAttribute('href'), 'fa-envelope', 'שיק א פריוואטע מעסעדזש מיט א ציטאט פון דער תגובה', 'פריוואטע מעסעדזש מיט א ציטאט');
     button.li.classList.add('ih-pm-quote');
-
-    let quoteLi = getQuoteElm(btn)?.parentElement;
-    if (quoteLi) {
-        quoteLi.parentNode.insertBefore(button.li, quoteLi.nextSibling)
-    }
+    insertPostButton(btn, button.li);
 }
 
 function addQuoteLastButton(btn, isPosting) {
@@ -307,7 +314,8 @@ function ping_user(post_id){
         let PostDetails = getPostDetails(post_id)
         let text = `[quote="${PostDetails.username}" user_id=${PostDetails.id} time=${PostDetails.time} post_id=${post_id}]\n[/quote]`
 
-        if (iveltSetting("alwaysCopyTopic") === true){
+        // a locked topic has no reply box to put it in
+        if (iveltSetting("alwaysCopyTopic") === true || !document.querySelector("#message-box textarea")){
             navigator.clipboard.writeText(text)
             iveltNotify("קאפירט צום קליפבאורד")
         } else {
@@ -366,12 +374,21 @@ function hasNestedQuotes(text) {
 
 }
 
+// The innermost quote, again until only the outer one is left. With the line break after it, but
+// only when there is one: the post can go on right after it on the same line ("[/quote][list=1]",
+// viewtopic.php?p=7079969), and a fixed extra character cut the first one of it
 function removeNestedQuotes(text) {
-    let nestedQuote = text.substring(
-        text.lastIndexOf('[quote'),
-        text.indexOf("[/quote]", text.lastIndexOf('[quote')) + 9
-    );
-    let modifiedText = text.replace(nestedQuote, "");
+    const start = text.lastIndexOf('[quote');
+    const close = text.indexOf('[/quote]', start);
+    if (start === -1 || close === -1) {
+        return text;
+    }
+    let end = close + '[/quote]'.length;
+    const lineBreak = text.slice(end).match(/^\r?\n/);
+    if (lineBreak) {
+        end += lineBreak[0].length;
+    }
+    let modifiedText = text.slice(0, start) + text.slice(end);
 
     if (hasNestedQuotes(modifiedText)) {
         return removeNestedQuotes(modifiedText);
@@ -540,6 +557,72 @@ function getCurrentTopicIdFromDOM() {
     return match?.[1] ?? null;
 }
 
+// A topic that isn't in the list (or with no list) often names its comments topic itself: a link
+// in the topic's first post, or in its writer's signature next to a link to this topic, whose
+// words, or the words right before it, say קאמענטארן / קאמענטירן. E.g. t=84957 (its first post),
+// t=83424 and t=84696 (the signature). Any other post's link could be anything, so only those.
+// What's found is kept for the topic's other pages, where that post may not be
+const FOUND_COMMENTS_KEY = "ihFoundCommentsTopics";
+const COMMENTS_WORD = /קאמענט(?:ארן|ירן)/;
+let foundCommentsTopic; // this page's, once looked for
+
+function findCommentsTopic(topicId) {
+    if (foundCommentsTopic !== undefined) {
+        return foundCommentsTopic;
+    }
+    let saved = {};
+    try {
+        saved = JSON.parse(localStorage.getItem(FOUND_COMMENTS_KEY)) || {};
+    } catch (e) {}
+
+    const linkedTopic = a => (a.href.match(/\/viewtopic\.php\?(?:[^#]*&)?t=(\d+)/) || [])[1];
+    const places = [];
+    // the topic's first post is the first one on its first page
+    if (!/[?&]start=[1-9]/.test(location.search)) {
+        const first = document.querySelector('.post .content');
+        if (first) places.push(first);
+    }
+    document.querySelectorAll('.post .signature').forEach(sig => {
+        if ([...sig.querySelectorAll('a[href*="viewtopic.php"]')].some(a => linkedTopic(a) === topicId)) {
+            places.push(sig);
+        }
+    });
+
+    let found = null;
+    for (const place of places) {
+        for (const a of place.querySelectorAll('a[href*="viewtopic.php"]')) {
+            const target = linkedTopic(a);
+            if (target && target !== topicId && COMMENTS_WORD.test(a.textContent + textBefore(a, place))) {
+                found = target;
+                break;
+            }
+        }
+        if (found) break;
+    }
+
+    if (found && saved[topicId] !== found) {
+        saved[topicId] = found;
+        try {
+            localStorage.setItem(FOUND_COMMENTS_KEY, JSON.stringify(saved));
+        } catch (e) {}
+    }
+    foundCommentsTopic = found || saved[topicId] || null;
+    return foundCommentsTopic;
+}
+
+// The words before the link on its own line, or else on the last line with words before it
+// (t=83424 has an empty line between them), within the post or signature
+function textBefore(link, place) {
+    const range = document.createRange();
+    range.setStart(place, 0);
+    range.setEndBefore(link);
+    const box = document.createElement('div');
+    box.appendChild(range.cloneContents());
+    box.querySelectorAll('br').forEach(br => br.replaceWith('\n'));
+    box.querySelectorAll('a').forEach(a => a.replaceWith('\n'));
+    return box.textContent.split('\n').filter(line => line.trim()).pop() || '';
+}
+
 function addQuoteInOtherTopicButton(btn, postID, topicMapping, imageData) {
     const currentTopicId = getCurrentTopicIdFromDOM();
 
@@ -548,11 +631,11 @@ function addQuoteInOtherTopicButton(btn, postID, topicMapping, imageData) {
         return;
     }
 
-    const targetTopicId = topicMapping[currentTopicId];
+    const targetTopicId = topicMapping?.[currentTopicId] || findCommentsTopic(currentTopicId);
     if (!targetTopicId) {
         return;
     }
-    let sourceURL = getQuoteElm(btn)
+    const href = getQuoteSourceHref(btn, postID);
 
     addSimpleButton(
         btn,
@@ -560,7 +643,7 @@ function addQuoteInOtherTopicButton(btn, postID, topicMapping, imageData) {
         'fa-comment',
         'ציטיר אינעם קאמענטארן אשכול',
         'ציטיר אינעם קאמענטארן אשכול',
-        () => quoteInOtherTopic(sourceURL.getAttribute("href"), postID, targetTopicId, imageData))
+        () => quoteInOtherTopic(href, postID, targetTopicId, imageData))
 
 }
 

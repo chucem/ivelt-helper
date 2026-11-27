@@ -1,5 +1,4 @@
 const preferencesOptions = [
-	'hideUserName',
 	'getBrowserNotifications',
 	'popupSameTab',
 	'warnOnLosingPost',
@@ -16,6 +15,7 @@ const preferencesOptions = [
 	'quoteSourceLink',
 	'stickyPostButtons',
 	'stickyHeader',
+	'stickyTopicBar',
 	'compactQuotesMobile',
 	'titleOpensUnread',
 	'doubleClickLike',
@@ -37,6 +37,7 @@ const preferencesOptions = [
 	'driveFolderName',
 	'openAttachmentsTab',
 	'copyPostLink',
+	'copyTopicLink',
 	'whoLiked',
 	'profileCards',
 	'printShowLikes',
@@ -88,11 +89,11 @@ async function showTopicMappingStatus(){
 	// isolated, so the browser's (often English) date doesn't get mixed into the Yiddish around it
 	const when = time => '⁨' + new Date(time).toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) + '⁩';
 
-	let text = updatedAt ? 'לעצט אפדעיטעט ' + when(updatedAt) : '';
+	let text = updatedAt ? 'לעצט אפדעיטעד ' + when(updatedAt) : '';
 	if(failedAt && (!updatedAt || failedAt > updatedAt))
 		text += (text ? '. ' : '') + 'דער לעצטער פרואוו (' + when(failedAt) + ') האט נישט געארבעט';
 	if(forceUpdateTopicMapCache === true)
-		text = 'ווערט אפדעיטעט ווען מען עפנט דעם קומענדיגן בלאט אויפן פארום';
+		text = 'ווערט אפדעיטעד ווען מען עפנט דעם קומענדיגן בלאט אויפן פארום';
 	document.getElementById('topicMappingStatus').textContent = text;
 }
 
@@ -423,7 +424,92 @@ async function showInstallSource(){
 	statusLine.replaceChildren('ס\'איז דא א נייע ווערסיע ', version, ' – ', action);
 }
 
+// A link to one setting (settings.html#stickyHeader, from the what's-new pop-up) scrolls to its
+// row and marks it for a few seconds, so it's found at once
+function showLinkedSetting(){
+	const id = decodeURIComponent(location.hash.slice(1));
+	const field = id && document.getElementById(id);
+	const row = field && field.closest('#tab-settings .row');
+	if(!row) return;
+	row.scrollIntoView({ block: 'center' });
+	row.classList.remove('setting-target', 'setting-target-fade');
+	row.classList.add('setting-target');
+	setTimeout(() => row.classList.add('setting-target-fade'), 2500);
+	setTimeout(() => row.classList.remove('setting-target', 'setting-target-fade'), 4500);
+}
+
+// The filter box: only the settings with all the words typed show, with their group's heading.
+// Hebrew letters are matched without their final forms, so "אשכול" finds "אשכולות" too
+function initSettingsFilter(){
+	const input = document.getElementById('settingsFilter');
+	const none = document.getElementById('settingsFilterNone');
+	const panel = document.getElementById('tab-settings');
+	const fold = text => text.toLowerCase().replace(/[ךםןףץ]/g, c => 'כמנפצ'['ךםןףץ'.indexOf(c)]);
+	const rows = [...panel.querySelectorAll('.row')].filter(row => !row.closest('.settings-filter'));
+	const filter = () => {
+		const words = fold(input.value).split(/\s+/).filter(Boolean);
+		let shown = 0;
+		rows.forEach(row => {
+			const match = words.every(word => fold(row.textContent).includes(word));
+			row.classList.toggle('filtered-out', !match);
+			if(match) shown++;
+		});
+		panel.querySelectorAll('.settings-group, .row-pair').forEach(box => {
+			box.classList.toggle('filtered-out', !box.querySelector('.row:not(.filtered-out)'));
+		});
+		none.classList.toggle('hidden', shown > 0);
+	};
+	input.addEventListener('input', filter);
+	// Escape clears it
+	input.addEventListener('keydown', e => {
+		if(e.key === 'Escape' && input.value){
+			input.value = '';
+			filter();
+		}
+	});
+}
+
+// A "ניי" tag on the settings that the what's-new entry of this version (or the newest one before
+// it) names, from js/whatsNew.data.js: what the update just added is found at once
+function markNewSettings(){
+	if(typeof whatsNewReleases !== 'object') return;
+	const current = chrome.runtime.getManifest().version.split('.').map(Number);
+	const older = v => {
+		const parts = v.split('.').map(Number);
+		for(let i = 0; i < Math.max(parts.length, current.length); i++){
+			const diff = (parts[i] || 0) - (current[i] || 0);
+			if(diff) return diff < 0;
+		}
+		return true;
+	};
+	const latest = Object.keys(whatsNewReleases).filter(older)
+		.sort((a, b) => b.localeCompare(a, undefined, { numeric: true }))[0];
+	const release = latest && whatsNewReleases[latest];
+	if(!release) return;
+	[...(release.features || []), ...(release.fixes || [])].forEach(item => {
+		const field = item && item.setting && document.getElementById(item.setting);
+		const label = field && (field.closest('.row').querySelector(`label[for="${item.setting}"]`) || field.closest('.row').querySelector('label'));
+		if(!label || label.querySelector('.new-tag')) return;
+		const tag = document.createElement('span');
+		tag.className = 'new-tag';
+		tag.textContent = 'ניי';
+		tag.title = 'ניי אין ווערסיע ' + latest;
+		label.prepend(tag, ' ');
+	});
+}
+
 window.addEventListener('hashchange', showTab);
+window.addEventListener('hashchange', showLinkedSetting);
+document.addEventListener('DOMContentLoaded', initSettingsFilter);
+document.addEventListener('DOMContentLoaded', markNewSettings);
+// the what's-new pop-up again, also after it was closed (js/whatsNew.js)
+document.addEventListener('DOMContentLoaded', () => {
+	document.getElementById('showWhatsNew').addEventListener('click', e => {
+		e.preventDefault();
+		if(window.ihShowWhatsNew) window.ihShowWhatsNew();
+	});
+});
+document.addEventListener('DOMContentLoaded', () => setTimeout(showLinkedSetting));
 document.addEventListener('DOMContentLoaded', showVersion);
 document.addEventListener('DOMContentLoaded', showInstallSource);
 document.addEventListener('DOMContentLoaded', showTab);

@@ -31,6 +31,10 @@ Do all of these before the merge, so they ship with the release. Commit each one
 everything since the last release (`git log --oneline v<last>..dev`) and has no line for
 something already released. Never remove old entries: the pop-up shows every version since the
 one the user had, each in its own section, so someone who skips a version still sees it.
+Every line about a new setting (or a change to one) links straight to it: write it as
+`{ text: '...', setting: '<the setting's id in settings.html>' }`, and the pop-up adds a link that
+opens the settings at that row, highlighted. Heimish Yiddish per the heimish-yiddish skill
+(e.g. the fixes heading is פארבעסערונגען, "updated" is אפדעיטעד).
 
 ### READMEs
 `README.md` and `README.yi.md` list every feature. Add the new ones to both, in the same

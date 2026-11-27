@@ -15,7 +15,6 @@
 
 const SETTINGS_SYNC_KEY = 'settingsSync';
 const SYNCED_SETTINGS = [
-  'hideUserName',
   'alwaysCopyTopic',
   'copyAttachments',
   'getBrowserNotifications',
@@ -30,6 +29,7 @@ const SYNCED_SETTINGS = [
   'cachedTopicMappingExpire',
   'stickyPostButtons',
   'stickyHeader',
+  'stickyTopicBar',
   'compactQuotesMobile',
   'titleOpensUnread',
   'doubleClickLike',
@@ -42,6 +42,7 @@ const SYNCED_SETTINGS = [
   'upDownArrowKeys',
   'spoilerPolish',
   'copyPostLink',
+  'copyTopicLink',
   'imageResizer',
   'pasteImages',
   'openAttachmentsTab',
